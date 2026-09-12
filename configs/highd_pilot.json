@@ -6,6 +6,7 @@
   "seconds_after": 2.0,
   "max_scenes_per_recording": 12,
   "max_agents": 4,
+  "require_lane_stable_cav": true,
   "max_neighbor_distance_m": 80.0,
   "frame_stride": 1
 }

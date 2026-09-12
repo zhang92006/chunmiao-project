@@ -36,6 +36,9 @@ class HighDTests(unittest.TestCase):
             self.assertEqual(scene["actors"][0]["xy"][-1][0], 8)
             self.assertEqual(scene["actors"][1]["xy"][0][0], 10)
             self.assertEqual(scene["time"], [0, 0.5, 1, 1.5, 2])
+            tracks[1][1]["laneId"] = 3
+            with self.assertRaisesRegex(ValueError, "changes_lane"):
+                make_scene("01", "train", metadata, meta, tracks, 2, 3, self.config)
             del tracks[1][1]
             with self.assertRaisesRegex(ValueError, "incomplete"):
                 make_scene("01", "train", metadata, meta, tracks, 2, 3, self.config)

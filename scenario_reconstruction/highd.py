@@ -55,6 +55,8 @@ def validate_config(config):
             raise ValueError(f"{name} must be a positive integer")
     if config["max_agents"] < 2:
         raise ValueError("At least the CAV and the lane changer are required")
+    if not isinstance(config.get("require_lane_stable_cav", True), bool):
+        raise ValueError("require_lane_stable_cav must be a boolean")
 
 
 def center(row):
@@ -74,6 +76,8 @@ def make_scene(rec, split, metadata, track_meta, tracks, changer_id, event_frame
     frames = list(range(start, end + 1, config["frame_stride"]))
     if any(frame not in tracks[ego_id] or frame not in changer for frame in frames):
         raise ValueError("incomplete_primary_window")
+    if config.get("require_lane_stable_cav", True) and len({tracks[ego_id][frame]["laneId"] for frame in frames}) != 1:
+        raise ValueError("target_follower_changes_lane")
     ego_event = tracks[ego_id].get(event_frame)
     if ego_event is None or int(ego_event["laneId"]) != int(event["laneId"]):
         raise ValueError("follower_not_in_target_lane")
