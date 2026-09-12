@@ -30,3 +30,9 @@ checkpoints/
 *.db3
 metadata.yaml
 
+# Licensed datasets and reconstructed trajectories stay local
+data/local/
+data/processed/
+*_tracks.csv
+*_tracksMeta.csv
+*_recordingMeta.csv

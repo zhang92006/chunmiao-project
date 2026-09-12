@@ -1,0 +1,11 @@
+{
+  "dataset": "highD-v1.0",
+  "seed": 7,
+  "splits": {"train": ["01", "02"], "validation": ["03"], "test": ["04"]},
+  "seconds_before": 2.0,
+  "seconds_after": 2.0,
+  "max_scenes_per_recording": 12,
+  "max_agents": 4,
+  "max_neighbor_distance_m": 80.0,
+  "frame_stride": 1
+}
