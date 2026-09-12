@@ -68,6 +68,9 @@ interpolation baselines. See [implementation results](docs/实施记录.md) for 
 behavior, pilot numbers, and limitations. These baselines use a lightweight
 lane-fixed IDM response, not a complete SUMO/Autoware planner evaluation.
 
+See [零碰撞修正记录](docs/零碰撞修正记录.md) for the future target-pair objective,
+timed action pulse, between-frame collision checks, and latest negative-result pilot.
+
 ## Batch reconstruction
 
 ```bash

@@ -85,7 +85,7 @@ class TrajectoryBenchmarkTests(unittest.TestCase):
 
     def test_action_space_deformation_and_search(self):
         time = np.asarray(self.scene["time"])
-        delta = action_deformation(time, 1, [-1, 0.5])
+        delta = action_deformation(time, 1, [-1, 0.5, 0.2, 1.0])
         observed = time <= 1
         for values in delta:
             np.testing.assert_allclose(values[observed], 0, atol=1e-12)
@@ -94,9 +94,34 @@ class TrajectoryBenchmarkTests(unittest.TestCase):
         first = search(self.scene, "action_uniform", self.config, 7)
         second = search(self.scene, "action_uniform", self.config, 7)
         self.assertEqual(first["trials"], second["trials"])
-        self.assertEqual(first["parameter_units"], "m/s^2")
+        self.assertEqual(first["parameter_names"], ["ax_mps2", "ay_mps2", "start_delay_s", "hold_s"])
         constrained = search(self.scene, "action_constrained_search", self.config, 7)
         self.assertLessEqual(constrained["evaluations"], self.config["budget_per_search"])
+
+    def test_risk_objective_ignores_prefix_and_uncontrolled_actor(self):
+        xy = np.asarray([actor["xy"] for actor in self.scene["actors"]], dtype=float)
+        velocity = np.asarray([actor["velocity"] for actor in self.scene["actors"]], dtype=float)
+        xy[1, 0] = xy[0, 0]  # Historical target overlap is outside the controllable future.
+        metrics = risk_metrics(self.scene, xy, velocity, prefix_s=1, collision_substeps=4)
+        self.assertTrue(metrics["collision"])
+        self.assertFalse(metrics["target_future_collision"])
+        self.assertGreater(metrics["target_future_min_clearance_m"], 0)
+
+    def test_between_frame_collision_is_detected(self):
+        first = np.array([[-2.0, 0.0], [2.0, 0.0]])
+        second = np.array([[0.0, -2.0], [0.0, 2.0]])
+        self.assertTrue(np.all(box_clearance(first, second, [1, 1], np.array([1, 1])) > 0))
+        scene = synthetic_scene()
+        scene["time"] = [0.0, 1.0]
+        scene["actors"] = [dict(scene["actors"][0], xy=first.tolist(), velocity=[[4, 0], [4, 0]],
+                                acceleration=[[0, 0], [0, 0]]),
+                           dict(scene["actors"][1], xy=second.tolist(), velocity=[[0, 4], [0, 4]],
+                                acceleration=[[0, 0], [0, 0]], length=1, width=1)]
+        scene["actors"][0]["length"] = scene["actors"][0]["width"] = 1
+        metrics = risk_metrics(scene, np.array([first, second]),
+                               np.array([[[4, 0], [4, 0]], [[0, 4], [0, 4]]]),
+                               prefix_s=-1, collision_substeps=4)
+        self.assertTrue(metrics["collision"])
 
     def test_cav_reacts_after_prefix(self):
         xy, velocity, _ = deform_scene(self.scene, [0, 0], self.config)
