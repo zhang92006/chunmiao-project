@@ -1,9 +1,11 @@
 # Scenario Reconstruction
 
-This folder defines the accident template layer used before rebuilding cases in
-the project SUMO/NADE environment.
+This package defines the accident-template, perturbation, simulation, and
+Autoware-analysis layers used to rebuild cases in the project SUMO/NADE
+environment. Repository installation instructions and dependency information
+are in the root `README.md`.
 
-The first implementation step is intentionally small:
+Main components:
 
 - `templates.py` defines the machine-readable template schema.
 - `templates/autoware_cut_in.yaml` is a starter accident template.
@@ -41,12 +43,6 @@ The generated `episodes/` folder contains `crash/`, `tested_and_safe/`,
 `crash_weight_dict.json`, and `safe_weight_dict.json`. It can be checked with:
 
 ```bash
-python MultiBV_Data_Onboarding_Package/MultiBV_Data_Onboarding_Package/validate_multibv_dataset.py \
+python -m scenario_reconstruction.validate_training_env \
   data_analysis/raw_data/ScenarioReconstructionMultiBV/episodes
 ```
-
-Next implementation steps:
-
-1. Expand event execution beyond `forced_bv_action`.
-2. Add perturbation sampling for template variants.
-3. Add Autoware db3-to-template extraction.
