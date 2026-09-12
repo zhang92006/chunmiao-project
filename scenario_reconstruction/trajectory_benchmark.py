@@ -23,6 +23,8 @@ from .highd import file_hash, write_json
 
 
 RECONSTRUCTION_METHODS = ("linear", "cubic", "pchip", "smoothing_spline")
+SEARCH_METHODS = ("replay", "uniform", "constrained_search",
+                  "action_uniform", "action_constrained_search")
 
 
 def validate_benchmark_config(config):
@@ -31,7 +33,8 @@ def validate_benchmark_config(config):
             raise ValueError(f"{name} must be a positive integer")
     if not isinstance(config["seed"], int) or not 0 <= config["seed"] < 2**32:
         raise ValueError("seed must lie in [0, 2**32)")
-    positive = ("max_longitudinal_offset_m", "max_lateral_offset_m", "max_speed_mps",
+    positive = ("max_longitudinal_offset_m", "max_lateral_offset_m",
+                "max_longitudinal_action_delta_mps2", "max_lateral_action_delta_mps2", "max_speed_mps",
                 "max_abs_longitudinal_accel_mps2", "max_abs_lateral_accel_mps2", "max_abs_jerk_mps3")
     for name in positive:
         if not np.isfinite(config[name]) or config[name] <= 0:
@@ -102,12 +105,42 @@ def deformation(time, prefix, params):
     return tuple(smoothstep.deriv(order)(u)[:, None] * params / duration**order for order in range(3))
 
 
+def action_deformation(time, prefix, params):
+    """Integrate a smoothly introduced acceleration correction into v and xy."""
+    time = np.asarray(time, dtype=float)
+    params = np.asarray(params, dtype=float)
+    duration = time[-1] - prefix
+    if duration <= 0 or prefix < time[0] or params.shape != (2,) or not np.isfinite(params).all():
+        raise ValueError("Invalid action deformation")
+    u = np.clip((time - prefix) / duration, 0, 1)
+    gate = Polynomial([0, 0, 0, 10, -15, 6])(u)
+    acceleration = gate[:, None] * params
+    velocity = np.zeros_like(acceleration)
+    position = np.zeros_like(acceleration)
+    dt = np.diff(time)
+    velocity[1:] = np.cumsum((acceleration[:-1] + acceleration[1:]) * dt[:, None] / 2, axis=0)
+    position[1:] = np.cumsum((velocity[:-1] + velocity[1:]) * dt[:, None] / 2, axis=0)
+    return position, velocity, acceleration
+
+
 def deform_scene(scene, params, config):
     xy = np.array([actor["xy"] for actor in scene["actors"]], dtype=float)
     velocity = np.array([actor["velocity"] for actor in scene["actors"]], dtype=float)
     acceleration = np.array([actor["acceleration"] for actor in scene["actors"]], dtype=float)
     index = next(i for i, actor in enumerate(scene["actors"]) if actor["id"] == scene["changer_id"])
     delta = deformation(scene["time"], config["observed_prefix_s"], params)
+    xy[index] += delta[0]
+    velocity[index] += delta[1]
+    acceleration[index] += delta[2]
+    return xy, velocity, acceleration
+
+
+def deform_scene_action(scene, params, config):
+    xy = np.array([actor["xy"] for actor in scene["actors"]], dtype=float)
+    velocity = np.array([actor["velocity"] for actor in scene["actors"]], dtype=float)
+    acceleration = np.array([actor["acceleration"] for actor in scene["actors"]], dtype=float)
+    index = next(i for i, actor in enumerate(scene["actors"]) if actor["id"] == scene["changer_id"])
+    delta = action_deformation(scene["time"], config["observed_prefix_s"], params)
     xy[index] += delta[0]
     velocity[index] += delta[1]
     acceleration[index] += delta[2]
@@ -201,15 +234,21 @@ def risk_metrics(scene, xy, velocity):
             "first_collision_time_s": scene["time"][int(collisions[0])] if len(collisions) else None}
 
 
-def evaluate(scene, params, config):
-    xy, velocity, acceleration = deform_scene(scene, params, config)
+def evaluate(scene, params, config, parameterization="terminal_offset"):
+    if parameterization == "terminal_offset":
+        xy, velocity, acceleration = deform_scene(scene, params, config)
+    elif parameterization == "action_delta":
+        xy, velocity, acceleration = deform_scene_action(scene, params, config)
+    else:
+        raise ValueError(f"Unknown parameterization: {parameterization}")
     violations = physical_checks(scene, xy, velocity, acceleration, config)
     replay_xy = xy.copy()
     xy, velocity, comfort = rollout_idm(scene, xy, velocity, config)
     metrics = risk_metrics(scene, xy, velocity)
     original = np.asarray([actor["xy"] for actor in scene["actors"]])
     metrics.update(params=list(map(float, params)), feasible=not violations, violations=violations,
-                   intervention_l2_m=float(np.linalg.norm(params)),
+                   parameterization=parameterization, parameter_l2=float(np.linalg.norm(params)),
+                   parameter_units="m/s^2" if parameterization == "action_delta" else "m",
                    background_ade_m=float(np.mean(np.linalg.norm(replay_xy[1:] - original[1:], axis=-1))),
                    cav_jerk_rms_mps3=comfort)
     return metrics
@@ -217,30 +256,40 @@ def evaluate(scene, params, config):
 
 def ranking(result, config):
     if result["collision"]:
-        return (0, result["intervention_l2_m"])
-    return (1, result["min_clearance_m"] + config["intervention_penalty"] * result["intervention_l2_m"])
+        return (0, result["parameter_l2"])
+    return (1, result["min_clearance_m"] + config["intervention_penalty"] * result["parameter_l2"])
 
 
 def search(scene, method, config, seed):
     """Same bounded parameter space and max evaluation budget; no hidden GT scoring."""
     budget = int(config["budget_per_search"])
-    bounds = np.array([config["max_longitudinal_offset_m"], config["max_lateral_offset_m"]])
+    if method in {"replay", "uniform", "constrained_search"}:
+        parameterization = "terminal_offset"
+        bounds = np.array([config["max_longitudinal_offset_m"], config["max_lateral_offset_m"]])
+        algorithm = method
+    elif method in {"action_uniform", "action_constrained_search"}:
+        parameterization = "action_delta"
+        bounds = np.array([config["max_longitudinal_action_delta_mps2"],
+                           config["max_lateral_action_delta_mps2"]])
+        algorithm = "uniform" if method == "action_uniform" else "constrained_search"
+    else:
+        raise ValueError(f"Unknown baseline: {method}")
     if budget < 1 or np.any(bounds <= 0) or not np.isfinite(bounds).all():
         raise ValueError("Search budget and offset bounds must be positive")
     started, trials, best = clock.perf_counter(), [], None
 
     def trial(params):
         nonlocal best
-        result = evaluate(scene, params, config)
+        result = evaluate(scene, params, config, parameterization)
         trials.append(result)
         if result["feasible"] and (best is None or ranking(result, config) < ranking(best, config)):
             best = result
 
     trial(np.zeros(2))  # Common replay reference; no candidate is forced to be dangerous.
-    if method == "uniform":
+    if algorithm == "uniform":
         for params in np.random.default_rng(seed).uniform(-bounds, bounds, size=(budget - 1, 2)):
             trial(params)
-    elif method == "constrained_search":
+    elif algorithm == "constrained_search":
         step, anchor, seen = bounds / 2, np.zeros(2), {(0.0, 0.0)}
         while len(trials) < budget and np.max(step / bounds) > 1e-5:
             old_best = best
@@ -259,9 +308,9 @@ def search(scene, method, config, seed):
                 step /= 2
             if best is not None:
                 anchor = np.array(best["params"])
-    elif method != "replay":
-        raise ValueError(f"Unknown baseline: {method}")
-    return {"method": method, "seed": seed, "evaluations": len(trials),
+    return {"method": method, "parameterization": parameterization,
+            "parameter_units": "m/s^2" if parameterization == "action_delta" else "m",
+            "parameter_bounds": bounds.tolist(), "seed": seed, "evaluations": len(trials),
             "feasible_candidates": sum(item["feasible"] for item in trials),
             "violation_counts": dict(Counter(reason for item in trials for reason in item["violations"])),
             "selected": best, "elapsed_s": clock.perf_counter() - started,
@@ -413,7 +462,7 @@ def run_benchmark(manifest_path, output, config, split="validation", allow_test=
         result = {"scene_id": scene["scene_id"], "recording_id": scene["recording_id"],
                   "location_id": scene["location_id"], "split": split,
                   "interaction_stratum": scene["interaction"]["stratum"]}
-        result["baselines"] = [search(scene, method, config, seed) for method in ("replay", "uniform", "constrained_search")]
+        result["baselines"] = [search(scene, method, config, seed) for method in SEARCH_METHODS]
         result["reconstruction"] = reconstruction_pilot(scene, config, seed)
         for protocol in config["missing_protocols"]:
             for method in RECONSTRUCTION_METHODS:
@@ -433,7 +482,7 @@ def run_benchmark(manifest_path, output, config, split="validation", allow_test=
                "test_lock_overridden": bool(split == "test" and allow_test),
                "interaction_strata": dict(Counter(r["interaction_stratum"] for r in results)),
                "baselines": {}, "reconstruction": {}, "calibration": calibration}
-    for method in ("replay", "uniform", "constrained_search"):
+    for method in SEARCH_METHODS:
         runs = [next(b for b in result["baselines"] if b["method"] == method) for result in results]
         chosen = [run["selected"] for run in runs if run["selected"] is not None]
         summary["baselines"][method] = {
@@ -442,7 +491,8 @@ def run_benchmark(manifest_path, output, config, split="validation", allow_test=
             "candidate_evaluations": sum(run["evaluations"] for run in runs),
             "feasible_candidates": sum(run["feasible_candidates"] for run in runs),
             "mean_selected_clearance_m": float(np.mean([item["min_clearance_m"] for item in chosen])) if chosen else None,
-            "mean_selected_intervention_l2_m": float(np.mean([item["intervention_l2_m"] for item in chosen])) if chosen else None,
+            "mean_selected_parameter_l2": float(np.mean([item["parameter_l2"] for item in chosen])) if chosen else None,
+            "parameter_units": runs[0]["parameter_units"],
             "elapsed_s": sum(run["elapsed_s"] for run in runs),
             "violation_counts": dict(sum((Counter(run["violation_counts"]) for run in runs), Counter())),
         }
@@ -454,7 +504,8 @@ def run_benchmark(manifest_path, output, config, split="validation", allow_test=
             summary["baselines"][method]["by_interaction_stratum"][stratum] = {
                 "attempted_scenes": len(stratum_runs), "collision_scenes": sum(bool(x["collision"]) for x in selected),
                 "mean_selected_clearance_m": float(np.mean([x["min_clearance_m"] for x in selected])) if selected else None,
-                "mean_selected_intervention_l2_m": float(np.mean([x["intervention_l2_m"] for x in selected])) if selected else None,
+                "mean_selected_parameter_l2": float(np.mean([x["parameter_l2"] for x in selected])) if selected else None,
+                "parameter_units": stratum_runs[0]["parameter_units"],
             }
     for protocol in config["missing_protocols"]:
         name = protocol["name"]

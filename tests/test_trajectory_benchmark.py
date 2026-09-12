@@ -5,7 +5,7 @@ import unittest
 import numpy as np
 
 from scenario_reconstruction.trajectory_benchmark import (
-    box_clearance, conformal_radius, deformation, deform_scene, evaluate,
+    action_deformation, box_clearance, conformal_radius, deformation, deform_scene, evaluate,
     make_masked_evidence, reconstruct, risk_metrics, rollout_idm, run_benchmark,
     search, validate_scene, validate_benchmark_config,
 )
@@ -82,6 +82,21 @@ class TrajectoryBenchmarkTests(unittest.TestCase):
         optimized = search(self.scene, "constrained_search", self.config, 7)
         self.assertLessEqual(optimized["evaluations"], self.config["budget_per_search"])
         self.assertTrue(optimized["selected"]["feasible"])
+
+    def test_action_space_deformation_and_search(self):
+        time = np.asarray(self.scene["time"])
+        delta = action_deformation(time, 1, [-1, 0.5])
+        observed = time <= 1
+        for values in delta:
+            np.testing.assert_allclose(values[observed], 0, atol=1e-12)
+        self.assertLess(delta[1][-1, 0], 0)
+        self.assertGreater(delta[0][-1, 1], 0)
+        first = search(self.scene, "action_uniform", self.config, 7)
+        second = search(self.scene, "action_uniform", self.config, 7)
+        self.assertEqual(first["trials"], second["trials"])
+        self.assertEqual(first["parameter_units"], "m/s^2")
+        constrained = search(self.scene, "action_constrained_search", self.config, 7)
+        self.assertLessEqual(constrained["evaluations"], self.config["budget_per_search"])
 
     def test_cav_reacts_after_prefix(self):
         xy, velocity, _ = deform_scene(self.scene, [0, 0], self.config)

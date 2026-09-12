@@ -4,6 +4,8 @@
   "observed_prefix_s": 1.0,
   "max_longitudinal_offset_m": 8.0,
   "max_lateral_offset_m": 0.8,
+  "max_longitudinal_action_delta_mps2": 3.0,
+  "max_lateral_action_delta_mps2": 1.5,
   "max_speed_mps": 60.0,
   "max_abs_longitudinal_accel_mps2": 6.0,
   "max_abs_lateral_accel_mps2": 3.0,
