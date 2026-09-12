@@ -1,0 +1,93 @@
+{
+  "source_commit": "df4939ef7ac0d546bdaa1a2054c70a11895a66a1",
+  "dataset": "highD-v1.0",
+  "config": {
+    "dataset": "highD-v1.0",
+    "seed": 7,
+    "splits": {
+      "train": [
+        "01",
+        "02"
+      ],
+      "validation": [
+        "03"
+      ],
+      "test": [
+        "04"
+      ]
+    },
+    "seconds_before": 2,
+    "seconds_after": 2,
+    "max_scenes_per_recording": 12,
+    "max_agents": 4,
+    "require_lane_stable_cav": true,
+    "max_neighbor_distance_m": 80,
+    "frame_stride": 1
+  },
+  "license_notice": "Local licensed use only; do not commit source or derived trajectories.",
+  "recordings": [
+    {
+      "recording_id": "01",
+      "split": "train",
+      "candidate_events": 138,
+      "exported": 12,
+      "rejected_before_limit": {
+        "no_target_follower": 8,
+        "incomplete_primary_window": 15
+      },
+      "source_sha256": {
+        "01_tracks.csv": "f0f5a46026e58c0bc2a9d31ffab37f478eb9d4d5437421a3b3b2c0f754dbce2c",
+        "01_tracksMeta.csv": "691e033f5c585eea77b37f15e38cf7fb118d43e7ec438e29ca009325a896e79a",
+        "01_recordingMeta.csv": "a1288893fa8df0bc532dcf5a2b8e8735f13662c268fb58db283617b750bfcc60"
+      }
+    },
+    {
+      "recording_id": "02",
+      "split": "train",
+      "candidate_events": 123,
+      "exported": 12,
+      "rejected_before_limit": {
+        "no_target_follower": 11,
+        "incomplete_primary_window": 9
+      },
+      "source_sha256": {
+        "02_tracks.csv": "ba008c732fc6de257f044f59b8ff2508575fc338ad44e1d699a193ab0e644eb2",
+        "02_tracksMeta.csv": "1bbe4c04fc4f68478993759ce93e0c43c65889f152260fea86e1463b1145a8d2",
+        "02_recordingMeta.csv": "f8aad0e5f9ebfbbc7e86fb1174dab2e9937ae4384adc04dd73f0bfca3927ca3b"
+      }
+    },
+    {
+      "recording_id": "03",
+      "split": "validation",
+      "candidate_events": 116,
+      "exported": 12,
+      "rejected_before_limit": {
+        "incomplete_primary_window": 12,
+        "no_target_follower": 10,
+        "target_follower_out_of_range": 2
+      },
+      "source_sha256": {
+        "03_tracks.csv": "28fb1938287f03975f38bea5c6f8d2fabe2a964f11287a48c38fbdc758524958",
+        "03_tracksMeta.csv": "0051fb82678076a8ba511cc0e13b3e2785ffdd3a4d8ead645af99aba20583f24",
+        "03_recordingMeta.csv": "9250b0d3c1623c9a86c51bdca760c0e34e64ed2e98df189eec0b07dc8a0b8f20"
+      }
+    },
+    {
+      "recording_id": "04",
+      "split": "test",
+      "candidate_events": 256,
+      "exported": 12,
+      "rejected_before_limit": {
+        "incomplete_primary_window": 10,
+        "no_target_follower": 25,
+        "target_follower_changes_lane": 2,
+        "target_follower_out_of_range": 7
+      },
+      "source_sha256": {
+        "04_tracks.csv": "54d37516b9234fdd441ea0c976d692165be96373072685da636b2d4088a0396a",
+        "04_tracksMeta.csv": "956b9aad0da6ade6030e3847c5253a14b1a83d7da9a6a35a420ebcd760d557b7",
+        "04_recordingMeta.csv": "225a3ae33c46aad4053a4d4ae5f718d35a49d08f03ce704c7fc9e622e5b80340"
+      }
+    }
+  ]
+}

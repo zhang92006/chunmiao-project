@@ -1,0 +1,98 @@
+{
+  "source_commit": "df4939ef7ac0d546bdaa1a2054c70a11895a66a1",
+  "split": "validation",
+  "scene_count": 12,
+  "recording_count": 1,
+  "config": {
+    "seed": 7,
+    "budget_per_search": 24,
+    "observed_prefix_s": 1,
+    "max_longitudinal_offset_m": 8,
+    "max_lateral_offset_m": 0.8,
+    "max_speed_mps": 60,
+    "max_abs_longitudinal_accel_mps2": 6,
+    "max_abs_lateral_accel_mps2": 3,
+    "max_abs_jerk_mps3": 15,
+    "intervention_penalty": 0.2,
+    "idm": {
+      "desired_speed_mps": 35,
+      "time_headway_s": 1.5,
+      "min_gap_m": 5,
+      "accel_mps2": 2,
+      "brake_mps2": 4
+    },
+    "missing_interval_s": [
+      1.25,
+      2.75
+    ],
+    "completion_samples": 32,
+    "completion_spread_m": [
+      1,
+      0.3
+    ]
+  },
+  "manifest_sha256": "2317a62d08957e42e4d2d636e04129dba3a7caa973145f61f08e84757cba3d1b",
+  "python": "3.10.4",
+  "numpy": "1.22.4",
+  "scipy": "1.9.0",
+  "implementation_sha256": "9b6529577550a02e165b9388f3d52968f3bad6068a064ba5101e731e8ece082e",
+  "scope": "Kinematic screening: open-loop BVs, lane-fixed IDM CAV, sampled axis-aligned box collisions",
+  "baselines": {
+    "replay": {
+      "attempted_scenes": 12,
+      "scenes_with_feasible_candidate": 12,
+      "collision_scenes": 0,
+      "candidate_evaluations": 12,
+      "feasible_candidates": 12,
+      "mean_selected_clearance_m": 12.883531866930289,
+      "mean_selected_intervention_l2_m": 0,
+      "elapsed_s": 0.028077100001610233,
+      "violation_counts": {}
+    },
+    "uniform": {
+      "attempted_scenes": 12,
+      "scenes_with_feasible_candidate": 12,
+      "collision_scenes": 0,
+      "candidate_evaluations": 288,
+      "feasible_candidates": 257,
+      "mean_selected_clearance_m": 12.741053883630586,
+      "mean_selected_intervention_l2_m": 0.4659755656304039,
+      "elapsed_s": 0.6449853999984043,
+      "violation_counts": {
+        "jerk": 31,
+        "longitudinal_acceleration": 1
+      }
+    },
+    "constrained_search": {
+      "attempted_scenes": 12,
+      "scenes_with_feasible_candidate": 12,
+      "collision_scenes": 0,
+      "candidate_evaluations": 288,
+      "feasible_candidates": 288,
+      "mean_selected_clearance_m": 12.75626856483906,
+      "mean_selected_intervention_l2_m": 0.0674755614195902,
+      "elapsed_s": 0.6501330999999482,
+      "violation_counts": {}
+    }
+  },
+  "reconstruction": {
+    "linear": {
+      "mean_hidden_ade_m": 0.0667063483652176
+    },
+    "cubic": {
+      "mean_hidden_ade_m": 0.05964507219799208
+    },
+    "pchip": {
+      "mean_hidden_ade_m": 0.04437078022010971
+    },
+    "uncalibrated_envelope": {
+      "mean_joint_pointwise_coverage": 0.8468468468468467,
+      "mean_width_xy_m": [
+        1.3863771960518987,
+        0.4028021941106675
+      ],
+      "warning": "Sensitivity diagnostic only; not a calibrated confidence interval"
+    }
+  },
+  "source_velocity_consistency_rmse_mps_mean": 0.1049488783350605
+}

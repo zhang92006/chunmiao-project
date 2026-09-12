@@ -62,6 +62,12 @@ See [科研提升路线图](docs/科研提升路线图.md) for the literature co
 implementation order and publication requirements. Historical notes under the
 package directory may describe superseded probability/training behavior.
 
+The [trajectory benchmark guide](docs/轨迹基准使用说明.md) documents local highD
+export and replay/uniform/constrained-search screening, plus masked-trajectory
+interpolation baselines. See [implementation results](docs/实施记录.md) for tested
+behavior, pilot numbers, and limitations. These baselines use a lightweight
+lane-fixed IDM response, not a complete SUMO/Autoware planner evaluation.
+
 ## Batch reconstruction
 
 ```bash
