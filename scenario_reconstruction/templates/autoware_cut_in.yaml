@@ -1,13 +1,13 @@
 template_id: autoware_cut_in_run01
 description: >
-  Reconstruct a two-lane highway cut-in accident seed from Autoware bag data.
+  Hand-authored two-lane highway cut-in demonstration, NOT verified Autoware accident reconstruction.
   The actor starts in the right lane ahead of the CAV and is forced to merge
   left while the CAV continues with IDM control.
 map: 2Lane
 route: route_0
 duration: 12.0
 tags:
-  - autoware
+  - synthetic_demo
   - cut_in
   - two_lane_highway
 
@@ -45,14 +45,6 @@ events:
       lateral: left
       longitudinal: 0.0
       apply_once: false
-      multi_bv_num: 2
-      epsilon_placeholder: [0.5, 0.5]
-  - type: perception_dropout
-    actor: BV_cut_in
-    start_time: 0.0
-    duration: 0.5
-    params:
-      target: CAV
 
 perturbations:
   - field: ego.speed

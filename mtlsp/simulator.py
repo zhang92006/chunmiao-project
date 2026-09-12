@@ -42,8 +42,10 @@ class Simulator(object):
         input_path=None,
         experiment_path=None,
         output=None,
-        config={"max_obs_range": 115}):
+        config={"max_obs_range": 115},
+        seed=None):
         self.env = None
+        self.seed = seed
         self.sumo_net_file_path = sumo_net_file_path
         self.sumo_config_file_path = sumo_config_file_path
         self.gui_flag = gui_flag
@@ -147,7 +149,8 @@ class Simulator(object):
         """Start SUMO simulation or initialize environment.
         """        
         if self.sumo_control_state:
-            sumoCmd = [self.sumo_binary, "-c", self.sumo_config_file_path, "--step-length", str(self.step_size), "--random", "--collision.mingap-factor", "0", "--collision.action", "warn"]
+            sumoCmd = [self.sumo_binary, "-c", self.sumo_config_file_path, "--step-length", str(self.step_size), "--collision.mingap-factor", "0", "--collision.action", "warn"]
+            sumoCmd += ["--random"] if self.seed is None else ["--seed", str(self.seed)]
             if self.sublane_flag:
                 sumoCmd += ["--lateral-resolution", "0.25"]
             elif self.step_size < self.lc_duration:
@@ -248,8 +251,10 @@ class Simulator(object):
         self.split_run_flag = True
         self.episode = episode
         self.start()
-        self.soft_run()
-        self.stop()
+        try:
+            self.soft_run()
+        finally:
+            self.stop()
 
     def stop(self):
         """Close SUMO simulation.

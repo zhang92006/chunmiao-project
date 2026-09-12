@@ -4,6 +4,8 @@ import argparse
 import json
 from pathlib import Path
 
+from .likelihood import has_supported_likelihoods
+
 
 def prepare_crash_weight_dict(
     experiment_path: str | Path,
@@ -52,6 +54,10 @@ def prepare_safe_weight_dict(
 
     safe_weight_dict: dict[str, list[float]] = {}
     for safe_json_path in sorted(safe_dir.glob("*.json")):
+        with safe_json_path.open("r", encoding="utf-8") as stream:
+            episode = json.load(stream)
+        if not has_supported_likelihoods(episode):
+            continue
         if multi_bv:
             with safe_json_path.open("r", encoding="utf-8") as stream:
                 episode = json.load(stream)
@@ -73,6 +79,8 @@ def _is_training_ready_episode(
     multi_bv: bool = False,
     agent_num: int = 2,
 ) -> bool:
+    if multi_bv or not has_supported_likelihoods(episode):
+        return False
     weight_step_info = episode.get("weight_step_info", {})
     drl_obs_step_info = episode.get("drl_obs_step_info", {})
     criticality_step_info = episode.get("criticality_step_info", {})

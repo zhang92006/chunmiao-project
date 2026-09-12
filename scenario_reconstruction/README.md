@@ -30,19 +30,25 @@ Run:
 python -m scenario_reconstruction.validate_template scenario_reconstruction/templates/autoware_cut_in.yaml
 ```
 
-Generate MultiBV K=2 training data from variants:
+Generate scenario diagnostic episodes from variants (not likelihood-valid training data):
 
 ```bash
 python -m scenario_reconstruction.run_batch scenario_reconstruction/templates/autoware_cut_in.yaml \
   --count 100 \
-  --output_root data_analysis/raw_data/ScenarioReconstructionMultiBV \
-  --multi_bv_num 2
+  --output_root data_analysis/raw_data/ScenarioReconstructionDiagnostics --seed 7
 ```
 
-The generated `episodes/` folder contains `crash/`, `tested_and_safe/`,
-`crash_weight_dict.json`, and `safe_weight_dict.json`. It can be checked with:
+All completed episodes are retained, including non-critical safe runs. Training
+weight dictionaries are intentionally empty for template-initialized scenarios:
+there is no derived importance ratio for their initialization or scripted actions.
+The legacy 10-D/one-action training environment rejects joint MultiBV records.
+`weight_result=null` means unavailable, not a zero collision probability.
 
-```bash
-python -m scenario_reconstruction.validate_training_env \
-  data_analysis/raw_data/ScenarioReconstructionMultiBV/episodes
-```
+Only `forced_bv_action` currently has a tested execution path. Other fault names
+remain in the descriptive schema, but runtime validation rejects them. Use
+`validate_template --schema_only` only when inspecting an unimplemented description.
+The example is hand-authored, not a verified reconstruction of the Autoware bag.
+
+See [the research roadmap](../docs/科研提升路线图.md). Earlier implementation and
+experiment notes in this directory are historical; their heuristic training
+weights and first-agent MultiBV projection are no longer supported.

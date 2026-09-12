@@ -39,6 +39,10 @@ class NADEInfoExtractor(InfoExtractor):
             return None
         if stop:
             self.episode_log["episode_info"] = self.env.episode_info
+            self.episode_log["termination_reason"] = reason
+            scenario_metadata = getattr(self.env, "scenario_metadata", None)
+            if scenario_metadata is not None:
+                self.episode_log["scenario_metadata"] = scenario_metadata
             if 1 in reason:  # have crash
                 self.episode_log["collision_result"] = 1
                 self.episode_log["collision_id"] = additional_info["collision_id"]
@@ -68,18 +72,18 @@ class NADEInfoExtractor(InfoExtractor):
                 save_dir = os.path.join(self.save_dir, "crash")
                 with open(save_dir + "/"+str(self.episode_log["episode_info"]["id"]) + ".json", 'w') as json_file:
                     json_file.write(json_str)
-                self.weight_result = float(self.episode_log["weight_episode"])
+                self.weight_result = None if scenario_metadata is not None else float(self.episode_log["weight_episode"])
             #     # print("CRASH WEIGHT RESULT:", self.weight_result)
             else:
                 save_dir = os.path.join(self.save_dir, "tested_and_safe")
-                if self.meet_log_criteria(self.episode_log["ttc_step_info"], self.episode_log["distance_step_info"]):
+                if all_log_flag or self.meet_log_criteria(self.episode_log["ttc_step_info"], self.episode_log["distance_step_info"]):
                     with open(save_dir + "/"+str(self.episode_log["episode_info"]["id"]) + ".json", 'w') as json_file:
                         json_file.write(json_str)
                 else:
                     file = os.path.join(self.env.simulator.experiment_path, "crash", self.env.simulator.output_filename+"."+"fcd.xml")
                     if os.path.isfile(file):
                         os.remove(file)
-                self.weight_result = 0
+                self.weight_result = None if scenario_metadata is not None else 0
             # total_criticality = sum(self.episode_log["criticality_step_info"].values())
             # if total_criticality > 0: # this episode have criticality
             #     with open(save_dir + "/"+str(self.episode_log["episode_info"]["id"]) + ".json", 'w') as json_file:

@@ -28,6 +28,7 @@ import random
 import json
 import numpy as np
 import logging
+from scenario_reconstruction.likelihood import require_single_bv_likelihoods
 
 
 class D2RLTrainingEnv(core.Env):
@@ -83,6 +84,7 @@ class D2RLTrainingEnv(core.Env):
 		return self._reset(episode_data_path)
 
 	def filter_episode_data(self, episode_data):
+		require_single_bv_likelihoods(episode_data)
 		invalid_timestep_list = []
 		for timestep in episode_data["weight_step_info"]:
 			weight = self._joint_value(episode_data["weight_step_info"][timestep])
@@ -155,19 +157,16 @@ class D2RLTrainingEnv(core.Env):
 
 	@staticmethod
 	def _joint_value(record):
-		"""Return a scalar from either legacy or MultiBV step records."""
+		"""Read a legacy scalar; joint-policy ratios need a different environment."""
 		if isinstance(record, dict):
-			return float(record["joint"])
+			raise ValueError("MultiBV joint likelihoods cannot be used with a single-BV action")
 		return float(record)
 
 	@staticmethod
 	def _primary_observation(record):
-		"""Project MultiBV observations to the legacy 10-D primary-agent view."""
+		"""Reject silent loss of other agents' observations."""
 		if isinstance(record, dict):
-			per_agent = record.get("per_agent", [])
-			if not per_agent:
-				raise ValueError("MultiBV observation has no per_agent entries")
-			return per_agent[0]
+			raise ValueError("MultiBV observations require a joint-policy training environment")
 		return record
 
 	def get_multiple_adv_action_num(self, weight_info):
@@ -204,7 +203,7 @@ class D2RLTrainingEnv(core.Env):
 				weight = self._joint_value(weight_info[timestep])
 				epsilon = epsilon_info[timestep]
 				if isinstance(epsilon, list):
-					epsilon = epsilon[0]
+					raise ValueError("MultiBV epsilon list cannot be projected to the first agent")
 				if weight > 1:
 					total_q_amplifier = total_q_amplifier * (1/epsilon)
 				elif weight < 0.999:

@@ -44,6 +44,24 @@ The first command validates the template without starting SUMO. The second runs
 one headless SUMO episode and writes generated data under the ignored
 `data_analysis/raw_data/` directory.
 
+The example is a synthetic cut-in demonstration, not validated Autoware accident
+ground truth. Perception/control fault descriptions without an implemented runtime
+are rejected. Runs fix Python/NumPy/PyTorch/SUMO seeds (`--seed`, default 0), honor
+the template duration, and retain all safe outcomes. Use a fresh output directory
+for each experiment; existing episode files are not overwritten.
+
+Template initialization and scripted interventions have no derived importance
+likelihood ratio. Their returned `weight_result` is `null`; upstream weights in
+logs are diagnostics, not valid D2RL training weights or road crash probabilities.
+The legacy single-BV trainer now rejects MultiBV joint records rather than silently
+using only the first agent.
+
+## Research plan
+
+See [科研提升路线图](docs/科研提升路线图.md) for the literature comparison,
+implementation order and publication requirements. Historical notes under the
+package directory may describe superseded probability/training behavior.
+
 ## Batch reconstruction
 
 ```bash
@@ -68,4 +86,3 @@ without an API key using `--no_llm`.
 
 Detailed implementation and experiment notes are under
 `scenario_reconstruction/`.
-

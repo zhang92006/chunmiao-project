@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 import json
+import math
 from pathlib import Path
 from typing import Any
 
@@ -96,7 +97,7 @@ class ScenarioTemplate:
     def validate(self) -> None:
         if self.map != "2Lane":
             raise ValueError("Only map='2Lane' is supported by the current SUMO setup.")
-        if self.duration <= 0:
+        if not math.isfinite(self.duration) or self.duration <= 0:
             raise ValueError("duration must be positive.")
 
         vehicle_ids = {self.ego.id}
@@ -106,6 +107,8 @@ class ScenarioTemplate:
             vehicle_ids.add(actor.id)
 
         for vehicle in [self.ego, *self.actors]:
+            if not all(math.isfinite(x) for x in (vehicle.speed, vehicle.position)):
+                raise ValueError(f"{vehicle.id}: state must be finite")
             if vehicle.speed < 0:
                 raise ValueError(f"{vehicle.id}.speed must be non-negative.")
             if vehicle.position < 0:
@@ -114,6 +117,8 @@ class ScenarioTemplate:
                 raise ValueError(f"{vehicle.id}.lane_index must be 0 or 1 for 2Lane.")
 
         for event in self.events:
+            if not all(math.isfinite(x) for x in (event.start_time, event.duration)):
+                raise ValueError("Event timing must be finite")
             if event.actor not in vehicle_ids:
                 raise ValueError(f"Event actor does not exist: {event.actor}")
             if event.start_time < 0:
@@ -128,8 +133,26 @@ class ScenarioTemplate:
         for item in self.perturbations:
             if item.distribution != "uniform":
                 raise ValueError("Only uniform perturbations are supported for now.")
-            if item.low > item.high:
+            if not all(math.isfinite(x) for x in (item.low, item.high)) or item.low > item.high:
                 raise ValueError(f"Invalid perturbation range for {item.field}.")
+
+    def validate_runtime(self) -> None:
+        """Keep the descriptive schema, but never silently execute unsupported faults."""
+        self.validate()
+        if self.ego.id != "CAV" or self.ego.controller != "IDM":
+            raise ValueError("Current runtime requires ego id CAV and controller IDM")
+        for event in self.events:
+            if event.type != "forced_bv_action":
+                raise ValueError(f"{event.type} is schema-only: no tested runtime injection exists")
+            if event.actor == self.ego.id:
+                raise ValueError("forced_bv_action must target a background vehicle")
+            if event.params.get("lateral", "central") not in {"left", "right", "central"}:
+                raise ValueError("Invalid forced lateral action")
+            acceleration = float(event.params.get("longitudinal", 0.0))
+            if not math.isfinite(acceleration) or not -4 <= acceleration <= 2:
+                raise ValueError("Forced acceleration must be finite and within [-4, 2] m/s^2")
+            if any(name in event.params for name in ("ndd_possi", "training_weight", "epsilon_placeholder")):
+                raise ValueError("Scripted events must not specify fabricated likelihoods or training weights")
 
 
 def load_template(path: str | Path) -> ScenarioTemplate:
