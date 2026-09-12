@@ -1,0 +1,32 @@
+# Python caches and local environments
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
+.env
+
+# Editors and operating systems
+.vscode/
+.idea/
+.DS_Store
+
+# Generated scenario and experiment artifacts
+data_analysis/raw_data/
+outputs/
+results/raw/
+runs/
+wandb/
+scenario_reconstruction/generated_templates*/
+
+# Model artifacts
+checkpoints/
+*.pt
+*.pth
+*.ckpt
+
+# Local Autoware recordings and databases
+*.db3
+metadata.yaml
+
