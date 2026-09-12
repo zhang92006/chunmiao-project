@@ -17,13 +17,16 @@ import time as clock
 import numpy as np
 import scipy
 from numpy.polynomial import Polynomial
-from scipy.interpolate import CubicSpline, PchipInterpolator
+from scipy.interpolate import CubicSpline, PchipInterpolator, UnivariateSpline
 
 from .highd import file_hash, write_json
 
 
+RECONSTRUCTION_METHODS = ("linear", "cubic", "pchip", "smoothing_spline")
+
+
 def validate_benchmark_config(config):
-    for name in ("budget_per_search", "completion_samples"):
+    for name in ("budget_per_search",):
         if isinstance(config[name], bool) or int(config[name]) != config[name] or config[name] < 1:
             raise ValueError(f"{name} must be a positive integer")
     if not isinstance(config["seed"], int) or not 0 <= config["seed"] < 2**32:
@@ -38,11 +41,29 @@ def validate_benchmark_config(config):
             raise ValueError(f"{name} must be finite and nonnegative")
     if not all(np.isfinite(v) and v > 0 for v in config["idm"].values()):
         raise ValueError("IDM parameters must be finite and positive")
-    gap, spread = np.asarray(config["missing_interval_s"]), np.asarray(config["completion_spread_m"])
-    if gap.shape != (2,) or not np.isfinite(gap).all() or not 0 <= gap[0] < gap[1]:
-        raise ValueError("Missing interval must be a finite increasing pair")
-    if spread.shape != (2,) or not np.isfinite(spread).all() or np.any(spread <= 0):
-        raise ValueError("Completion spreads must be a finite positive pair")
+    alpha = config.get("conformal_alpha")
+    if not np.isfinite(alpha) or not 0 < alpha < 1:
+        raise ValueError("conformal_alpha must lie strictly between zero and one")
+    protocols = config.get("missing_protocols", [])
+    names = [protocol.get("name") for protocol in protocols]
+    if not protocols or any(not name for name in names) or len(set(names)) != len(names):
+        raise ValueError("Missing protocols need unique non-empty names")
+    for protocol in protocols:
+        if protocol.get("mode") not in {"block", "intermittent"}:
+            raise ValueError(f"Unsupported missing mode: {protocol.get('mode')}")
+        noise = np.asarray(protocol.get("position_noise_std_m", [0, 0]), dtype=float)
+        if noise.shape != (2,) or not np.isfinite(noise).all() or np.any(noise < 0):
+            raise ValueError("Position noise must be a finite nonnegative x/y pair")
+        if protocol["mode"] == "block":
+            gap = np.asarray(protocol.get("interval_s"), dtype=float)
+            if gap.shape != (2,) or not np.isfinite(gap).all() or not 0 <= gap[0] < gap[1]:
+                raise ValueError("Block interval must be a finite increasing pair")
+        else:
+            probability = protocol.get("missing_probability")
+            margin = protocol.get("interior_margin_s")
+            if (not np.isfinite(probability) or not 0 < probability < 1
+                    or not np.isfinite(margin) or margin < 0):
+                raise ValueError("Intermittent missingness needs probability in (0,1) and nonnegative margin")
 
 
 def validate_scene(scene):
@@ -247,7 +268,7 @@ def search(scene, method, config, seed):
             "trials": trials}
 
 
-def reconstruct(time, observed_xy, method):
+def reconstruct(time, observed_xy, method, noise_std=(0.0, 0.0)):
     """The function receives NaNs instead of hidden truth. Interior gaps only."""
     time, observed_xy = np.asarray(time), np.asarray(observed_xy, dtype=float)
     observed = np.isfinite(observed_xy).all(axis=1)
@@ -259,73 +280,146 @@ def reconstruct(time, observed_xy, method):
         result = CubicSpline(time[observed], observed_xy[observed], bc_type="natural")(time)
     elif method == "pchip":
         result = PchipInterpolator(time[observed], observed_xy[observed])(time)
+    elif method == "smoothing_spline":
+        noise_std = np.asarray(noise_std, dtype=float)
+        if noise_std.shape != (2,) or not np.isfinite(noise_std).all() or np.any(noise_std < 0):
+            raise ValueError("noise_std must be a finite nonnegative x/y pair")
+        result = np.column_stack([
+            UnivariateSpline(time[observed], observed_xy[observed, dimension],
+                             k=min(3, int(observed.sum()) - 1),
+                             s=float(observed.sum() * noise_std[dimension] ** 2))(time)
+            for dimension in range(2)
+        ])
     else:
         raise ValueError(f"Unknown reconstruction method: {method}")
-    result[observed] = observed_xy[observed]
+    if method != "smoothing_spline" or not np.any(noise_std):
+        result[observed] = observed_xy[observed]
     return result
+
+
+def make_masked_evidence(time, truth, protocol, seed):
+    """Mask and then noise observations; reconstruction never receives hidden truth."""
+    time, truth = np.asarray(time), np.asarray(truth, dtype=float)
+    rng = np.random.default_rng(seed)
+    if protocol["mode"] == "block":
+        low, high = protocol["interval_s"]
+        hidden = (time >= low) & (time <= high)
+    else:
+        eligible = ((time >= time[0] + protocol["interior_margin_s"])
+                    & (time <= time[-1] - protocol["interior_margin_s"]))
+        hidden = eligible & (rng.random(len(time)) < protocol["missing_probability"])
+    hidden[[0, -1]] = False
+    if not hidden.any() or (~hidden).sum() < 4:
+        raise ValueError(f"Protocol {protocol['name']} does not leave a usable interpolation problem")
+    evidence = truth.copy()
+    noise_std = np.asarray(protocol.get("position_noise_std_m", [0, 0]), dtype=float)
+    evidence[~hidden] += rng.normal(size=((~hidden).sum(), 2)) * noise_std
+    evidence[hidden] = np.nan
+    return evidence, hidden
 
 
 def reconstruction_pilot(scene, config, seed):
     time = np.asarray(scene["time"])
     actor = next(actor for actor in scene["actors"] if actor["id"] == scene["changer_id"])
     truth = np.asarray(actor["xy"])
-    low, high = config["missing_interval_s"]
-    hidden = (time >= low) & (time <= high)
-    if not hidden.any() or hidden[0] or hidden[-1]:
-        raise ValueError("Missing interval must hide an interior part of the trajectory")
-    evidence = truth.copy()
-    evidence[hidden] = np.nan
-    results, completions = {}, {}
-    for method in ("linear", "cubic", "pchip"):
-        completion = reconstruct(time, evidence, method)
-        error = np.linalg.norm(completion[hidden] - truth[hidden], axis=-1)
-        results[method] = {"hidden_ade_m": float(np.mean(error)), "hidden_last_error_m": float(error[-1]),
-                           "observed_max_error_m": float(np.max(np.abs(completion[~hidden] - truth[~hidden])))}
-        completions[method] = completion
-    # An uncalibrated sensitivity envelope, NOT posterior uncertainty or a new method.
-    left = time[np.where(hidden)[0][0] - 1]
-    right = time[np.where(hidden)[0][-1] + 1]
-    u = np.clip((time - left) / (right - left), 0, 1)
-    bump = 64 * u**3 * (1 - u)**3
-    bump[~hidden] = 0
-    offsets = np.random.default_rng(seed).normal(size=(config["completion_samples"], 2)) * config["completion_spread_m"]
-    samples = completions["cubic"][None] + offsets[:, None, :] * bump[None, :, None]
-    q_low, q_high = np.quantile(samples[:, hidden], [0.05, 0.95], axis=0)
-    covered = np.all((truth[hidden] >= q_low) & (truth[hidden] <= q_high), axis=1)
-    results["uncalibrated_envelope"] = {"joint_pointwise_coverage": float(np.mean(covered)),
-        "mean_width_xy_m": np.mean(q_high - q_low, axis=0).tolist(),
-        "warning": "Hand-chosen Gaussian offsets; no physical filtering or calibrated posterior claim"}
+    results = {}
+    for index, protocol in enumerate(config["missing_protocols"]):
+        evidence, hidden = make_masked_evidence(time, truth, protocol, seed + 7919 * index)
+        protocol_results = {"hidden_points": int(hidden.sum()), "observed_points": int((~hidden).sum())}
+        for method in RECONSTRUCTION_METHODS:
+            completion = reconstruct(time, evidence, method, protocol.get("position_noise_std_m", [0, 0]))
+            error = np.linalg.norm(completion[hidden] - truth[hidden], axis=-1)
+            protocol_results[method] = {
+                "hidden_ade_m": float(np.mean(error)),
+                "last_hidden_error_m": float(error[-1]),
+                "max_hidden_error_m": float(np.max(error)),
+                "evidence_residual_max_m": float(np.max(np.linalg.norm(completion[~hidden] - evidence[~hidden], axis=-1))),
+            }
+        results[protocol["name"]] = protocol_results
     return results
 
 
-def run_benchmark(manifest_path, output, config, split="validation"):
+def conformal_radius(group_scores, alpha):
+    """Finite-sample split-conformal radius with recording as exchangeability unit."""
+    scores = np.sort(np.asarray(group_scores, dtype=float))
+    if not len(scores) or not np.isfinite(scores).all():
+        raise ValueError("Conformal calibration needs finite recording scores")
+    rank = int(np.ceil((len(scores) + 1) * (1 - alpha)))
+    if rank > len(scores):
+        raise ValueError("Too few calibration recordings for the requested alpha")
+    return float(scores[rank - 1]), rank
+
+
+def _load_manifest_scene(manifest_path, manifest, item, split):
+    path = (manifest_path.parent / item["path"]).resolve()
+    if not path.is_relative_to(manifest_path.parent.resolve()):
+        raise ValueError("Scene path escapes dataset directory")
+    if file_hash(path) != item["sha256"]:
+        raise ValueError(f"Scene checksum mismatch: {item['scene_id']}")
+    scene = json.loads(path.read_text(encoding="utf-8"))
+    validate_scene(scene)
+    allowed = {f"{int(rec):02d}" for rec in manifest["config"]["splits"][split]}
+    if (scene["split"] != split or scene["recording_id"] not in allowed
+            or scene["scene_id"] != item["scene_id"] or scene["recording_id"] != item["recording_id"]):
+        raise ValueError("Scene split disagrees with recording manifest")
+    return scene
+
+
+def scene_seed(scene_id, base_seed):
+    return (base_seed + int(hashlib.sha256(scene_id.encode()).hexdigest()[:8], 16)) % 2**32
+
+
+def run_benchmark(manifest_path, output, config, split="validation", allow_test=False):
     validate_benchmark_config(config)
+    if split == "test" and not allow_test:
+        raise ValueError("Test evaluation is locked; finish model selection, then pass allow_test=True once")
     manifest_path, output = Path(manifest_path), Path(output)
     if output.exists() and any(output.iterdir()):
         raise FileExistsError("Use a new output directory")
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     from .highd import validate_config
     validate_config(manifest["config"])
+    calibration_items = [item for item in manifest["scenes"] if item["split"] == "calibration"]
+    if not calibration_items:
+        raise ValueError("Manifest needs a recording-disjoint calibration split")
+    calibration_by_recording = {}
+    for item in calibration_items:
+        scene = _load_manifest_scene(manifest_path, manifest, item, "calibration")
+        reconstructed = reconstruction_pilot(scene, config, scene_seed(scene["scene_id"], config["seed"]))
+        for protocol in config["missing_protocols"]:
+            for method in RECONSTRUCTION_METHODS:
+                key = (protocol["name"], method, scene["recording_id"])
+                score = reconstructed[protocol["name"]][method]["max_hidden_error_m"]
+                calibration_by_recording[key] = max(score, calibration_by_recording.get(key, 0.0))
+    calibration = {}
+    calibration_recordings = sorted({item["recording_id"] for item in calibration_items})
+    for protocol in config["missing_protocols"]:
+        calibration[protocol["name"]] = {}
+        for method in RECONSTRUCTION_METHODS:
+            scores = [calibration_by_recording[(protocol["name"], method, rec)] for rec in calibration_recordings]
+            radius, rank = conformal_radius(scores, config["conformal_alpha"])
+            calibration[protocol["name"]][method] = {
+                "radius_m": radius, "rank": rank,
+                "recording_count": len(scores), "scene_count": len(calibration_items),
+                "calibration_score_min_m": float(min(scores)), "calibration_score_max_m": float(max(scores)),
+            }
     records = [item for item in manifest["scenes"] if item["split"] == split]
     if not records:
         raise ValueError(f"No scenes in split {split}")
     results = []
     for item in records:
-        path = (manifest_path.parent / item["path"]).resolve()
-        if not path.is_relative_to(manifest_path.parent.resolve()):
-            raise ValueError("Scene path escapes dataset directory")
-        if file_hash(path) != item["sha256"]:
-            raise ValueError(f"Scene checksum mismatch: {item['scene_id']}")
-        scene = json.loads(path.read_text(encoding="utf-8"))
-        validate_scene(scene)
-        allowed_recordings = {f"{int(rec):02d}" for rec in manifest["config"]["splits"][split]}
-        if (scene["split"] != split or scene["recording_id"] not in allowed_recordings
-                or scene["scene_id"] != item["scene_id"] or scene["recording_id"] != item["recording_id"]):
-            raise ValueError("Scene split disagrees with recording manifest")
-        seed = (config["seed"] + int(hashlib.sha256(scene["scene_id"].encode()).hexdigest()[:8], 16)) % 2**32
-        result = {"scene_id": scene["scene_id"], "recording_id": scene["recording_id"], "split": split}
+        scene = _load_manifest_scene(manifest_path, manifest, item, split)
+        seed = scene_seed(scene["scene_id"], config["seed"])
+        result = {"scene_id": scene["scene_id"], "recording_id": scene["recording_id"],
+                  "location_id": scene["location_id"], "split": split,
+                  "interaction_stratum": scene["interaction"]["stratum"]}
         result["baselines"] = [search(scene, method, config, seed) for method in ("replay", "uniform", "constrained_search")]
         result["reconstruction"] = reconstruction_pilot(scene, config, seed)
+        for protocol in config["missing_protocols"]:
+            for method in RECONSTRUCTION_METHODS:
+                metric = result["reconstruction"][protocol["name"]][method]
+                metric["within_conformal_radius"] = bool(
+                    metric["max_hidden_error_m"] <= calibration[protocol["name"]][method]["radius_m"] + 1e-12)
         xy, velocity = np.asarray([a["xy"] for a in scene["actors"]]), np.asarray([a["velocity"] for a in scene["actors"]])
         residual = np.gradient(xy, np.asarray(scene["time"]), axis=1) - velocity
         result["source_velocity_consistency_rmse_mps"] = float(np.sqrt(np.mean(residual**2)))
@@ -336,7 +430,9 @@ def run_benchmark(manifest_path, output, config, split="validation"):
                "python": platform.python_version(), "numpy": np.__version__, "scipy": scipy.__version__,
                "implementation_sha256": file_hash(__file__),
                "scope": "Kinematic screening: open-loop BVs, lane-fixed IDM CAV, sampled axis-aligned box collisions",
-               "baselines": {}, "reconstruction": {}}
+               "test_lock_overridden": bool(split == "test" and allow_test),
+               "interaction_strata": dict(Counter(r["interaction_stratum"] for r in results)),
+               "baselines": {}, "reconstruction": {}, "calibration": calibration}
     for method in ("replay", "uniform", "constrained_search"):
         runs = [next(b for b in result["baselines"] if b["method"] == method) for result in results]
         chosen = [run["selected"] for run in runs if run["selected"] is not None]
@@ -350,13 +446,32 @@ def run_benchmark(manifest_path, output, config, split="validation"):
             "elapsed_s": sum(run["elapsed_s"] for run in runs),
             "violation_counts": dict(sum((Counter(run["violation_counts"]) for run in runs), Counter())),
         }
-    for method in ("linear", "cubic", "pchip"):
-        summary["reconstruction"][method] = {"mean_hidden_ade_m": float(np.mean([r["reconstruction"][method]["hidden_ade_m"] for r in results]))}
-    envelopes = [r["reconstruction"]["uncalibrated_envelope"] for r in results]
-    summary["reconstruction"]["uncalibrated_envelope"] = {
-        "mean_joint_pointwise_coverage": float(np.mean([r["joint_pointwise_coverage"] for r in envelopes])),
-        "mean_width_xy_m": np.mean([r["mean_width_xy_m"] for r in envelopes], axis=0).tolist(),
-        "warning": "Sensitivity diagnostic only; not a calibrated confidence interval"}
+        summary["baselines"][method]["by_interaction_stratum"] = {}
+        for stratum in sorted(summary["interaction_strata"]):
+            indices = [i for i, result in enumerate(results) if result["interaction_stratum"] == stratum]
+            stratum_runs = [runs[i] for i in indices]
+            selected = [run["selected"] for run in stratum_runs if run["selected"] is not None]
+            summary["baselines"][method]["by_interaction_stratum"][stratum] = {
+                "attempted_scenes": len(stratum_runs), "collision_scenes": sum(bool(x["collision"]) for x in selected),
+                "mean_selected_clearance_m": float(np.mean([x["min_clearance_m"] for x in selected])) if selected else None,
+                "mean_selected_intervention_l2_m": float(np.mean([x["intervention_l2_m"] for x in selected])) if selected else None,
+            }
+    for protocol in config["missing_protocols"]:
+        name = protocol["name"]
+        summary["reconstruction"][name] = {}
+        for method in RECONSTRUCTION_METHODS:
+            values = [r["reconstruction"][name][method] for r in results]
+            per_recording = {}
+            for result, value in zip(results, values):
+                per_recording.setdefault(result["recording_id"], []).append(value["within_conformal_radius"])
+            summary["reconstruction"][name][method] = {
+                "mean_hidden_ade_m": float(np.mean([value["hidden_ade_m"] for value in values])),
+                "mean_last_hidden_error_m": float(np.mean([value["last_hidden_error_m"] for value in values])),
+                "conformal_radius_m": calibration[name][method]["radius_m"],
+                "evaluation_scene_joint_coverage": float(np.mean([value["within_conformal_radius"] for value in values])),
+                "evaluation_recording_joint_coverage": float(np.mean([all(group) for group in per_recording.values()])),
+                "coverage_unit": "entire hidden 2D path; calibration groups are source recordings",
+            }
     summary["source_velocity_consistency_rmse_mps_mean"] = float(np.mean([r["source_velocity_consistency_rmse_mps"] for r in results]))
     write_json(output / "results.json", results)
     write_json(output / "summary.json", summary)
@@ -368,10 +483,13 @@ def main():
     parser.add_argument("--manifest", required=True)
     parser.add_argument("--output", required=True)
     parser.add_argument("--config", default="configs/trajectory_baselines.json")
-    parser.add_argument("--split", choices=("train", "validation", "test"), default="validation")
+    parser.add_argument("--split", choices=("train", "calibration", "validation", "test"), default="validation")
+    parser.add_argument("--allow_test", action="store_true",
+                        help="Unlock held-out test evaluation after model selection is frozen")
     args = parser.parse_args()
     summary = run_benchmark(args.manifest, args.output,
-                            json.loads(Path(args.config).read_text(encoding="utf-8")), args.split)
+                            json.loads(Path(args.config).read_text(encoding="utf-8")), args.split,
+                            allow_test=args.allow_test)
     print(json.dumps(summary, ensure_ascii=False, indent=2))
 
 

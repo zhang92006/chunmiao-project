@@ -40,7 +40,7 @@ def write_json(path, value):
 def validate_config(config):
     seen = set()
     for split, recordings in config["splits"].items():
-        if split not in {"train", "validation", "test"}:
+        if split not in {"train", "calibration", "validation", "test"}:
             raise ValueError(f"Unknown split: {split}")
         for rec in recordings:
             rec = f"{int(rec):02d}"
@@ -57,11 +57,66 @@ def validate_config(config):
         raise ValueError("At least the CAV and the lane changer are required")
     if not isinstance(config.get("require_lane_stable_cav", True), bool):
         raise ValueError("require_lane_stable_cav must be a boolean")
+    bins = config.get("target_headway_bins_s", [1.0, 2.0])
+    if (len(bins) != 2 or not all(np.isfinite(value) for value in bins)
+            or not 0 < bins[0] < bins[1]):
+        raise ValueError("target_headway_bins_s must be two increasing positive values")
 
 
 def center(row):
     return np.array([float(row["x"]) + float(row["width"]) / 2,
                      float(row["y"]) + float(row["height"]) / 2])
+
+
+def _interaction_metrics(scene, config):
+    actors = {actor["id"]: actor for actor in scene["actors"]}
+    ego, changer = actors[next(actor["id"] for actor in scene["actors"] if actor["role"] == "CAV")], actors[scene["changer_id"]]
+    index = scene["source_frames"].index(scene["event_frame"])
+    centre_gap = changer["xy"][index][0] - ego["xy"][index][0]
+    net_gap = centre_gap - (changer["length"] + ego["length"]) / 2
+    ego_speed, changer_speed = ego["velocity"][index][0], changer["velocity"][index][0]
+    closing = ego_speed - changer_speed
+    headway = max(net_gap, 0) / ego_speed if ego_speed > 1e-6 else None
+    ttc = net_gap / closing if net_gap > 0 and closing > 1e-6 else None
+    low, high = config.get("target_headway_bins_s", [1.0, 2.0])
+    if net_gap <= 0:
+        gap_bin = "overlap"
+    elif headway is None:
+        gap_bin = "stopped"
+    elif headway < low:
+        gap_bin = "short"
+    elif headway < high:
+        gap_bin = "medium"
+    else:
+        gap_bin = "long"
+    start_lane, target_lane = changer["lane_id"][0], changer["lane_id"][index]
+    return {"centre_gap_m": float(centre_gap), "net_gap_m": float(net_gap),
+            "time_headway_s": float(headway) if headway is not None else None,
+            "closing_speed_mps": float(closing), "ttc_s": float(ttc) if ttc is not None else None,
+            "gap_bin": gap_bin, "closing": closing > 0,
+            "lane_id_change_sign": int(np.sign(target_lane - start_lane)),
+            "stratum": f"{gap_bin}_{'closing' if closing > 0 else 'opening'}"}
+
+
+def _select_stratified(candidates, limit, seed):
+    rng = random.Random(seed)
+    buckets = {}
+    for scene in candidates:
+        buckets.setdefault(scene["interaction"]["stratum"], []).append(scene)
+    for values in buckets.values():
+        rng.shuffle(values)
+    order = sorted(buckets)
+    rng.shuffle(order)
+    selected = []
+    while len(selected) < limit and order:
+        remaining = []
+        for key in order:
+            if buckets[key] and len(selected) < limit:
+                selected.append(buckets[key].pop())
+            if buckets[key]:
+                remaining.append(key)
+        order = remaining
+    return selected
 
 
 def make_scene(rec, split, metadata, track_meta, tracks, changer_id, event_frame, config):
@@ -118,16 +173,19 @@ def make_scene(rec, split, metadata, track_meta, tracks, changer_id, event_frame
         })
     marking_key = "lowerLaneMarkings" if direction == 2 else "upperLaneMarkings"
     boundaries = sorted((float(y) - origin[1]) * axes[1] for y in metadata[marking_key].split(";"))
-    return {
+    scene = {
         "schema_version": 1, "scene_id": f"highd_{rec}_{changer_id}_{event_frame}",
         "split": split, "recording_id": rec, "location_id": int(metadata["locationId"]),
         "source_frames": frames, "source_frame_rate": fps,
         "time": [(frame - start) / fps for frame in frames],
-        "event_time": (event_frame - start) / fps, "changer_id": str(changer_id),
+        "event_time": (event_frame - start) / fps, "event_frame": event_frame,
+        "changer_id": str(changer_id),
         "coordinate_system": "vehicle-centre, x-forward, y-left, metres; CAV starts at origin",
         "driving_direction": direction, "road_boundaries_y": boundaries,
         "actors": actors,
     }
+    scene["interaction"] = _interaction_metrics(scene, config)
+    return scene
 
 
 def export_recording(data_dir, output, rec, split, config):
@@ -161,7 +219,7 @@ def export_recording(data_dir, output, rec, split, config):
         if identifier in wanted_ids and identifier not in changing:
             tracks.setdefault(identifier, {})[int(row["frame"])] = row
     random.Random(config["seed"] + int(rec)).shuffle(events)
-    scenes, rejected, used_changers = [], Counter(), set()
+    candidates, rejected, used_changers = [], Counter(), set()
     for identifier, frame in events:
         if identifier in used_changers:
             continue
@@ -170,16 +228,21 @@ def export_recording(data_dir, output, rec, split, config):
         except ValueError as exc:
             rejected[str(exc)] += 1
             continue
+        candidates.append(scene)
+        used_changers.add(identifier)
+    selected = _select_stratified(candidates, config["max_scenes_per_recording"], config["seed"] + int(rec))
+    scenes = []
+    for scene in selected:
         name = f"{split}/{scene['scene_id']}.json"
         write_json(output / name, scene)
         scenes.append({"scene_id": scene["scene_id"], "path": name, "split": split,
                        "recording_id": rec, "location_id": scene["location_id"],
-                       "sha256": file_hash(output / name), "agent_count": len(scene["actors"])})
-        used_changers.add(identifier)
-        if len(scenes) >= config["max_scenes_per_recording"]:
-            break
+                       "sha256": file_hash(output / name), "agent_count": len(scene["actors"]),
+                       "interaction_stratum": scene["interaction"]["stratum"]})
     return scenes, {"recording_id": rec, "split": split, "candidate_events": len(events),
-                    "exported": len(scenes), "rejected_before_limit": dict(rejected),
+                    "eligible_scenes": len(candidates), "exported": len(scenes),
+                    "selected_strata": dict(Counter(scene["interaction"]["stratum"] for scene in selected)),
+                    "rejected": dict(rejected),
                     "source_sha256": {path.name: file_hash(path) for path in files.values()}}
 
 

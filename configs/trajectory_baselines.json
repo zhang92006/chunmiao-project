@@ -10,7 +10,11 @@
   "max_abs_jerk_mps3": 15.0,
   "intervention_penalty": 0.2,
   "idm": {"desired_speed_mps": 35.0, "time_headway_s": 1.5, "min_gap_m": 5.0, "accel_mps2": 2.0, "brake_mps2": 4.0},
-  "missing_interval_s": [1.25, 2.75],
-  "completion_samples": 32,
-  "completion_spread_m": [1.0, 0.3]
+  "missing_protocols": [
+    {"name": "block_1p5s", "mode": "block", "interval_s": [1.25, 2.75], "position_noise_std_m": [0.0, 0.0]},
+    {"name": "block_2p5s", "mode": "block", "interval_s": [0.75, 3.25], "position_noise_std_m": [0.0, 0.0]},
+    {"name": "intermittent_35pct", "mode": "intermittent", "missing_probability": 0.35, "interior_margin_s": 0.25, "position_noise_std_m": [0.0, 0.0]},
+    {"name": "noisy_block", "mode": "block", "interval_s": [1.25, 2.75], "position_noise_std_m": [0.2, 0.1]}
+  ],
+  "conformal_alpha": 0.1
 }

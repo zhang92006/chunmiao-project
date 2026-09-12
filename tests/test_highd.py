@@ -17,6 +17,13 @@ class HighDTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "leaks"):
             validate_config(self.config)
 
+    def test_calibration_split_allowed_and_bad_bins_rejected(self):
+        self.config["splits"]["calibration"] = [30]
+        validate_config(self.config)
+        self.config["target_headway_bins_s"] = [2, 1]
+        with self.assertRaisesRegex(ValueError, "headway"):
+            validate_config(self.config)
+
     def test_center_uses_box_dimensions(self):
         np.testing.assert_equal(center(dict(x=10, y=5, width=4, height=2)), [12, 6])
 
@@ -36,6 +43,8 @@ class HighDTests(unittest.TestCase):
             self.assertEqual(scene["actors"][0]["xy"][-1][0], 8)
             self.assertEqual(scene["actors"][1]["xy"][0][0], 10)
             self.assertEqual(scene["time"], [0, 0.5, 1, 1.5, 2])
+            self.assertEqual(scene["interaction"]["gap_bin"], "medium")
+            self.assertEqual(scene["interaction"]["stratum"], "medium_opening")
             tracks[1][1]["laneId"] = 3
             with self.assertRaisesRegex(ValueError, "changes_lane"):
                 make_scene("01", "train", metadata, meta, tracks, 2, 3, self.config)
