@@ -1,0 +1,27 @@
+{
+  "seed": 7,
+  "budget_per_search": 24,
+  "observed_prefix_s": 1.0,
+  "max_longitudinal_offset_m": 8.0,
+  "max_lateral_offset_m": 0.8,
+  "max_longitudinal_action_delta_mps2": 3.0,
+  "max_lateral_action_delta_mps2": 1.5,
+  "max_action_start_delay_s": 1.0,
+  "min_action_hold_s": 0.4,
+  "max_action_hold_s": 2.0,
+  "action_ramp_s": 0.2,
+  "max_speed_mps": 60.0,
+  "max_abs_longitudinal_accel_mps2": 6.0,
+  "max_abs_lateral_accel_mps2": 3.0,
+  "max_abs_jerk_mps3": 15.0,
+  "near_miss_clearance_m": 1.0,
+  "collision_substeps": 4,
+  "idm": {"desired_speed_mps": 35.0, "time_headway_s": 1.5, "min_gap_m": 5.0, "accel_mps2": 2.0, "brake_mps2": 4.0},
+  "missing_protocols": [
+    {"name": "block_1p5s", "mode": "block", "interval_s": [1.25, 2.75], "position_noise_std_m": [0.0, 0.0]},
+    {"name": "block_2p5s", "mode": "block", "interval_s": [0.75, 3.25], "position_noise_std_m": [0.0, 0.0]},
+    {"name": "intermittent_35pct", "mode": "intermittent", "missing_probability": 0.35, "interior_margin_s": 0.25, "position_noise_std_m": [0.0, 0.0]},
+    {"name": "noisy_block", "mode": "block", "interval_s": [1.25, 2.75], "position_noise_std_m": [0.2, 0.1]}
+  ],
+  "conformal_alpha": 0.1
+}

@@ -275,7 +275,7 @@ class NDE(BaseEnv):
         return bv_speed, max(bv_position, required_bv_position)
 
     def _terminate_check(self):
-        collision = tuple(set(self.simulator.detected_crash()))
+        collision = tuple(sorted(set(self.simulator.detected_crash())))
         reason = None
         stop = False
         additional_info = {}

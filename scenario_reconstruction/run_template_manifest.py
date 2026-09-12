@@ -13,9 +13,12 @@ def run_template_manifest(
     experiment_path: str | Path,
     max_ndd_possi: float | None = 0.01,
     gui_episode: int | None = None,
+    seed: int = 0,
 ) -> dict:
     manifest_path = Path(manifest_path)
     experiment_path = Path(experiment_path)
+    if experiment_path.exists() and any(experiment_path.rglob("*.json")):
+        raise FileExistsError("Use a fresh experiment directory to avoid mixing old episodes")
     for subdir in ("crash", "tested_and_safe", "rejected"):
         (experiment_path / subdir).mkdir(parents=True, exist_ok=True)
 
@@ -39,12 +42,14 @@ def run_template_manifest(
                 episode=episode_id,
                 experiment_path=str(experiment_path),
                 gui=gui_episode is not None,
+                seed=seed + episode_id,
             )
             results.append(
                 {
                     "episode": episode_id,
                     "template": template_path,
                     "status": "ok",
+                    "seed": seed + episode_id,
                     "weight_result": weight,
                 }
             )
@@ -54,6 +59,7 @@ def run_template_manifest(
                     "episode": episode_id,
                     "template": template_path,
                     "status": "error",
+                    "seed": seed + episode_id,
                     "error": f"{type(exc).__name__}: {exc}",
                 }
             )
@@ -101,6 +107,7 @@ def main() -> None:
         help="Output directory where episode JSON files are written.",
     )
     parser.add_argument("--max_ndd_possi", type=float, default=0.01)
+    parser.add_argument("--seed", type=int, default=0)
     parser.add_argument(
         "--gui_episode",
         type=int,
@@ -114,6 +121,7 @@ def main() -> None:
         experiment_path=args.experiment_path,
         max_ndd_possi=args.max_ndd_possi,
         gui_episode=args.gui_episode,
+        seed=args.seed,
     )
     print("Manifest run finished.")
     print(f"attempted={summary['attempted']}")

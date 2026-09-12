@@ -44,6 +44,33 @@ The first command validates the template without starting SUMO. The second runs
 one headless SUMO episode and writes generated data under the ignored
 `data_analysis/raw_data/` directory.
 
+The example is a synthetic cut-in demonstration, not validated Autoware accident
+ground truth. Perception/control fault descriptions without an implemented runtime
+are rejected. Runs fix Python/NumPy/PyTorch/SUMO seeds (`--seed`, default 0), honor
+the template duration, and retain all safe outcomes. Use a fresh output directory
+for each experiment; existing episode files are not overwritten.
+
+Template initialization and scripted interventions have no derived importance
+likelihood ratio. Their returned `weight_result` is `null`; upstream weights in
+logs are diagnostics, not valid D2RL training weights or road crash probabilities.
+The legacy single-BV trainer now rejects MultiBV joint records rather than silently
+using only the first agent.
+
+## Research plan
+
+See [科研提升路线图](docs/科研提升路线图.md) for the literature comparison,
+implementation order and publication requirements. Historical notes under the
+package directory may describe superseded probability/training behavior.
+
+The [trajectory benchmark guide](docs/轨迹基准使用说明.md) documents local highD
+export and replay/uniform/constrained-search screening, plus masked-trajectory
+interpolation baselines. See [implementation results](docs/实施记录.md) for tested
+behavior, pilot numbers, and limitations. These baselines use a lightweight
+lane-fixed IDM response, not a complete SUMO/Autoware planner evaluation.
+
+See [零碰撞修正记录](docs/零碰撞修正记录.md) for the future target-pair objective,
+timed action pulse, between-frame collision checks, and latest negative-result pilot.
+
 ## Batch reconstruction
 
 ```bash
@@ -68,4 +95,3 @@ without an API key using `--no_llm`.
 
 Detailed implementation and experiment notes are under
 `scenario_reconstruction/`.
-

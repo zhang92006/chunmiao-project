@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import random
 from pathlib import Path
 import sys
 
@@ -14,8 +15,20 @@ def run_template(
     experiment_path: str,
     gui: bool = False,
     gui_delay: int = 100,
-) -> float:
+    seed: int = 0,
+) -> float | None:
+    if not isinstance(seed, int) or not 0 <= seed < 2**31:
+        raise ValueError("seed must be an integer in [0, 2**31)")
+    for folder in ("crash", "tested_and_safe", "rejected"):
+        if Path(experiment_path, folder, f"{episode}.json").exists():
+            raise FileExistsError("Episode output exists; use a new directory or episode id")
+    import numpy as np
+    import torch
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
     conf.experiment_config["mode"] = "behavior_policy"
+    conf.experiment_config["log_mode"] = "all"
     conf.simulation_config["epsilon_setting"] = "fixed"
     conf.simulation_config["gui_flag"] = gui
     conf.simulation_config["gui_delay"] = gui_delay
@@ -27,6 +40,8 @@ def run_template(
     from .environment import ScenarioNADE
 
     env = ScenarioNADE(template_path)
+    env.scenario_metadata.update(seed=seed, numpy_version=np.__version__,
+                                 python_version=sys.version.split()[0])
     sim = Simulator(
         sumo_net_file_path="./maps/2LaneHighway/2LaneHighway.net.xml",
         sumo_config_file_path="./maps/2LaneHighway/2LaneHighwayHighSpeed.sumocfg",
@@ -39,6 +54,7 @@ def run_template(
         gui_flag=gui,
         output=[],
         experiment_path=experiment_path,
+        seed=seed,
     )
     sim.bind_env(env)
     Path(experiment_path, "crash").mkdir(parents=True, exist_ok=True)
@@ -76,6 +92,7 @@ def _prepend_sumo_bin(sumo_home: Path) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run one reconstructed scenario.")
     parser.add_argument("template", help="Path to a scenario template YAML file.")
+    parser.add_argument("--seed", type=int, default=0, help="Seed for Python, NumPy, PyTorch and SUMO")
     parser.add_argument(
         "--episode",
         type=int,
@@ -106,6 +123,7 @@ def main() -> None:
         args.experiment_path,
         gui=args.gui,
         gui_delay=args.gui_delay,
+        seed=args.seed,
     )
     print(f"Scenario finished. weight_result={weight}")
 

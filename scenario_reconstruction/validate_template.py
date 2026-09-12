@@ -8,9 +8,12 @@ from scenario_reconstruction.templates import load_template
 def main() -> None:
     parser = argparse.ArgumentParser(description="Validate a scenario template.")
     parser.add_argument("template", help="Path to a scenario template YAML file.")
+    parser.add_argument("--schema_only", action="store_true", help="Allow descriptive, not-yet-executable event types")
     args = parser.parse_args()
 
     template = load_template(args.template)
+    if not args.schema_only:
+        template.validate_runtime()
     print(f"Template OK: {template.template_id}")
     print(f"Vehicles: 1 CAV + {len(template.actors)} BV")
     print(f"Events: {len(template.events)}")

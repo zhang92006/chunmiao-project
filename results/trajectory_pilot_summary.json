@@ -1,0 +1,659 @@
+{
+  "source_commit": "5b3f4874a4df1751ea97c4cfd0ee6f56fda43eb9",
+  "split": "validation",
+  "scene_count": 60,
+  "recording_count": 5,
+  "config": {
+    "seed": 7,
+    "budget_per_search": 24,
+    "observed_prefix_s": 1,
+    "max_longitudinal_offset_m": 8,
+    "max_lateral_offset_m": 0.8,
+    "max_longitudinal_action_delta_mps2": 3,
+    "max_lateral_action_delta_mps2": 1.5,
+    "max_speed_mps": 60,
+    "max_abs_longitudinal_accel_mps2": 6,
+    "max_abs_lateral_accel_mps2": 3,
+    "max_abs_jerk_mps3": 15,
+    "intervention_penalty": 0.2,
+    "idm": {
+      "desired_speed_mps": 35,
+      "time_headway_s": 1.5,
+      "min_gap_m": 5,
+      "accel_mps2": 2,
+      "brake_mps2": 4
+    },
+    "missing_protocols": [
+      {
+        "name": "block_1p5s",
+        "mode": "block",
+        "interval_s": [
+          1.25,
+          2.75
+        ],
+        "position_noise_std_m": [
+          0,
+          0
+        ]
+      },
+      {
+        "name": "block_2p5s",
+        "mode": "block",
+        "interval_s": [
+          0.75,
+          3.25
+        ],
+        "position_noise_std_m": [
+          0,
+          0
+        ]
+      },
+      {
+        "name": "intermittent_35pct",
+        "mode": "intermittent",
+        "missing_probability": 0.35,
+        "interior_margin_s": 0.25,
+        "position_noise_std_m": [
+          0,
+          0
+        ]
+      },
+      {
+        "name": "noisy_block",
+        "mode": "block",
+        "interval_s": [
+          1.25,
+          2.75
+        ],
+        "position_noise_std_m": [
+          0.2,
+          0.1
+        ]
+      }
+    ],
+    "conformal_alpha": 0.1
+  },
+  "manifest_sha256": "63dbfc42edc28da0dc3bdd325e5bd01f392cb36699bd7903961fc579af6940db",
+  "python": "3.10.4",
+  "numpy": "1.22.4",
+  "scipy": "1.9.0",
+  "implementation_sha256": "a00e1e311bd755f81f0a1e0cb812bb5008fb3e1c61fade3fe555b0defc1fc01e",
+  "scope": "Kinematic screening: open-loop BVs, lane-fixed IDM CAV, sampled axis-aligned box collisions",
+  "test_lock_overridden": false,
+  "interaction_strata": {
+    "medium_opening": 14,
+    "short_closing": 10,
+    "long_opening": 9,
+    "medium_closing": 8,
+    "long_closing": 4,
+    "short_opening": 15
+  },
+  "baselines": {
+    "replay": {
+      "attempted_scenes": 60,
+      "scenes_with_feasible_candidate": 60,
+      "collision_scenes": 0,
+      "candidate_evaluations": 60,
+      "feasible_candidates": 60,
+      "mean_selected_clearance_m": 13.950360584079846,
+      "mean_selected_parameter_l2": 0,
+      "parameter_units": "m",
+      "elapsed_s": 0.14620759999888833,
+      "violation_counts": {},
+      "by_interaction_stratum": {
+        "long_closing": {
+          "attempted_scenes": 4,
+          "collision_scenes": 0,
+          "mean_selected_clearance_m": 32.59593869674999,
+          "mean_selected_parameter_l2": 0,
+          "parameter_units": "m"
+        },
+        "long_opening": {
+          "attempted_scenes": 9,
+          "collision_scenes": 0,
+          "mean_selected_clearance_m": 22.928198624352405,
+          "mean_selected_parameter_l2": 0,
+          "parameter_units": "m"
+        },
+        "medium_closing": {
+          "attempted_scenes": 8,
+          "collision_scenes": 0,
+          "mean_selected_clearance_m": 20.05072238993421,
+          "mean_selected_parameter_l2": 0,
+          "parameter_units": "m"
+        },
+        "medium_opening": {
+          "attempted_scenes": 14,
+          "collision_scenes": 0,
+          "mean_selected_clearance_m": 8.698771206336882,
+          "mean_selected_parameter_l2": 0,
+          "parameter_units": "m"
+        },
+        "short_closing": {
+          "attempted_scenes": 10,
+          "collision_scenes": 0,
+          "mean_selected_clearance_m": 17.88638843223776,
+          "mean_selected_parameter_l2": 0,
+          "parameter_units": "m"
+        },
+        "short_opening": {
+          "attempted_scenes": 15,
+          "collision_scenes": 0,
+          "mean_selected_clearance_m": 2.615442153870103,
+          "mean_selected_parameter_l2": 0,
+          "parameter_units": "m"
+        }
+      }
+    },
+    "uniform": {
+      "attempted_scenes": 60,
+      "scenes_with_feasible_candidate": 60,
+      "collision_scenes": 0,
+      "candidate_evaluations": 1440,
+      "feasible_candidates": 1256,
+      "mean_selected_clearance_m": 13.542443631482351,
+      "mean_selected_parameter_l2": 1.0412601934662604,
+      "parameter_units": "m",
+      "elapsed_s": 3.346995699987019,
+      "violation_counts": {
+        "jerk": 184
+      },
+      "by_interaction_stratum": {
+        "long_closing": {
+          "attempted_scenes": 4,
+          "collision_scenes": 0,
+          "mean_selected_clearance_m": 31.083805969246285,
+          "mean_selected_parameter_l2": 4.812612687039332,
+          "parameter_units": "m"
+        },
+        "long_opening": {
+          "attempted_scenes": 9,
+          "collision_scenes": 0,
+          "mean_selected_clearance_m": 22.928198624352405,
+          "mean_selected_parameter_l2": 0,
+          "parameter_units": "m"
+        },
+        "medium_closing": {
+          "attempted_scenes": 8,
+          "collision_scenes": 0,
+          "mean_selected_clearance_m": 18.760568741355172,
+          "mean_selected_parameter_l2": 3.0967543925062646,
+          "parameter_units": "m"
+        },
+        "medium_opening": {
+          "attempted_scenes": 14,
+          "collision_scenes": 0,
+          "mean_selected_clearance_m": 8.698771206336882,
+          "mean_selected_parameter_l2": 0,
+          "parameter_units": "m"
+        },
+        "short_closing": {
+          "attempted_scenes": 10,
+          "collision_scenes": 0,
+          "mean_selected_clearance_m": 17.075862726517503,
+          "mean_selected_parameter_l2": 1.8451125719768182,
+          "parameter_units": "m"
+        },
+        "short_opening": {
+          "attempted_scenes": 15,
+          "collision_scenes": 0,
+          "mean_selected_clearance_m": 2.615442153870103,
+          "mean_selected_parameter_l2": 0,
+          "parameter_units": "m"
+        }
+      }
+    },
+    "constrained_search": {
+      "attempted_scenes": 60,
+      "scenes_with_feasible_candidate": 60,
+      "collision_scenes": 0,
+      "candidate_evaluations": 1440,
+      "feasible_candidates": 1422,
+      "mean_selected_clearance_m": 13.475522932796565,
+      "mean_selected_parameter_l2": 0.8782764263688527,
+      "parameter_units": "m",
+      "elapsed_s": 3.374781200000143,
+      "violation_counts": {
+        "jerk": 18
+      },
+      "by_interaction_stratum": {
+        "long_closing": {
+          "attempted_scenes": 4,
+          "collision_scenes": 0,
+          "mean_selected_clearance_m": 31.19428022830212,
+          "mean_selected_parameter_l2": 3.5845381826780027,
+          "parameter_units": "m"
+        },
+        "long_opening": {
+          "attempted_scenes": 9,
+          "collision_scenes": 0,
+          "mean_selected_clearance_m": 22.928198624352405,
+          "mean_selected_parameter_l2": 0,
+          "parameter_units": "m"
+        },
+        "medium_closing": {
+          "attempted_scenes": 8,
+          "collision_scenes": 0,
+          "mean_selected_clearance_m": 18.68694373957,
+          "mean_selected_parameter_l2": 3.043376699279489,
+          "parameter_units": "m"
+        },
+        "medium_opening": {
+          "attempted_scenes": 14,
+          "collision_scenes": 0,
+          "mean_selected_clearance_m": 8.698771206336882,
+          "mean_selected_parameter_l2": 0,
+          "parameter_units": "m"
+        },
+        "short_closing": {
+          "attempted_scenes": 10,
+          "collision_scenes": 0,
+          "mean_selected_clearance_m": 16.689048832208584,
+          "mean_selected_parameter_l2": 1.4011419257183242,
+          "parameter_units": "m"
+        },
+        "short_opening": {
+          "attempted_scenes": 15,
+          "collision_scenes": 0,
+          "mean_selected_clearance_m": 2.615442153870103,
+          "mean_selected_parameter_l2": 0,
+          "parameter_units": "m"
+        }
+      }
+    },
+    "action_uniform": {
+      "attempted_scenes": 60,
+      "scenes_with_feasible_candidate": 60,
+      "collision_scenes": 0,
+      "candidate_evaluations": 1440,
+      "feasible_candidates": 1347,
+      "mean_selected_clearance_m": 13.854190122808744,
+      "mean_selected_parameter_l2": 0.29416065926071444,
+      "parameter_units": "m/s^2",
+      "elapsed_s": 3.2365733999940858,
+      "violation_counts": {
+        "offroad": 89,
+        "background_collision": 4
+      },
+      "by_interaction_stratum": {
+        "long_closing": {
+          "attempted_scenes": 4,
+          "collision_scenes": 0,
+          "mean_selected_clearance_m": 32.41067276516078,
+          "mean_selected_parameter_l2": 0.7884538684651412,
+          "parameter_units": "m/s^2"
+        },
+        "long_opening": {
+          "attempted_scenes": 9,
+          "collision_scenes": 0,
+          "mean_selected_clearance_m": 22.928198624352405,
+          "mean_selected_parameter_l2": 0,
+          "parameter_units": "m/s^2"
+        },
+        "medium_closing": {
+          "attempted_scenes": 8,
+          "collision_scenes": 0,
+          "mean_selected_clearance_m": 19.56226607069409,
+          "mean_selected_parameter_l2": 1.4239613406612175,
+          "parameter_units": "m/s^2"
+        },
+        "medium_opening": {
+          "attempted_scenes": 14,
+          "collision_scenes": 0,
+          "mean_selected_clearance_m": 8.698771206336882,
+          "mean_selected_parameter_l2": 0,
+          "parameter_units": "m/s^2"
+        },
+        "short_closing": {
+          "attempted_scenes": 10,
+          "collision_scenes": 0,
+          "mean_selected_clearance_m": 17.77423709263892,
+          "mean_selected_parameter_l2": 0.31041333564925616,
+          "parameter_units": "m/s^2"
+        },
+        "short_opening": {
+          "attempted_scenes": 15,
+          "collision_scenes": 0,
+          "mean_selected_clearance_m": 2.615442153870103,
+          "mean_selected_parameter_l2": 0,
+          "parameter_units": "m/s^2"
+        }
+      }
+    },
+    "action_constrained_search": {
+      "attempted_scenes": 60,
+      "scenes_with_feasible_candidate": 60,
+      "collision_scenes": 0,
+      "candidate_evaluations": 1440,
+      "feasible_candidates": 1437,
+      "mean_selected_clearance_m": 13.80435920576035,
+      "mean_selected_parameter_l2": 0.2941829494374948,
+      "parameter_units": "m/s^2",
+      "elapsed_s": 3.2600003000043216,
+      "violation_counts": {
+        "offroad": 3
+      },
+      "by_interaction_stratum": {
+        "long_closing": {
+          "attempted_scenes": 4,
+          "collision_scenes": 0,
+          "mean_selected_clearance_m": 32.39318619040787,
+          "mean_selected_parameter_l2": 0.76171875,
+          "parameter_units": "m/s^2"
+        },
+        "long_opening": {
+          "attempted_scenes": 9,
+          "collision_scenes": 0,
+          "mean_selected_clearance_m": 22.928198624352405,
+          "mean_selected_parameter_l2": 0,
+          "parameter_units": "m/s^2"
+        },
+        "medium_closing": {
+          "attempted_scenes": 8,
+          "collision_scenes": 0,
+          "mean_selected_clearance_m": 19.53933079959902,
+          "mean_selected_parameter_l2": 1.4505127457812106,
+          "parameter_units": "m/s^2"
+        },
+        "medium_opening": {
+          "attempted_scenes": 14,
+          "collision_scenes": 0,
+          "mean_selected_clearance_m": 8.698771206336882,
+          "mean_selected_parameter_l2": 0,
+          "parameter_units": "m/s^2"
+        },
+        "short_closing": {
+          "attempted_scenes": 10,
+          "collision_scenes": 0,
+          "mean_selected_clearance_m": 17.500594437125788,
+          "mean_selected_parameter_l2": 0.3,
+          "parameter_units": "m/s^2"
+        },
+        "short_opening": {
+          "attempted_scenes": 15,
+          "collision_scenes": 0,
+          "mean_selected_clearance_m": 2.615442153870103,
+          "mean_selected_parameter_l2": 0,
+          "parameter_units": "m/s^2"
+        }
+      }
+    }
+  },
+  "reconstruction": {
+    "block_1p5s": {
+      "linear": {
+        "mean_hidden_ade_m": 0.07900241019526269,
+        "mean_last_hidden_error_m": 0.014036108223395396,
+        "conformal_radius_m": 0.5485013578945619,
+        "evaluation_scene_joint_coverage": 1,
+        "evaluation_recording_joint_coverage": 1,
+        "coverage_unit": "entire hidden 2D path; calibration groups are source recordings"
+      },
+      "cubic": {
+        "mean_hidden_ade_m": 0.059740675054254073,
+        "mean_last_hidden_error_m": 0.012580118565533684,
+        "conformal_radius_m": 0.4053128143035737,
+        "evaluation_scene_joint_coverage": 1,
+        "evaluation_recording_joint_coverage": 1,
+        "coverage_unit": "entire hidden 2D path; calibration groups are source recordings"
+      },
+      "pchip": {
+        "mean_hidden_ade_m": 0.04701237810539353,
+        "mean_last_hidden_error_m": 0.010243020294905843,
+        "conformal_radius_m": 0.3765526708023432,
+        "evaluation_scene_joint_coverage": 1,
+        "evaluation_recording_joint_coverage": 1,
+        "coverage_unit": "entire hidden 2D path; calibration groups are source recordings"
+      },
+      "smoothing_spline": {
+        "mean_hidden_ade_m": 0.05974067505426263,
+        "mean_last_hidden_error_m": 0.012580118565526297,
+        "conformal_radius_m": 0.4053128143035524,
+        "evaluation_scene_joint_coverage": 1,
+        "evaluation_recording_joint_coverage": 1,
+        "coverage_unit": "entire hidden 2D path; calibration groups are source recordings"
+      }
+    },
+    "block_2p5s": {
+      "linear": {
+        "mean_hidden_ade_m": 0.20317431733945449,
+        "mean_last_hidden_error_m": 0.020222549591333346,
+        "conformal_radius_m": 0.9044871053962834,
+        "evaluation_scene_joint_coverage": 1,
+        "evaluation_recording_joint_coverage": 1,
+        "coverage_unit": "entire hidden 2D path; calibration groups are source recordings"
+      },
+      "cubic": {
+        "mean_hidden_ade_m": 0.08532656198551153,
+        "mean_last_hidden_error_m": 0.011337329980604821,
+        "conformal_radius_m": 0.6055258148067558,
+        "evaluation_scene_joint_coverage": 1,
+        "evaluation_recording_joint_coverage": 1,
+        "coverage_unit": "entire hidden 2D path; calibration groups are source recordings"
+      },
+      "pchip": {
+        "mean_hidden_ade_m": 0.08714910068415363,
+        "mean_last_hidden_error_m": 0.010759477168991356,
+        "conformal_radius_m": 0.6497295496329435,
+        "evaluation_scene_joint_coverage": 1,
+        "evaluation_recording_joint_coverage": 1,
+        "coverage_unit": "entire hidden 2D path; calibration groups are source recordings"
+      },
+      "smoothing_spline": {
+        "mean_hidden_ade_m": 0.0853265619846916,
+        "mean_last_hidden_error_m": 0.011337329980489967,
+        "conformal_radius_m": 0.6055258148325181,
+        "evaluation_scene_joint_coverage": 1,
+        "evaluation_recording_joint_coverage": 1,
+        "coverage_unit": "entire hidden 2D path; calibration groups are source recordings"
+      }
+    },
+    "intermittent_35pct": {
+      "linear": {
+        "mean_hidden_ade_m": 0.006156647425094154,
+        "mean_last_hidden_error_m": 0.005540219112004211,
+        "conformal_radius_m": 0.05215361924162803,
+        "evaluation_scene_joint_coverage": 0.9666666666666667,
+        "evaluation_recording_joint_coverage": 0.6,
+        "coverage_unit": "entire hidden 2D path; calibration groups are source recordings"
+      },
+      "cubic": {
+        "mean_hidden_ade_m": 0.007465253871679441,
+        "mean_last_hidden_error_m": 0.007623579212425458,
+        "conformal_radius_m": 0.0445589708320939,
+        "evaluation_scene_joint_coverage": 0.9833333333333333,
+        "evaluation_recording_joint_coverage": 0.8,
+        "coverage_unit": "entire hidden 2D path; calibration groups are source recordings"
+      },
+      "pchip": {
+        "mean_hidden_ade_m": 0.00659046809008103,
+        "mean_last_hidden_error_m": 0.006658238124850594,
+        "conformal_radius_m": 0.033376644633404465,
+        "evaluation_scene_joint_coverage": 0.95,
+        "evaluation_recording_joint_coverage": 0.6,
+        "coverage_unit": "entire hidden 2D path; calibration groups are source recordings"
+      },
+      "smoothing_spline": {
+        "mean_hidden_ade_m": 0.007465256421647476,
+        "mean_last_hidden_error_m": 0.00762376970894067,
+        "conformal_radius_m": 0.04455897083292016,
+        "evaluation_scene_joint_coverage": 0.9833333333333333,
+        "evaluation_recording_joint_coverage": 0.8,
+        "coverage_unit": "entire hidden 2D path; calibration groups are source recordings"
+      }
+    },
+    "noisy_block": {
+      "linear": {
+        "mean_hidden_ade_m": 0.188918439536173,
+        "mean_last_hidden_error_m": 0.2181067173013459,
+        "conformal_radius_m": 0.6464088899702548,
+        "evaluation_scene_joint_coverage": 1,
+        "evaluation_recording_joint_coverage": 1,
+        "coverage_unit": "entire hidden 2D path; calibration groups are source recordings"
+      },
+      "cubic": {
+        "mean_hidden_ade_m": 1.9637896151121226,
+        "mean_last_hidden_error_m": 0.5708686181129043,
+        "conformal_radius_m": 11.388167434622867,
+        "evaluation_scene_joint_coverage": 1,
+        "evaluation_recording_joint_coverage": 1,
+        "coverage_unit": "entire hidden 2D path; calibration groups are source recordings"
+      },
+      "pchip": {
+        "mean_hidden_ade_m": 0.8500609747458442,
+        "mean_last_hidden_error_m": 0.3569615349208813,
+        "conformal_radius_m": 6.917598070968726,
+        "evaluation_scene_joint_coverage": 1,
+        "evaluation_recording_joint_coverage": 1,
+        "coverage_unit": "entire hidden 2D path; calibration groups are source recordings"
+      },
+      "smoothing_spline": {
+        "mean_hidden_ade_m": 0.10456656736826556,
+        "mean_last_hidden_error_m": 0.07548172917507687,
+        "conformal_radius_m": 1.137238205479445,
+        "evaluation_scene_joint_coverage": 1,
+        "evaluation_recording_joint_coverage": 1,
+        "coverage_unit": "entire hidden 2D path; calibration groups are source recordings"
+      }
+    }
+  },
+  "calibration": {
+    "block_1p5s": {
+      "linear": {
+        "radius_m": 0.5485013578945619,
+        "rank": 10,
+        "recording_count": 10,
+        "scene_count": 120,
+        "calibration_score_min_m": 0.20796634343083856,
+        "calibration_score_max_m": 0.5485013578945619
+      },
+      "cubic": {
+        "radius_m": 0.4053128143035737,
+        "rank": 10,
+        "recording_count": 10,
+        "scene_count": 120,
+        "calibration_score_min_m": 0.15201610894678624,
+        "calibration_score_max_m": 0.4053128143035737
+      },
+      "pchip": {
+        "radius_m": 0.3765526708023432,
+        "rank": 10,
+        "recording_count": 10,
+        "scene_count": 120,
+        "calibration_score_min_m": 0.1347878474618827,
+        "calibration_score_max_m": 0.3765526708023432
+      },
+      "smoothing_spline": {
+        "radius_m": 0.4053128143035524,
+        "rank": 10,
+        "recording_count": 10,
+        "scene_count": 120,
+        "calibration_score_min_m": 0.15201610894663506,
+        "calibration_score_max_m": 0.4053128143035524
+      }
+    },
+    "block_2p5s": {
+      "linear": {
+        "radius_m": 0.9044871053962834,
+        "rank": 10,
+        "recording_count": 10,
+        "scene_count": 120,
+        "calibration_score_min_m": 0.5335403752587505,
+        "calibration_score_max_m": 0.9044871053962834
+      },
+      "cubic": {
+        "radius_m": 0.6055258148067558,
+        "rank": 10,
+        "recording_count": 10,
+        "scene_count": 120,
+        "calibration_score_min_m": 0.1763632063353353,
+        "calibration_score_max_m": 0.6055258148067558
+      },
+      "pchip": {
+        "radius_m": 0.6497295496329435,
+        "rank": 10,
+        "recording_count": 10,
+        "scene_count": 120,
+        "calibration_score_min_m": 0.25549315609633205,
+        "calibration_score_max_m": 0.6497295496329435
+      },
+      "smoothing_spline": {
+        "radius_m": 0.6055258148325181,
+        "rank": 10,
+        "recording_count": 10,
+        "scene_count": 120,
+        "calibration_score_min_m": 0.1763632063427273,
+        "calibration_score_max_m": 0.6055258148325181
+      }
+    },
+    "intermittent_35pct": {
+      "linear": {
+        "radius_m": 0.05215361924162803,
+        "rank": 10,
+        "recording_count": 10,
+        "scene_count": 120,
+        "calibration_score_min_m": 0.025495097567955715,
+        "calibration_score_max_m": 0.05215361924162803
+      },
+      "cubic": {
+        "radius_m": 0.0445589708320939,
+        "rank": 10,
+        "recording_count": 10,
+        "scene_count": 120,
+        "calibration_score_min_m": 0.028406784057239415,
+        "calibration_score_max_m": 0.0445589708320939
+      },
+      "pchip": {
+        "radius_m": 0.033376644633404465,
+        "rank": 10,
+        "recording_count": 10,
+        "scene_count": 120,
+        "calibration_score_min_m": 0.02257296511193002,
+        "calibration_score_max_m": 0.033376644633404465
+      },
+      "smoothing_spline": {
+        "radius_m": 0.04455897083292016,
+        "rank": 10,
+        "recording_count": 10,
+        "scene_count": 120,
+        "calibration_score_min_m": 0.028406784057238794,
+        "calibration_score_max_m": 0.04455897083292016
+      }
+    },
+    "noisy_block": {
+      "linear": {
+        "radius_m": 0.6464088899702548,
+        "rank": 10,
+        "recording_count": 10,
+        "scene_count": 120,
+        "calibration_score_min_m": 0.3674222536541448,
+        "calibration_score_max_m": 0.6464088899702548
+      },
+      "cubic": {
+        "radius_m": 11.388167434622867,
+        "rank": 10,
+        "recording_count": 10,
+        "scene_count": 120,
+        "calibration_score_min_m": 4.5693894460671345,
+        "calibration_score_max_m": 11.388167434622867
+      },
+      "pchip": {
+        "radius_m": 6.917598070968726,
+        "rank": 10,
+        "recording_count": 10,
+        "scene_count": 120,
+        "calibration_score_min_m": 2.1118456214170953,
+        "calibration_score_max_m": 6.917598070968726
+      },
+      "smoothing_spline": {
+        "radius_m": 1.137238205479445,
+        "rank": 10,
+        "recording_count": 10,
+        "scene_count": 120,
+        "calibration_score_min_m": 0.17009624242280602,
+        "calibration_score_max_m": 1.137238205479445
+      }
+    }
+  },
+  "source_velocity_consistency_rmse_mps_mean": 0.12447172048090667
+}

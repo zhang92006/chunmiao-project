@@ -16,12 +16,16 @@ def run_batch(
     output_root: str,
     seed: int = 0,
     max_ndd_possi: float | None = 0.01,
-    target_end_time: float = 1.4,
-    target_collision_actor: str = "BV_cut_in",
+    target_end_time: float | None = None,
+    target_collision_actor: str | None = None,
     multi_bv: bool = True,
     multi_bv_num: int = 2,
 ) -> dict:
     output_dir = Path(output_root)
+    if count < 1 or not 0 <= seed < 2**31 - count:
+        raise ValueError("count must be positive and seed + count within SUMO seed range")
+    if output_dir.exists() and any(output_dir.iterdir()):
+        raise FileExistsError("Batch output must be absent or empty; stale episodes bias results")
     variants_dir = output_dir / "variants"
     experiment_dir = output_dir / "episodes"
     variants_dir.mkdir(parents=True, exist_ok=True)
@@ -40,12 +44,14 @@ def run_batch(
                 str(variant_path),
                 episode=index,
                 experiment_path=str(experiment_dir),
+                seed=seed + index,
             )
             results.append(
                 {
                     "episode": index,
                     "variant": str(variant_path),
                     "status": "ok",
+                    "seed": seed + index,
                     "weight_result": weight,
                 }
             )
@@ -55,6 +61,7 @@ def run_batch(
                     "episode": index,
                     "variant": str(variant_path),
                     "status": "error",
+                    "seed": seed + index,
                     "error": str(exc),
                 }
             )
@@ -79,6 +86,10 @@ def run_batch(
         "template": template_path,
         "count": count,
         "seed": seed,
+        "score_semantics": "Optional hand-target heuristic, NOT reconstruction accuracy",
+        "logged_episodes": len(outcomes),
+        "collision_count": sum(bool(item["collision_result"]) for item in outcomes),
+        "training_eligibility": "Template initialization and scripted interventions have no valid likelihood ratio",
         "output_root": str(output_dir),
         "successful_runs": sum(1 for item in results if item["status"] == "ok"),
         "failed_runs": sum(1 for item in results if item["status"] != "ok"),
@@ -125,7 +136,7 @@ def _collect_episode_outcomes(
                 target_collision_actor=target_collision_actor,
             )
         )
-    return sorted(outcomes, key=lambda item: item["closeness_score"])
+    return sorted(outcomes, key=lambda item: item["closeness_score"] if item["closeness_score"] is not None else float("inf"))
 
 
 def _episode_outcome(
@@ -134,8 +145,8 @@ def _episode_outcome(
     target_end_time: float,
     target_collision_actor: str,
 ) -> dict:
-    min_ttc = min(episode.get("ttc_step_info", {"": 10000}).values())
-    min_distance = min(episode.get("distance_step_info", {"": 10000}).values())
+    min_ttc = min((episode.get("ttc_step_info") or {"": 10000}).values())
+    min_distance = min((episode.get("distance_step_info") or {"": 10000}).values())
     end_time = float(episode.get("episode_info", {}).get("end_time", 10000))
     collision_ids = episode.get("collision_id") or []
     collision_match = target_collision_actor in collision_ids
@@ -143,7 +154,7 @@ def _episode_outcome(
     event_key = next(iter(episode.get("drl_obs_step_info", {}) or {}), None)
     ndd_possi = None
     reward_at_099 = None
-    if event_key is not None:
+    if event_key is not None and episode.get("scenario_metadata", {}).get("likelihood_valid") is True:
         ndd_possi = episode.get("ndd_step_info", {}).get(event_key)
         if ndd_possi is not None:
             ndd_for_reward = (
@@ -156,13 +167,15 @@ def _episode_outcome(
     actor_penalty = 0 if collision_match else 5
     snapshot_penalty = _collision_snapshot_penalty(collision_snapshot)
     closeness_score = (
-        abs(end_time - target_end_time)
+        abs(end_time - (target_end_time if target_end_time is not None else end_time))
         + min(min_ttc, 5) / 5
         + min(max(min_distance, 0), 20) / 20
         + collision_penalty
         + actor_penalty
         + snapshot_penalty
     )
+    if target_end_time is None or target_collision_actor is None:
+        closeness_score = None
     return {
         "file": str(path),
         "collision_result": episode.get("collision_result"),
@@ -176,6 +189,8 @@ def _episode_outcome(
         "collision_snapshot": collision_snapshot,
         "collision_snapshot_penalty": snapshot_penalty,
         "closeness_score": closeness_score,
+        "termination_reason": episode.get("termination_reason"),
+        "scenario_metadata": episode.get("scenario_metadata"),
     }
 
 
@@ -298,12 +313,12 @@ def main() -> None:
     parser.add_argument(
         "--target_end_time",
         type=float,
-        default=1.4,
+        default=None,
         help="Reference crash end time used for closeness scoring.",
     )
     parser.add_argument(
         "--target_collision_actor",
-        default="BV_cut_in",
+        default=None,
         help="Reference collision actor used for closeness scoring.",
     )
     parser.add_argument(

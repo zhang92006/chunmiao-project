@@ -1,0 +1,18 @@
+{
+  "dataset": "highD-v1.0",
+  "seed": 7,
+  "splits": {
+    "train": ["01", "02", "04", "05", "07", "08", "11", "12", "15", "16"],
+    "calibration": ["03", "06", "09", "13", "17", "25", "26", "27", "28", "29"],
+    "validation": ["10", "14", "18", "19", "20"],
+    "test": ["58", "59", "60"]
+  },
+  "seconds_before": 2.0,
+  "seconds_after": 2.0,
+  "max_scenes_per_recording": 12,
+  "max_agents": 4,
+  "require_lane_stable_cav": true,
+  "target_headway_bins_s": [1.0, 2.0],
+  "max_neighbor_distance_m": 80.0,
+  "frame_stride": 1
+}

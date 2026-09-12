@@ -1,0 +1,772 @@
+{
+  "source_commit": "5b3f4874a4df1751ea97c4cfd0ee6f56fda43eb9",
+  "dataset": "highD-v1.0",
+  "config": {
+    "dataset": "highD-v1.0",
+    "seed": 7,
+    "splits": {
+      "train": [
+        "01",
+        "02",
+        "04",
+        "05",
+        "07",
+        "08",
+        "11",
+        "12",
+        "15",
+        "16"
+      ],
+      "calibration": [
+        "03",
+        "06",
+        "09",
+        "13",
+        "17",
+        "25",
+        "26",
+        "27",
+        "28",
+        "29"
+      ],
+      "validation": [
+        "10",
+        "14",
+        "18",
+        "19",
+        "20"
+      ],
+      "test": [
+        "58",
+        "59",
+        "60"
+      ]
+    },
+    "seconds_before": 2,
+    "seconds_after": 2,
+    "max_scenes_per_recording": 12,
+    "max_agents": 4,
+    "require_lane_stable_cav": true,
+    "target_headway_bins_s": [
+      1,
+      2
+    ],
+    "max_neighbor_distance_m": 80,
+    "frame_stride": 1
+  },
+  "license_notice": "Local licensed use only; do not commit source or derived trajectories.",
+  "recordings": [
+    {
+      "recording_id": "01",
+      "split": "train",
+      "candidate_events": 138,
+      "eligible_scenes": 53,
+      "exported": 12,
+      "selected_strata": {
+        "medium_closing": 3,
+        "short_closing": 3,
+        "medium_opening": 3,
+        "long_opening": 1,
+        "short_opening": 2
+      },
+      "rejected": {
+        "no_target_follower": 32,
+        "incomplete_primary_window": 42,
+        "target_follower_out_of_range": 7,
+        "target_follower_changes_lane": 3
+      },
+      "source_sha256": {
+        "01_tracks.csv": "f0f5a46026e58c0bc2a9d31ffab37f478eb9d4d5437421a3b3b2c0f754dbce2c",
+        "01_tracksMeta.csv": "691e033f5c585eea77b37f15e38cf7fb118d43e7ec438e29ca009325a896e79a",
+        "01_recordingMeta.csv": "a1288893fa8df0bc532dcf5a2b8e8735f13662c268fb58db283617b750bfcc60"
+      }
+    },
+    {
+      "recording_id": "02",
+      "split": "train",
+      "candidate_events": 123,
+      "eligible_scenes": 47,
+      "exported": 12,
+      "selected_strata": {
+        "short_closing": 3,
+        "short_opening": 3,
+        "medium_opening": 2,
+        "medium_closing": 2,
+        "long_opening": 2
+      },
+      "rejected": {
+        "no_target_follower": 40,
+        "incomplete_primary_window": 26,
+        "target_follower_out_of_range": 9
+      },
+      "source_sha256": {
+        "02_tracks.csv": "ba008c732fc6de257f044f59b8ff2508575fc338ad44e1d699a193ab0e644eb2",
+        "02_tracksMeta.csv": "1bbe4c04fc4f68478993759ce93e0c43c65889f152260fea86e1463b1145a8d2",
+        "02_recordingMeta.csv": "f8aad0e5f9ebfbbc7e86fb1174dab2e9937ae4384adc04dd73f0bfca3927ca3b"
+      }
+    },
+    {
+      "recording_id": "04",
+      "split": "train",
+      "candidate_events": 256,
+      "eligible_scenes": 73,
+      "exported": 12,
+      "selected_strata": {
+        "long_closing": 2,
+        "long_opening": 3,
+        "medium_closing": 3,
+        "short_opening": 2,
+        "medium_opening": 2
+      },
+      "rejected": {
+        "incomplete_primary_window": 61,
+        "no_target_follower": 97,
+        "target_follower_changes_lane": 2,
+        "target_follower_out_of_range": 17
+      },
+      "source_sha256": {
+        "04_tracks.csv": "54d37516b9234fdd441ea0c976d692165be96373072685da636b2d4088a0396a",
+        "04_tracksMeta.csv": "956b9aad0da6ade6030e3847c5253a14b1a83d7da9a6a35a420ebcd760d557b7",
+        "04_recordingMeta.csv": "225a3ae33c46aad4053a4d4ae5f718d35a49d08f03ce704c7fc9e622e5b80340"
+      }
+    },
+    {
+      "recording_id": "05",
+      "split": "train",
+      "candidate_events": 265,
+      "eligible_scenes": 67,
+      "exported": 12,
+      "selected_strata": {
+        "short_closing": 1,
+        "medium_opening": 3,
+        "medium_closing": 3,
+        "long_opening": 1,
+        "long_closing": 2,
+        "short_opening": 2
+      },
+      "rejected": {
+        "incomplete_primary_window": 70,
+        "no_target_follower": 99,
+        "target_follower_out_of_range": 16,
+        "target_follower_changes_lane": 8
+      },
+      "source_sha256": {
+        "05_tracks.csv": "ca46e3b2de36119d8e6749e1135841ec8e4c4f41fadf6cdc2da6aa9d71cf1083",
+        "05_tracksMeta.csv": "90e7a1e86004e90d503eb75dfbdfbee376fa7db05eac96a498bc9c0a7af9521f",
+        "05_recordingMeta.csv": "4d6697b79dd3e0789d495a017a98f9f7f5b62e4612b35530f160131ad17e5356"
+      }
+    },
+    {
+      "recording_id": "07",
+      "split": "train",
+      "candidate_events": 131,
+      "eligible_scenes": 44,
+      "exported": 12,
+      "selected_strata": {
+        "medium_closing": 3,
+        "long_opening": 2,
+        "medium_opening": 3,
+        "short_opening": 2,
+        "short_closing": 2
+      },
+      "rejected": {
+        "incomplete_primary_window": 36,
+        "no_target_follower": 33,
+        "target_follower_out_of_range": 12,
+        "target_follower_changes_lane": 5
+      },
+      "source_sha256": {
+        "07_tracks.csv": "8edccf8dd5df2e191d680e500f8e9af0b7a76084d317353e7bb56d435cf0bb44",
+        "07_tracksMeta.csv": "c256b9658ca93138ec4f912cd1f44f81c0d7ed1e17bf572ee904351f8407d7d2",
+        "07_recordingMeta.csv": "1c9c62061fb046b8f9115d919c00f4387d22b6b2a1cdc57a16c1236e51662ede"
+      }
+    },
+    {
+      "recording_id": "08",
+      "split": "train",
+      "candidate_events": 275,
+      "eligible_scenes": 88,
+      "exported": 12,
+      "selected_strata": {
+        "short_opening": 3,
+        "short_closing": 2,
+        "long_opening": 2,
+        "medium_closing": 2,
+        "long_closing": 1,
+        "medium_opening": 2
+      },
+      "rejected": {
+        "incomplete_primary_window": 61,
+        "no_target_follower": 101,
+        "target_follower_out_of_range": 15,
+        "target_follower_changes_lane": 6
+      },
+      "source_sha256": {
+        "08_tracks.csv": "ddee259d438cd88e80649ecdea94eda5a43b980acd4b4bbfe3e5f53ea4f2c44d",
+        "08_tracksMeta.csv": "6a06c99560b38cb44abfb9326763b097101f1eec1c0911e671b6c09cf7434925",
+        "08_recordingMeta.csv": "43b86d9c9d188575446f7822f587e6204aec16a5b4e10114240eaf7a99cbdf24"
+      }
+    },
+    {
+      "recording_id": "11",
+      "split": "train",
+      "candidate_events": 144,
+      "eligible_scenes": 78,
+      "exported": 12,
+      "selected_strata": {
+        "medium_closing": 2,
+        "short_opening": 2,
+        "short_closing": 2,
+        "long_opening": 2,
+        "medium_opening": 2,
+        "long_closing": 2
+      },
+      "rejected": {
+        "no_target_follower": 12,
+        "incomplete_primary_window": 40,
+        "target_follower_out_of_range": 9,
+        "target_follower_changes_lane": 2
+      },
+      "source_sha256": {
+        "11_tracks.csv": "675028ee5815542158dee1aeef9085ef079744184d66dcea63d6641addd8ba93",
+        "11_tracksMeta.csv": "f83a331b6c1ecaa1c1ce8aaf1177b8e89a690314a755d66878fc583803aff977",
+        "11_recordingMeta.csv": "34cfefc4d00ce2043f3cb9714cb20bced41532fe669c20bb9abd4616bf70a109"
+      }
+    },
+    {
+      "recording_id": "12",
+      "split": "train",
+      "candidate_events": 207,
+      "eligible_scenes": 116,
+      "exported": 12,
+      "selected_strata": {
+        "short_closing": 2,
+        "long_closing": 2,
+        "short_opening": 2,
+        "medium_closing": 2,
+        "medium_opening": 2,
+        "long_opening": 2
+      },
+      "rejected": {
+        "target_follower_out_of_range": 11,
+        "incomplete_primary_window": 50,
+        "target_follower_changes_lane": 3,
+        "no_target_follower": 22
+      },
+      "source_sha256": {
+        "12_tracks.csv": "d7e25dc0985acf0d142a7edac4a9385b2bfb47e61eeaada6a9a3ddf49cac1614",
+        "12_tracksMeta.csv": "f468c7dd93d323621aa81a9024d2ca0fe814185d4834de02afad2652ed6ea424",
+        "12_recordingMeta.csv": "87061657e9549ee026a1309995f06bb4706612968386c0d0f91dac91a508673b"
+      }
+    },
+    {
+      "recording_id": "15",
+      "split": "train",
+      "candidate_events": 116,
+      "eligible_scenes": 49,
+      "exported": 12,
+      "selected_strata": {
+        "short_closing": 3,
+        "medium_opening": 3,
+        "medium_closing": 2,
+        "long_opening": 2,
+        "short_opening": 2
+      },
+      "rejected": {
+        "incomplete_primary_window": 33,
+        "target_follower_out_of_range": 5,
+        "no_target_follower": 28
+      },
+      "source_sha256": {
+        "15_tracks.csv": "c25cb1713c7bed25d5af3bdd3ef21e8075c1d912dc9f6478ba1894c038e1fb62",
+        "15_tracksMeta.csv": "1126f5bad58a5f0d59242fd503d35fc555ecd95b27f6b6e8d976fc54ee085a8b",
+        "15_recordingMeta.csv": "52a50edf77ec2bcd32a7c71308f91bd19b266fa36dd0f0e7a579aa8585ba389f"
+      }
+    },
+    {
+      "recording_id": "16",
+      "split": "train",
+      "candidate_events": 142,
+      "eligible_scenes": 63,
+      "exported": 12,
+      "selected_strata": {
+        "medium_closing": 2,
+        "long_opening": 2,
+        "medium_opening": 2,
+        "short_opening": 2,
+        "long_closing": 2,
+        "short_closing": 2
+      },
+      "rejected": {
+        "incomplete_primary_window": 28,
+        "target_follower_out_of_range": 11,
+        "no_target_follower": 36,
+        "target_follower_changes_lane": 2
+      },
+      "source_sha256": {
+        "16_tracks.csv": "7cf804369e229b069e1392c6274c6b9ab57fafd9294b52d31fae76d46ecaefb1",
+        "16_tracksMeta.csv": "907362fd7f23f4c1f1fca4b130832833bf4a44dc1cf76d52a846ec74c0c76d36",
+        "16_recordingMeta.csv": "0d71c7ff3573524fb4b763191ab188acc94fd89bda7247fe1b2641bb7da1b6eb"
+      }
+    },
+    {
+      "recording_id": "03",
+      "split": "calibration",
+      "candidate_events": 116,
+      "eligible_scenes": 44,
+      "exported": 12,
+      "selected_strata": {
+        "medium_closing": 3,
+        "medium_opening": 3,
+        "short_closing": 2,
+        "short_opening": 2,
+        "long_opening": 2
+      },
+      "rejected": {
+        "incomplete_primary_window": 26,
+        "no_target_follower": 35,
+        "target_follower_out_of_range": 11
+      },
+      "source_sha256": {
+        "03_tracks.csv": "28fb1938287f03975f38bea5c6f8d2fabe2a964f11287a48c38fbdc758524958",
+        "03_tracksMeta.csv": "0051fb82678076a8ba511cc0e13b3e2785ffdd3a4d8ead645af99aba20583f24",
+        "03_recordingMeta.csv": "9250b0d3c1623c9a86c51bdca760c0e34e64ed2e98df189eec0b07dc8a0b8f20"
+      }
+    },
+    {
+      "recording_id": "06",
+      "split": "calibration",
+      "candidate_events": 295,
+      "eligible_scenes": 100,
+      "exported": 12,
+      "selected_strata": {
+        "long_closing": 1,
+        "medium_opening": 3,
+        "medium_closing": 2,
+        "short_opening": 2,
+        "long_opening": 2,
+        "short_closing": 2
+      },
+      "rejected": {
+        "no_target_follower": 101,
+        "target_follower_out_of_range": 19,
+        "incomplete_primary_window": 62,
+        "target_follower_changes_lane": 5
+      },
+      "source_sha256": {
+        "06_tracks.csv": "9144ecc409625a128652a8c68034fbb47b23b85a4f035e268d7b3dbe82df8315",
+        "06_tracksMeta.csv": "5420632399e754779eb6a3fd8ec710e63df70edbfa96293b913f0723dea0c209",
+        "06_recordingMeta.csv": "ebfa8c34d10b811445529c17974b3ca52ea1310c76e34eb9f637aa9878333aee"
+      }
+    },
+    {
+      "recording_id": "09",
+      "split": "calibration",
+      "candidate_events": 236,
+      "eligible_scenes": 70,
+      "exported": 12,
+      "selected_strata": {
+        "medium_closing": 3,
+        "short_closing": 2,
+        "long_opening": 2,
+        "medium_opening": 2,
+        "long_closing": 1,
+        "short_opening": 2
+      },
+      "rejected": {
+        "target_follower_out_of_range": 13,
+        "no_target_follower": 70,
+        "incomplete_primary_window": 71,
+        "target_follower_changes_lane": 7
+      },
+      "source_sha256": {
+        "09_tracks.csv": "fe144137574b1a56d0fbcb66c0293fe8f4c519ad4a26f775e63a4cff365fab2d",
+        "09_tracksMeta.csv": "32b155039a2a8c6386867e99ad98b715636d604f4a4f354f5f57103073a618b6",
+        "09_recordingMeta.csv": "92eae8d95f987ae32866efc2e17cd31adda94638dc9a338b3962c16e6ab54986"
+      }
+    },
+    {
+      "recording_id": "13",
+      "split": "calibration",
+      "candidate_events": 316,
+      "eligible_scenes": 158,
+      "exported": 12,
+      "selected_strata": {
+        "medium_opening": 2,
+        "short_closing": 2,
+        "long_opening": 2,
+        "short_opening": 2,
+        "medium_closing": 2,
+        "long_closing": 2
+      },
+      "rejected": {
+        "no_target_follower": 46,
+        "incomplete_primary_window": 90,
+        "target_follower_out_of_range": 17,
+        "target_follower_changes_lane": 2
+      },
+      "source_sha256": {
+        "13_tracks.csv": "b6e379bda6e5ade00d12d7d09a61854a35a3dccd96f25ba762516bed42eaa825",
+        "13_tracksMeta.csv": "90c82f49599be8210330d65789aa827aa3b6b5b78eb819ca363940240a8235b5",
+        "13_recordingMeta.csv": "f90b3639eb8e1c9e98eab72e418cfd608b3aa4cd2c900b1c4f43beb9a830a018"
+      }
+    },
+    {
+      "recording_id": "17",
+      "split": "calibration",
+      "candidate_events": 131,
+      "eligible_scenes": 57,
+      "exported": 12,
+      "selected_strata": {
+        "short_closing": 1,
+        "short_opening": 3,
+        "medium_opening": 3,
+        "long_opening": 3,
+        "medium_closing": 2
+      },
+      "rejected": {
+        "no_target_follower": 33,
+        "incomplete_primary_window": 30,
+        "target_follower_out_of_range": 7
+      },
+      "source_sha256": {
+        "17_tracks.csv": "57558b7425121b16a4c1f5af6ac7adca592b49b9f78b3454db3d7138795f0136",
+        "17_tracksMeta.csv": "bfd403db75ecb9b23c713be34ef307ee8cf0a30585109bca2bb9659a74237f15",
+        "17_recordingMeta.csv": "4116a418f0a8ceff976b86ecf7226d897b71c4851a5bab6c06c1bdc42bb22b21"
+      }
+    },
+    {
+      "recording_id": "25",
+      "split": "calibration",
+      "candidate_events": 143,
+      "eligible_scenes": 99,
+      "exported": 12,
+      "selected_strata": {
+        "short_closing": 2,
+        "long_closing": 2,
+        "short_opening": 2,
+        "medium_closing": 2,
+        "long_opening": 2,
+        "medium_opening": 2
+      },
+      "rejected": {
+        "incomplete_primary_window": 22,
+        "no_target_follower": 12,
+        "target_follower_out_of_range": 4,
+        "target_follower_changes_lane": 2
+      },
+      "source_sha256": {
+        "25_tracks.csv": "929ecd7798b5952d956c3255ccb08a80096144c9dec3a0e60978562b93500b7b",
+        "25_tracksMeta.csv": "7cfcf1378b2b673751a497d197c596078e05124dece033db6081344a61822f21",
+        "25_recordingMeta.csv": "996c33915c2c961fbda24cff939532a9088884710816fe9476a27a8ab0de5b04"
+      }
+    },
+    {
+      "recording_id": "26",
+      "split": "calibration",
+      "candidate_events": 221,
+      "eligible_scenes": 141,
+      "exported": 12,
+      "selected_strata": {
+        "long_opening": 2,
+        "medium_opening": 2,
+        "medium_closing": 2,
+        "long_closing": 2,
+        "short_opening": 2,
+        "short_closing": 2
+      },
+      "rejected": {
+        "incomplete_primary_window": 37,
+        "no_target_follower": 24,
+        "target_follower_out_of_range": 9,
+        "target_follower_changes_lane": 3
+      },
+      "source_sha256": {
+        "26_tracks.csv": "d23ba1ec54cecc60106e8feaa32bcbab6f3df56f89312dc866f46f8f938ce296",
+        "26_tracksMeta.csv": "1b0e7fd38bdd25057935877ec5a8dec630aa59fc62df4c75df707a195dc4f43e",
+        "26_recordingMeta.csv": "218416ae1106fe32b2be5978c3b83e9d457fed4c8a12228fc478ded3a3f21a75"
+      }
+    },
+    {
+      "recording_id": "27",
+      "split": "calibration",
+      "candidate_events": 261,
+      "eligible_scenes": 118,
+      "exported": 12,
+      "selected_strata": {
+        "medium_opening": 2,
+        "long_opening": 2,
+        "short_closing": 2,
+        "short_opening": 2,
+        "long_closing": 2,
+        "medium_closing": 2
+      },
+      "rejected": {
+        "no_target_follower": 54,
+        "target_follower_changes_lane": 8,
+        "incomplete_primary_window": 62,
+        "target_follower_out_of_range": 15
+      },
+      "source_sha256": {
+        "27_tracks.csv": "5be163674bb36f35a36150fb12c59ad138bee889a7efb8a4a854d96e69539d68",
+        "27_tracksMeta.csv": "8d57f447d24f3ad239e13042cb2bb8b61e503f8f643a28273aea63d45602a323",
+        "27_recordingMeta.csv": "a27cd4aad0a9fad51d6b1023b31038d103fd2669af1df2fe565ac7dca9fd593f"
+      }
+    },
+    {
+      "recording_id": "28",
+      "split": "calibration",
+      "candidate_events": 283,
+      "eligible_scenes": 110,
+      "exported": 12,
+      "selected_strata": {
+        "short_opening": 2,
+        "short_closing": 2,
+        "long_opening": 2,
+        "long_closing": 2,
+        "medium_opening": 2,
+        "medium_closing": 2
+      },
+      "rejected": {
+        "no_target_follower": 68,
+        "incomplete_primary_window": 77,
+        "target_follower_out_of_range": 18,
+        "target_follower_changes_lane": 3
+      },
+      "source_sha256": {
+        "28_tracks.csv": "7ad6e4782c663752128a7ff3bc2a6dee9334ecfebda502b5efdad1d50a86df09",
+        "28_tracksMeta.csv": "0e24f2d86b0af21c90bda038f053d575140e8e4f1868a2150e3cd404cde6b623",
+        "28_recordingMeta.csv": "c923be42d8a9b853cbc511b6161986e38325e3aa6b61e7a8fc49398340840766"
+      }
+    },
+    {
+      "recording_id": "29",
+      "split": "calibration",
+      "candidate_events": 269,
+      "eligible_scenes": 108,
+      "exported": 12,
+      "selected_strata": {
+        "long_opening": 2,
+        "short_closing": 2,
+        "medium_closing": 2,
+        "short_opening": 2,
+        "long_closing": 2,
+        "medium_opening": 2
+      },
+      "rejected": {
+        "no_target_follower": 73,
+        "target_follower_out_of_range": 22,
+        "incomplete_primary_window": 58,
+        "target_follower_changes_lane": 4
+      },
+      "source_sha256": {
+        "29_tracks.csv": "da522c02507e436cd6853f829340f344aaf0a9b1545f4051410e5023a39ed9e6",
+        "29_tracksMeta.csv": "fb9b2f623a9615cbcc3d9ee4c09683d68438bbd58edf94898d48e264000cfce3",
+        "29_recordingMeta.csv": "6a2b76b941053ce4f6ae3c2e35bb8e67c3b71a7a87154c2c546d84bc2513d246"
+      }
+    },
+    {
+      "recording_id": "10",
+      "split": "validation",
+      "candidate_events": 137,
+      "eligible_scenes": 36,
+      "exported": 12,
+      "selected_strata": {
+        "medium_opening": 3,
+        "short_closing": 2,
+        "long_opening": 2,
+        "medium_closing": 2,
+        "long_closing": 1,
+        "short_opening": 2
+      },
+      "rejected": {
+        "target_follower_out_of_range": 11,
+        "incomplete_primary_window": 49,
+        "no_target_follower": 36,
+        "target_follower_changes_lane": 3
+      },
+      "source_sha256": {
+        "10_tracks.csv": "528151c7ebf32bd029c3624897f9baee55e5e7dc9cb2721fdf18bc6e8d0cf383",
+        "10_tracksMeta.csv": "11ee5a53f609dc50cacbcd9e62ec45367b5bc73632b6f908c7d436830785f26d",
+        "10_recordingMeta.csv": "5b34fe2dbfb66ca6090fcd8e6deb1daad96556972d12c19b32e0aec5f9c14883"
+      }
+    },
+    {
+      "recording_id": "14",
+      "split": "validation",
+      "candidate_events": 273,
+      "eligible_scenes": 123,
+      "exported": 12,
+      "selected_strata": {
+        "medium_opening": 2,
+        "medium_closing": 2,
+        "long_opening": 2,
+        "long_closing": 2,
+        "short_closing": 2,
+        "short_opening": 2
+      },
+      "rejected": {
+        "no_target_follower": 49,
+        "incomplete_primary_window": 74,
+        "target_follower_changes_lane": 3,
+        "target_follower_out_of_range": 21
+      },
+      "source_sha256": {
+        "14_tracks.csv": "89a74ca0325fafb8f91cabd020e3e6dc1a2068e9a3e1c627cd28501ed8d6e6c1",
+        "14_tracksMeta.csv": "114293b234b2216676c2ca38d33fe8c9e74af1f46c7435257e0b4d64832ac020",
+        "14_recordingMeta.csv": "050a744f2975ecc0d34866180b384a4ea06446d9b2155b82a3606109ae907829"
+      }
+    },
+    {
+      "recording_id": "18",
+      "split": "validation",
+      "candidate_events": 72,
+      "eligible_scenes": 20,
+      "exported": 12,
+      "selected_strata": {
+        "short_opening": 6,
+        "short_closing": 1,
+        "medium_opening": 5
+      },
+      "rejected": {
+        "incomplete_primary_window": 23,
+        "no_target_follower": 24,
+        "target_follower_changes_lane": 1,
+        "target_follower_out_of_range": 2
+      },
+      "source_sha256": {
+        "18_tracks.csv": "8d9dfaa7219e7d0a95944fe0582d93127e309b7384287538bf9210575bec77a7",
+        "18_tracksMeta.csv": "ed3c93f847123dd1ca52c382e47c335c29a5556d42065bc6c144014c21376c32",
+        "18_recordingMeta.csv": "8fcbf0e0b0bfa6c5af314ad9f6f9c955d5acae2867e5e42305e2acd439433f63"
+      }
+    },
+    {
+      "recording_id": "19",
+      "split": "validation",
+      "candidate_events": 152,
+      "eligible_scenes": 64,
+      "exported": 12,
+      "selected_strata": {
+        "short_opening": 3,
+        "long_opening": 3,
+        "short_closing": 2,
+        "medium_opening": 2,
+        "medium_closing": 2
+      },
+      "rejected": {
+        "incomplete_primary_window": 40,
+        "no_target_follower": 41,
+        "target_follower_out_of_range": 4,
+        "target_follower_changes_lane": 1
+      },
+      "source_sha256": {
+        "19_tracks.csv": "69f7b3646fe31bcf613009d86e32e8460cca876b859d0e2905216b6cef55acf4",
+        "19_tracksMeta.csv": "d37821c89e59924b0d36c3591b5ddc7214bc4d94b5d7603006226112fc6b2c31",
+        "19_recordingMeta.csv": "61487e177165d23ba897444bf9b5ad121b23161500133945b404524d6ec1b5a2"
+      }
+    },
+    {
+      "recording_id": "20",
+      "split": "validation",
+      "candidate_events": 137,
+      "eligible_scenes": 57,
+      "exported": 12,
+      "selected_strata": {
+        "long_closing": 1,
+        "short_closing": 3,
+        "short_opening": 2,
+        "medium_closing": 2,
+        "long_opening": 2,
+        "medium_opening": 2
+      },
+      "rejected": {
+        "no_target_follower": 38,
+        "incomplete_primary_window": 31,
+        "target_follower_out_of_range": 7,
+        "target_follower_changes_lane": 2
+      },
+      "source_sha256": {
+        "20_tracks.csv": "8115a97297f6ce853e68847a6a20a60941c504733d8b3efe7e71eb3fb93d3fdf",
+        "20_tracksMeta.csv": "c568b8e090915b44b1a91ce33cdc2faa669dc1d9875ccc8d076f82542cebcbd5",
+        "20_recordingMeta.csv": "fd798118d7470d31aa255ddb51b1220af2231957e3b2e88be858d1d5ecba05ee"
+      }
+    },
+    {
+      "recording_id": "58",
+      "split": "test",
+      "candidate_events": 117,
+      "eligible_scenes": 45,
+      "exported": 12,
+      "selected_strata": {
+        "medium_closing": 3,
+        "short_opening": 3,
+        "short_closing": 1,
+        "long_opening": 1,
+        "long_closing": 2,
+        "medium_opening": 2
+      },
+      "rejected": {
+        "no_target_follower": 32,
+        "incomplete_primary_window": 24,
+        "target_follower_out_of_range": 7,
+        "target_follower_changes_lane": 5
+      },
+      "source_sha256": {
+        "58_tracks.csv": "7f58bce3a2e7e843a7fcc6950716d0bbd35df34b7658d1fc75b189b3a65ce6e5",
+        "58_tracksMeta.csv": "035a09eaf44f7bb2ee9a13efa94329cf01094c85db5dad0dd2068f898d76d869",
+        "58_recordingMeta.csv": "dba25fa6d40934e8b61c7d4a143085b834be128577f3a1195c8fec39f9132803"
+      }
+    },
+    {
+      "recording_id": "59",
+      "split": "test",
+      "candidate_events": 116,
+      "eligible_scenes": 27,
+      "exported": 12,
+      "selected_strata": {
+        "medium_opening": 3,
+        "long_opening": 3,
+        "short_opening": 2,
+        "medium_closing": 2,
+        "short_closing": 2
+      },
+      "rejected": {
+        "target_follower_changes_lane": 3,
+        "incomplete_primary_window": 32,
+        "target_follower_out_of_range": 17,
+        "no_target_follower": 36
+      },
+      "source_sha256": {
+        "59_tracks.csv": "649213c823b572c4a83185421dd76c98f6dd6b27bbcb157dc1ed8556428b6d27",
+        "59_tracksMeta.csv": "bfe1b5a16ffad89aa304acc9fd18b0a8ed01c0b0b2aeeacf9fb089b63aa94d9a",
+        "59_recordingMeta.csv": "1f10bf5ae342c4ce29e20fbf2a906034a242120be0dfb6e080152a9d73d6630c"
+      }
+    },
+    {
+      "recording_id": "60",
+      "split": "test",
+      "candidate_events": 271,
+      "eligible_scenes": 91,
+      "exported": 12,
+      "selected_strata": {
+        "short_opening": 2,
+        "short_closing": 2,
+        "long_closing": 2,
+        "medium_closing": 2,
+        "long_opening": 2,
+        "medium_opening": 2
+      },
+      "rejected": {
+        "target_follower_out_of_range": 25,
+        "incomplete_primary_window": 56,
+        "no_target_follower": 87,
+        "target_follower_changes_lane": 5
+      },
+      "source_sha256": {
+        "60_tracks.csv": "e258bd1eee47b51c34ebbb4a38cde11d158391732e4f850fe81a31c1ec837dc9",
+        "60_tracksMeta.csv": "50c6e4dd0a94423006b6eab4c3694604683fc42076acc68e4cd886f91064ebe5",
+        "60_recordingMeta.csv": "0e10960a3c7d07a9d862ffbc4db0f80f93088d951e13b0efe911c1bf80e708a5"
+      }
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "status": "validation pilot; not a held-out test result",
+  "date": "2026-09-12",
+  "seed": 7,
+  "scene_count": 60,
+  "recording_count": 5,
+  "budget_per_search": 24,
+  "manifest_sha256": "63dbfc42edc28da0dc3bdd325e5bd01f392cb36699bd7903961fc579af6940db",
+  "implementation_sha256": "c744cb3dbe37511825f517f65cb9958b19f64c52e2ad7264216672fabef0ca24",
+  "collision_definition": "CAV versus controlled lane changer after the 1.0 s observed prefix; axis-aligned boxes with four linear substeps per 25 Hz interval",
+  "near_miss_clearance_m": 1.0,
+  "methods": {
+    "replay": {"target_collision_scenes": 0, "near_miss_scenes": 0, "mean_target_future_clearance_m": 31.160628, "feasible_candidates": 60},
+    "uniform": {"target_collision_scenes": 0, "near_miss_scenes": 0, "mean_target_future_clearance_m": 29.455801, "feasible_candidates": 1256},
+    "constrained_search": {"target_collision_scenes": 0, "near_miss_scenes": 0, "mean_target_future_clearance_m": 28.979519, "feasible_candidates": 1110},
+    "timed_action_uniform": {"target_collision_scenes": 0, "near_miss_scenes": 0, "mean_target_future_clearance_m": 30.241563, "feasible_candidates": 770},
+    "timed_action_constrained_search": {"target_collision_scenes": 0, "near_miss_scenes": 0, "mean_target_future_clearance_m": 29.369046, "feasible_candidates": 990}
+  },
+  "interpretation": "The corrected objective and timed pulse improve attribution but do not establish collision-generation efficacy on this natural validation set and budget. No evaluated candidate reached the predefined near-miss boundary."
+}
