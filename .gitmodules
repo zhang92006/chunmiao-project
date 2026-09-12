@@ -1,0 +1,3 @@
+[submodule "external/autoware_msgs"]
+	path = external/autoware_msgs
+	url = https://github.com/autowarefoundation/autoware_msgs.git
