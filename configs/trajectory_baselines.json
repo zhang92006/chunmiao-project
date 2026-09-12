@@ -1,0 +1,16 @@
+{
+  "seed": 7,
+  "budget_per_search": 24,
+  "observed_prefix_s": 1.0,
+  "max_longitudinal_offset_m": 8.0,
+  "max_lateral_offset_m": 0.8,
+  "max_speed_mps": 60.0,
+  "max_abs_longitudinal_accel_mps2": 6.0,
+  "max_abs_lateral_accel_mps2": 3.0,
+  "max_abs_jerk_mps3": 15.0,
+  "intervention_penalty": 0.2,
+  "idm": {"desired_speed_mps": 35.0, "time_headway_s": 1.5, "min_gap_m": 5.0, "accel_mps2": 2.0, "brake_mps2": 4.0},
+  "missing_interval_s": [1.25, 2.75],
+  "completion_samples": 32,
+  "completion_spread_m": [1.0, 0.3]
+}

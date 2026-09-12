@@ -1,0 +1,97 @@
+import json
+from pathlib import Path
+import unittest
+
+import numpy as np
+
+from scenario_reconstruction.trajectory_benchmark import (
+    box_clearance, deformation, deform_scene, evaluate,
+    reconstruct, risk_metrics, rollout_idm, search, validate_scene, validate_benchmark_config,
+)
+
+
+def synthetic_scene():
+    time = np.linspace(0, 4, 101)
+    offset, velocity, acceleration = deformation(time, 0, [0, 4])
+    ego_xy = np.column_stack([25 * time, np.zeros(len(time))])
+    bv_xy = np.column_stack([20 + 23 * time, np.full(len(time), -4)]) + offset
+    return {"scene_id": "synthetic", "time": time.tolist(), "changer_id": "2",
+            "road_boundaries_y": [-6, -2, 2], "actors": [
+                {"id": "1", "role": "CAV", "length": 4.5, "width": 2,
+                 "xy": ego_xy.tolist(), "velocity": np.tile([25, 0], (len(time), 1)).tolist(),
+                 "acceleration": np.zeros_like(ego_xy).tolist()},
+                {"id": "2", "role": "BV", "length": 4.5, "width": 2,
+                 "xy": bv_xy.tolist(), "velocity": (velocity + [23, 0]).tolist(),
+                 "acceleration": acceleration.tolist()}]}
+
+
+class TrajectoryBenchmarkTests(unittest.TestCase):
+    def setUp(self):
+        self.config = json.loads(Path("configs/trajectory_baselines.json").read_text())
+        self.scene = synthetic_scene()
+
+    def test_scene_validation_and_observed_prefix_fixed(self):
+        validate_scene(self.scene)
+        observed = np.asarray(self.scene["time"]) <= 1
+        generated = deform_scene(self.scene, [-8, 0.5], self.config)
+        for field, values in zip(("xy", "velocity", "acceleration"), generated):
+            original = np.asarray([actor[field] for actor in self.scene["actors"]])
+            np.testing.assert_equal(values[:, observed], original[:, observed])
+        self.scene["time"][1] = self.scene["time"][0]
+        with self.assertRaises(ValueError):
+            validate_scene(self.scene)
+
+    def test_invalid_config_rejected(self):
+        self.config["max_abs_jerk_mps3"] = float("nan")
+        with self.assertRaisesRegex(ValueError, "jerk"):
+            validate_benchmark_config(self.config)
+
+    def test_box_geometry_and_adjacent_lane_ttc(self):
+        self.assertLess(box_clearance([0, 0], [2, 0], [4, 2], np.array([4, 2])), 0)
+        self.assertGreater(box_clearance([0, 0], [0, 4], [4, 2], np.array([4, 2])), 0)
+        xy, velocity, _ = deform_scene(self.scene, [0, 0], self.config)
+        xy[1, :, 1] = -4
+        metrics = risk_metrics(self.scene, xy, velocity)
+        self.assertIsNone(metrics["min_ttc_s"])
+        self.assertFalse(metrics["collision"])
+
+    def test_constraints_and_reproducible_search(self):
+        self.assertTrue(evaluate(self.scene, [0, 0], self.config)["feasible"])
+        self.assertIn("offroad", evaluate(self.scene, [0, 10], self.config)["violations"])
+        first = search(self.scene, "uniform", self.config, 7)
+        second = search(self.scene, "uniform", self.config, 7)
+        self.assertEqual(first["trials"], second["trials"])
+        self.assertEqual(first["evaluations"], self.config["budget_per_search"])
+        optimized = search(self.scene, "constrained_search", self.config, 7)
+        self.assertLessEqual(optimized["evaluations"], self.config["budget_per_search"])
+        self.assertTrue(optimized["selected"]["feasible"])
+
+    def test_cav_reacts_after_prefix(self):
+        xy, velocity, _ = deform_scene(self.scene, [0, 0], self.config)
+        close = xy.copy()
+        close[1, :, 1] = 0
+        far = xy.copy()
+        far[1, :, 1] = -4
+        close_result, _, _ = rollout_idm(self.scene, close, velocity, self.config)
+        far_result, _, _ = rollout_idm(self.scene, far, velocity, self.config)
+        observed = np.asarray(self.scene["time"]) <= 1
+        np.testing.assert_equal(close_result[:, observed], close[:, observed])
+        self.assertLess(close_result[0, -1, 0], far_result[0, -1, 0])
+
+    def test_no_hidden_truth_input_or_endpoint_extrapolation(self):
+        time = np.linspace(0, 4, 101)
+        truth = np.column_stack([2 * time, np.zeros(len(time))])
+        hidden = (time > 1) & (time < 3)
+        evidence = truth.copy()
+        evidence[hidden] = np.nan
+        for method in ("linear", "cubic", "pchip"):
+            completion = reconstruct(time, evidence, method)
+            np.testing.assert_allclose(completion, truth, atol=1e-12)
+            np.testing.assert_equal(completion[~hidden], evidence[~hidden])
+        evidence[0] = np.nan
+        with self.assertRaises(ValueError):
+            reconstruct(time, evidence, "linear")
+
+
+if __name__ == "__main__":
+    unittest.main()
