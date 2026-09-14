@@ -1,0 +1,43 @@
+{
+  "status": "retrospective offline diagnostic label; not online prediction or accident ground truth",
+  "dataset": "highD-v1.0",
+  "splits": ["train", "validation"],
+  "scene_count": 180,
+  "recording_count": 15,
+  "high_conflict_potential_scenes": 7,
+  "high_conflict_potential_recordings": 5,
+  "native_target_future_collision_scenes": 0,
+  "by_split": {
+    "train": {"scene_count": 120, "high_conflict_potential_scenes": 5},
+    "validation": {"scene_count": 60, "high_conflict_potential_scenes": 2}
+  },
+  "selected_strata": {"short_closing": 7},
+  "exclusion_reason_counts": {
+    "overlap_longitudinal_clearance_within_limit": 161,
+    "event_closing_speed_above_minimum": 104,
+    "event_headway_within_limit": 43,
+    "enough_intervention_lead": 18,
+    "future_lateral_overlap": 1
+  },
+  "selected_scene_ids": [
+    "highd_07_838_14319",
+    "highd_12_1106_8840",
+    "highd_12_1110_8997",
+    "highd_15_145_2715",
+    "highd_15_378_7303",
+    "highd_19_109_2801",
+    "highd_20_531_10973"
+  ],
+  "selected_minimum_native_target_future_clearance_m": 6.47,
+  "manifest_sha256": "63dbfc42edc28da0dc3bdd325e5bd01f392cb36699bd7903961fc579af6940db",
+  "implementation_sha256": "128cb2daafe006eb1802388fd39438c301c2d3df851ccfc660d40521f304b6bc",
+  "config": {
+    "schema_version": 1,
+    "observed_prefix_s": 1.0,
+    "max_event_headway_s": 2.0,
+    "min_event_closing_speed_mps": 0.1,
+    "max_overlap_longitudinal_clearance_m": 15.0,
+    "min_intervention_lead_s": 0.2,
+    "require_changer_ahead_at_event": true
+  }
+}
