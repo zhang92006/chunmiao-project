@@ -1,0 +1,26 @@
+{
+  "status": "calibration interface validated; complete grid not executed",
+  "source_scenario_id": "shrp2_131785457_rear_end_source_speed",
+  "source_split": "train",
+  "configuration": "configs/shrp2_rear_end_calibration.json",
+  "grid_candidate_count": 60,
+  "grid_generated_count": 60,
+  "single_candidate_smoke_test": {
+    "candidate_index": 0,
+    "initial_gap_m": 8.355100306780798,
+    "braking_acceleration_mps2": -2.0,
+    "braking_start_time_s": 0.0,
+    "braking_duration_s": 3.0,
+    "collision_result": false,
+    "collision_ids": [],
+    "end_time_s": 5.9,
+    "minimum_ttc_s": 1.3563433510920901,
+    "minimum_distance_m": 1.073638777833139,
+    "selection_status": "not_selected"
+  },
+  "interpretation": [
+    "The candidate generator, SUMO execution path, episode parser, and selection rule all executed successfully.",
+    "One non-collision candidate does not establish the full grid result.",
+    "The 60-candidate grid must be run by the user before selecting a calibration setting."
+  ]
+}
