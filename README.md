@@ -81,6 +81,11 @@ closed-loop SUMO results. See
 [`docs/SHRP2碰撞数据处理.md`](docs/SHRP2碰撞数据处理.md) for provenance,
 quality tiers, limitations, and the SUMO integration plan.
 
+The first SUMO bridge maps only high-confidence same-direction rear-end seeds;
+it does not claim closed-loop crash reproduction. See
+[`docs/SHRP2到SUMO映射分析.md`](docs/SHRP2到SUMO映射分析.md) for the executed
+mapping result, blocked road topologies, and calibration requirements.
+
 Detailed implementation and experiment notes are under
 `scenario_reconstruction/`.
 

@@ -1,0 +1,39 @@
+{
+  "status": "initialization bridge validated; collision reproduction not yet achieved",
+  "source": {
+    "dataset_doi": "10.15787/VTT1/T7UUC1",
+    "source_split": "train",
+    "test_split_used": false,
+    "kinematic_seed_summary": "results/shrp2_collision_pilot_summary.json"
+  },
+  "bridge_configuration": "configs/shrp2_sumo_bridge_pilot.json",
+  "seed_records": 12,
+  "templates_created": 3,
+  "blocked": {
+    "count": 6,
+    "simulation_types": ["crossing", "opposing_turn"],
+    "reason": "Current project ships only a same-direction 2Lane SUMO network."
+  },
+  "excluded": {
+    "count": 3,
+    "simulation_type": "lateral_sideswipe",
+    "reason": "All available seeds are low-quality because their impact conditioning shift is 5.187 m."
+  },
+  "smoke_execution": {
+    "source_scenario_id": "shrp2_131785457_rear_end_source_speed",
+    "map": "2Lane",
+    "initial_longitudinal_gap_m": 16.355100306780805,
+    "cav_speed_mps": 3.1173562720683066,
+    "primary_bv_speed_mps": 0.5215703254443228,
+    "collision_result": false,
+    "collision_ids": [],
+    "simulation_end_time_s": 20.8,
+    "minimum_ttc_s": 4.31784191829767,
+    "minimum_distance_m": 8.82303711877637
+  },
+  "interpretation": [
+    "The bridge preserves initial longitudinal geometry and executes in SUMO, but the default IDM policy avoids the source-conditioned collision.",
+    "This is a negative reproduction result, not evidence that the SHRP2 event was safe.",
+    "The current run_template entry point does not use ScenarioTemplate.duration as a simulation stopping condition."
+  ]
+}
