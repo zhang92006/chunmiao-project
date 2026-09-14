@@ -1,81 +1,83 @@
 # SHRP2 追尾碰撞校准协议
 
-## 目标与边界
+## 结论
 
-本协议只用于把高可信、训练划分的 SHRP2 追尾初始化候选校准为可控的 SUMO 碰撞压力测试。它不是事故动力学重放，也不从 SHRP2 直接估计制动行为概率。
+零碰撞不是 SUMO 碰撞检测失效，而是当前项目控制层与校准事件共同造成的：
 
-校准输入必须来自 `shrp2_sumo_bridge` 生成的高可信 `rear_end` JSON 模板。低可信种子、验证集和测试集不得参与本阶段参数搜索。
+1. 项目全局采用 `high_speed`，`Vehicle.act()` 会把车辆动作裁剪到 20–40 m/s；SHRP2 样本的 CAV/BV 初速仅为 3.117/0.522 m/s，因此 v1 的低速 BV 制动没有按预期执行。
+2. v1 的 BV 制动只持续到 3.0 s，而目标碰撞时刻是 4.0 s；BV 随后恢复 IDM 并加速，在最小间距约 2.53 m 时脱离冲突。
+3. 没有覆盖 CAV 响应时，项目中的安全跟驰控制会主动降速或换道。
 
-## 搜索参数与固定规则
+因此 v1 的 60 条结果只保留为工程诊断，不能用于论文中的制动参数结论。v2 绕过低速动作的 20 m/s 下限，将 BV 制动延长到 5 s，并增加明确标记为“仅校准”的 CAV 响应保持窗口。
 
-配置文件 `configs/shrp2_rear_end_calibration.json` 固定以下网格：
+## v2 的科学边界
 
-| 参数 | 候选值 |
-|---|---|
-| 初始间距偏移 | -8、-6、-4、-2、0 m |
-| 主 BV 制动加速度 | -2、-4、-6、-8 m/s² |
-| 制动触发时刻 | 0、0.5、1.0 s |
-| 制动持续时间 | 3 s |
-| 最小初始间距 | 7 m |
-| 目标首次碰撞时刻 | 4 s |
-| 时间容差 | 0.3 s |
+`calibration_cav_action` 是碰撞可达性干预，不是感知延迟、控制延迟或人类驾驶员反应模型。它只回答：“在安全初态下，如果 CAV 在限定窗口内保持当前响应，SUMO 能否到达并记录目标追尾？”
 
-总计 60 个候选。候选初始间距小于 7 m、或事件超出模板时长时会在运行前被拒绝。每个候选中的制动事件带有 `calibration_only=true` 和 `not_for_d2rl_training=true` 标记，不能直接进入训练数据目录。
+该事件必须满足：
 
-## 选择规则
+- 只能作用于 `CAV`；
+- `calibration_only=true`；
+- `not_for_d2rl_training=true`；
+- 不写入 D2RL 训练事件权重与观测；
+- 不能把结果称为 SHRP2 事故的精确重放。
 
-一个候选只有同时满足以下条件才被标为 `selected`：
+配置文件为 `configs/shrp2_rear_end_calibration_v2.json`。网格共 45 条，由 5 个初始位置差、3 个 CAV 加速度和 3 个保持时长组成。这里的 `initial_gap_m` 是 BV 与 CAV 的纵向位置差，不是保险杠净距。
 
-1. 初始间距不小于 7 m；
-2. SUMO 报告碰撞；
-3. 碰撞对象包含 `CAV` 与 `BV_primary`；
-4. 碰撞结束记录相对 4 s 的误差绝对值不超过 0.3 s。
+## 验证结果
 
-输出还会保存最小 TTC、最小间距、候选参数、碰撞 ID、时间误差和未选中原因。`selected` 的含义仅为“满足当前 SUMO 校准准则”，不是“精确复现 SHRP2 事故”。
+v2 短验证只运行了前三条候选，3/3 均由 SUMO 报告 `CAV` 与 `BV_primary` 在 3.8 s 发生碰撞，目标时刻误差为 -0.2 s，满足 ±0.3 s 规则。最小记录 TTC 为 0.00595 s，最小记录距离为 0.0196 m。
 
-## 接口冒烟结果
+这证明：
 
-完整网格尚未运行。已对候选 0 进行一次短接口验证：初始间距 8.355 m、BV 制动 -2 m/s²、在 0 s 触发、持续 3 s。该候选没有碰撞，最小 TTC 为 1.356 s、最小间距为 1.074 m，因而被正确标为 `not_selected`。
+- SUMO 的物理接触检测接口可用；
+- 低速动作绕过修复有效；
+- 该 SHRP2 初态在声明的干预条件下具有追尾可达性；
+- 尚未证明真实驾驶员或真实 ADS 会以该方式响应。
 
-这验证了“候选生成 → SUMO 执行 → episode 解析 → 选择规则”的工程链路；它不代表其余 59 条候选的结果。机器可读记录为 `results/shrp2_rear_end_calibration_interface_summary.json`。
+机器可读摘要位于 `results/shrp2_rear_end_calibration_v2_interface_summary.json`。
 
-## 命令
+## 是否更换仿真器
 
-先只生成 60 个候选、检查清单，不运行 SUMO：
+SUMO 官方说明，碰撞可被检测和记录；在 `--collision.mingap-factor 0` 下判据是车辆物理外形接触，TraCI 的 `speedMode` 可关闭安全速度约束。因此当前问题不要求更换 SUMO：项目已经使用 `collision.mingap-factor=0`、`collision.action=warn`，v2 也已实测记录碰撞。
 
-```powershell
-Set-Location 'G:\chunmiao\d2rl\Dense-Deep-Reinforcement-Learning\scenario_reconstruction'
+CARLA 能提供三维刚体动力学、碰撞传感器、摄像头/雷达和更真实的车辆响应，适合后期做传感器与动力学复核；但 CARLA Traffic Manager 本身也有碰撞风险检测与制动阶段，直接换成默认自动驾驶同样可能避免碰撞。换软件不能替代“故障/响应模型”的定义。
 
-& 'D:\Anaconda3\envs\D2RL\python.exe' -m scenario_reconstruction.shrp2_collision_calibration `
-  data_analysis\raw_data\shrp2_sumo_bridge_pilot\templates\sumo_shrp2_131785457_rear_end_source_speed.json `
-  --config configs\shrp2_rear_end_calibration.json `
-  --output data_analysis\raw_data\shrp2_rear_end_calibration_grid
-```
+推荐采用两级方案：SUMO 负责大规模场景搜索、概率估计和消融实验；冻结选中的代表性碰撞后，再把少量场景迁移到 CARLA 做动力学和传感器层验证。现阶段直接整体迁移会增加地图、坐标、控制器和复现成本，却不会自动解决零碰撞。
 
-运行完整网格会顺序执行 60 条 SUMO episode，预计数分钟；请由用户在 PowerShell 中运行，并保存日志：
+参考：
+
+- [SUMO Safety](https://sumo.dlr.de/docs/Simulation/Safety.html)
+- [SUMO TraCI vehicle state](https://sumo.dlr.de/docs/TraCI/Change_Vehicle_State.html)
+- [SUMO ACC model](https://sumo.dlr.de/docs/Car-Following-Models/ACC.html)
+- [CARLA Traffic Manager](https://carla.readthedocs.io/en/latest/adv_traffic_manager/)
+- [CARLA collision sensor](https://carla.readthedocs.io/en/latest/ref_sensors/)
+
+## 完整 v2 网格命令
+
+完整运行会顺序执行 45 条 SUMO episode，请在 PowerShell 中运行：
 
 ```powershell
 Set-Location 'G:\chunmiao\d2rl\Dense-Deep-Reinforcement-Learning\scenario_reconstruction'
 
 New-Item -ItemType Directory -Force data_analysis\logs | Out-Null
 
-$log = 'data_analysis\logs\shrp2_rear_end_calibration_grid.log'
+$calibrationLog = 'data_analysis\logs\shrp2_rear_end_calibration_v2_grid.log'
 
 & 'D:\Anaconda3\envs\D2RL\python.exe' -m scenario_reconstruction.shrp2_collision_calibration `
   data_analysis\raw_data\shrp2_sumo_bridge_pilot\templates\sumo_shrp2_131785457_rear_end_source_speed.json `
-  --config configs\shrp2_rear_end_calibration.json `
-  --output data_analysis\raw_data\shrp2_rear_end_calibration_grid_run `
-  --run 2>&1 | Tee-Object -FilePath $log
+  --config configs\shrp2_rear_end_calibration_v2.json `
+  --output data_analysis\raw_data\shrp2_rear_end_calibration_v2_grid_run `
+  --run 2>&1 | Tee-Object -FilePath $calibrationLog
 ```
 
-测试接口时只运行第一个候选：
+完成后检查：
 
 ```powershell
-& 'D:\Anaconda3\envs\D2RL\python.exe' -m scenario_reconstruction.shrp2_collision_calibration `
-  data_analysis\raw_data\shrp2_sumo_bridge_pilot\templates\sumo_shrp2_131785457_rear_end_source_speed.json `
-  --config configs\shrp2_rear_end_calibration.json `
-  --output data_analysis\raw_data\shrp2_rear_end_calibration_one `
-  --run --max_candidates 1
+$summaryPath = 'data_analysis\raw_data\shrp2_rear_end_calibration_v2_grid_run\calibration_summary.json'
+$summary = Get-Content $summaryPath -Raw | ConvertFrom-Json
+$summary | Select-Object executed_count, selected_count
+$summary.selected | Select-Object candidate_index, initial_gap_m, cav_override_acceleration_mps2, cav_override_duration_s, end_time_s, collision_time_error_s
 ```
 
-完整运行完成后，把 `calibration_summary.json` 的路径或日志发给我；我会生成筛选结果、失败类型统计和下一阶段的验证集冻结方案。
+完整结果出来后，再冻结一个最接近 4.0 s 的候选，并在验证集上只执行冻结协议，不重新调参。

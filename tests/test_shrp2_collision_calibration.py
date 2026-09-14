@@ -7,6 +7,7 @@ from scenario_reconstruction.shrp2_collision_calibration import (
     _outcome,
     generate_calibration_candidates,
 )
+from scenario_reconstruction.templates import ScenarioTemplate
 
 
 class SHRP2CollisionCalibrationTests(unittest.TestCase):
@@ -57,6 +58,47 @@ class SHRP2CollisionCalibrationTests(unittest.TestCase):
             _outcome(record, Path("crash/0.json"), episode, manifest)["selection_status"],
             "not_selected",
         )
+
+    def test_v2_adds_auditable_cav_reachability_action(self):
+        config = {
+            **self.config,
+            "schema_version": 2,
+            "cav_override_accelerations_mps2": [0.0],
+            "cav_override_start_time_s": 0.0,
+            "cav_override_durations_s": [4.0],
+        }
+        with tempfile.TemporaryDirectory() as temporary:
+            temporary_path = Path(temporary)
+            source_path = temporary_path / "source.json"
+            source_path.write_text(json.dumps(self._source_template()), encoding="utf-8")
+            manifest = generate_calibration_candidates(
+                source_path, temporary_path / "output", config
+            )
+            record = next(
+                item for item in manifest["records"] if item["status"] == "generated"
+            )
+            candidate = json.loads(
+                Path(record["template_path"]).read_text(encoding="utf-8")
+            )
+            cav_event = candidate["events"][1]
+            self.assertEqual(cav_event["type"], "calibration_cav_action")
+            self.assertTrue(cav_event["params"]["not_for_d2rl_training"])
+            self.assertEqual(
+                candidate["calibration_metadata"]["cav_override_semantics"],
+                "calibration reachability intervention; not a delay model",
+            )
+
+    def test_cav_calibration_action_cannot_be_used_as_training_event(self):
+        source = self._source_template()
+        source["events"] = [{
+            "type": "calibration_cav_action",
+            "actor": "CAV",
+            "start_time": 0.0,
+            "duration": 1.0,
+            "params": {"calibration_only": True},
+        }]
+        with self.assertRaisesRegex(ValueError, "not_for_d2rl_training"):
+            ScenarioTemplate.from_dict(source)
 
     @staticmethod
     def _source_template():

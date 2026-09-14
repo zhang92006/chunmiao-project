@@ -50,7 +50,10 @@ class ScenarioNADE(NADE):
                     apply_once = bool(event.params.get("apply_once", True))
                     if not apply_once or event_key not in self._logged_training_events:
                         self._apply_forced_bv_action(event)
-                    self._record_forced_training_step(event)
+                    if event.params.get("calibration_only") is not True:
+                        self._record_forced_training_step(event)
+                elif event.type == "calibration_cav_action":
+                    self._apply_calibration_cav_action(event)
 
     def _step(self):
         control_info_list = super()._step()
@@ -97,6 +100,9 @@ class ScenarioNADE(NADE):
     def _apply_forced_bv_action(self, event: EventSpec):
         if event.actor not in self.vehicle_list:
             return
+        if event.params.get("calibration_only") is True:
+            self._apply_calibration_longitudinal_action(event)
+            return
         vehicle = self.vehicle_list[event.actor]
         action = {
             "lateral": str(event.params.get("lateral", "central")),
@@ -106,6 +112,48 @@ class ScenarioNADE(NADE):
             return
         vehicle.controller.action = action
         vehicle.act(action)
+
+    def _apply_calibration_cav_action(self, event: EventSpec):
+        """Override the CAV response for an explicitly calibration-only window.
+
+        This is an intervention used to test crash reachability.  It is not a
+        perception-delay or control-delay implementation and is deliberately
+        excluded from the D2RL training-event bookkeeping below.
+        """
+        if event.actor != self.scenario_template.ego.id:
+            raise ValueError("calibration_cav_action may target only the ego CAV")
+        if event.params.get("calibration_only") is not True:
+            raise ValueError("calibration_cav_action requires calibration_only=true")
+        if event.params.get("not_for_d2rl_training") is not True:
+            raise ValueError(
+                "calibration_cav_action requires not_for_d2rl_training=true"
+            )
+        self._apply_calibration_longitudinal_action(event)
+
+    def _apply_calibration_longitudinal_action(self, event: EventSpec):
+        """Apply low-speed calibration acceleration without the 20 m/s clamp.
+
+        ``Vehicle.act`` uses the project's global high-speed action bounds and
+        therefore clips SHRP2 low-speed actions to at least 20 m/s.  Calibration
+        events use the simulator's acceleration primitive directly while still
+        disabling SUMO's speed and lane-change safety checks explicitly.
+        """
+        if event.actor not in self.vehicle_list:
+            return
+        vehicle = self.vehicle_list[event.actor]
+        self.simulator.set_vehicle_speedmode(vehicle.id, 0)
+        self.simulator.set_vehicle_lanechangemode(vehicle.id, 0)
+        current_lane_offset = self.simulator.get_vehicle_lateral_lane_position(
+            vehicle.id
+        )
+        self.simulator.change_vehicle_sublane_dist(
+            vehicle.id, -current_lane_offset, self.simulator.step_size
+        )
+        self.simulator.change_vehicle_speed(
+            vehicle.id,
+            float(event.params.get("longitudinal", 0.0)),
+            vehicle.action_step_size,
+        )
 
     def _record_forced_training_step(self, event: EventSpec):
         event_key = self._event_key(event)

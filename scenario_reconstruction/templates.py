@@ -12,6 +12,7 @@ VALID_FAILURE_TYPES = {
     "perception_position_bias",
     "control_delay",
     "forced_bv_action",
+    "calibration_cav_action",
 }
 
 
@@ -124,6 +125,23 @@ class ScenarioTemplate:
                 raise ValueError(f"{event.type} extends beyond scenario duration.")
             if event.type not in VALID_FAILURE_TYPES:
                 raise ValueError(f"Unsupported event type: {event.type}")
+            if event.type == "calibration_cav_action":
+                if event.actor != self.ego.id:
+                    raise ValueError(
+                        "calibration_cav_action may target only the ego CAV."
+                    )
+                if event.params.get("calibration_only") is not True:
+                    raise ValueError(
+                        "calibration_cav_action requires calibration_only=true."
+                    )
+                if event.params.get("not_for_d2rl_training") is not True:
+                    raise ValueError(
+                        "calibration_cav_action requires not_for_d2rl_training=true."
+                    )
+                if event.params.get("lateral", "central") != "central":
+                    raise ValueError(
+                        "calibration_cav_action supports longitudinal calibration only."
+                    )
 
         for item in self.perturbations:
             if item.distribution != "uniform":

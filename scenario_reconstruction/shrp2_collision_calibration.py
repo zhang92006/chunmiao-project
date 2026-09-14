@@ -1,8 +1,10 @@
 """Generate and evaluate auditable SUMO calibration candidates for SHRP2 rear-end seeds.
 
-Calibration searches a limited set of initial gaps and scripted primary-BV
-braking actions.  A selected candidate is only a SUMO calibration result; it
-must never be labelled an exact replay of the originating SHRP2 crash.
+Calibration searches a limited set of initial gaps and declared interventions.
+Schema v1 scripts primary-BV braking only.  Schema v2 also applies an explicit,
+calibration-only CAV response hold; it is a reachability test, not a modeled
+perception or controller delay.  A selected candidate is only a SUMO
+calibration result and must never be labelled an exact SHRP2 crash replay.
 """
 from __future__ import annotations
 
@@ -19,8 +21,9 @@ from .templates import ScenarioTemplate
 
 
 def validate_config(config: dict[str, Any]) -> None:
-    if config.get("schema_version") != 1:
-        raise ValueError("Only SHRP2 calibration schema_version 1 is supported")
+    schema_version = config.get("schema_version")
+    if schema_version not in (1, 2):
+        raise ValueError("Only SHRP2 calibration schema_version 1 or 2 is supported")
     if config.get("source_split") != "train":
         raise ValueError("Collision calibration may use only the project train split")
     for name in ("gap_offsets_m", "braking_accelerations_mps2", "braking_start_times_s"):
@@ -32,6 +35,36 @@ def validate_config(config: dict[str, Any]) -> None:
             raise ValueError(f"{name} must be a non-empty list of finite numbers")
     if any(value >= 0 for value in config["braking_accelerations_mps2"]):
         raise ValueError("braking_accelerations_mps2 values must be negative")
+    if schema_version == 2:
+        for name in (
+            "cav_override_accelerations_mps2",
+            "cav_override_durations_s",
+        ):
+            values = config.get(name)
+            if not isinstance(values, list) or not values or any(
+                isinstance(value, bool)
+                or not isinstance(value, (int, float))
+                or not math.isfinite(value)
+                for value in values
+            ):
+                raise ValueError(f"{name} must be a non-empty list of finite numbers")
+        if any(value <= 0 for value in config["cav_override_durations_s"]):
+            raise ValueError("cav_override_durations_s values must be positive")
+        if any(
+            value < -4 or value > 2
+            for value in config["cav_override_accelerations_mps2"]
+        ):
+            raise ValueError(
+                "cav_override_accelerations_mps2 values must stay within [-4, 2]"
+            )
+        cav_start = config.get("cav_override_start_time_s")
+        if (
+            isinstance(cav_start, bool)
+            or not isinstance(cav_start, (int, float))
+            or not math.isfinite(cav_start)
+            or cav_start < 0
+        ):
+            raise ValueError("cav_override_start_time_s must be finite and non-negative")
     for name in ("braking_duration_s", "minimum_initial_gap_m", "target_collision_time_s", "time_tolerance_s"):
         value = config.get(name)
         if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value <= 0:
@@ -55,18 +88,37 @@ def generate_calibration_candidates(
 
     primary = _find_actor(source, "BV_primary")
     source_gap = float(primary["position"]) - float(source["ego"]["position"])
-    combinations = list(itertools.product(
-        config["gap_offsets_m"],
-        config["braking_accelerations_mps2"],
-        config["braking_start_times_s"],
-    ))
+    schema_version = int(config["schema_version"])
+    cav_accelerations = (
+        config["cav_override_accelerations_mps2"]
+        if schema_version == 2
+        else [None]
+    )
+    cav_durations = (
+        config["cav_override_durations_s"] if schema_version == 2 else [None]
+    )
+    combinations = list(
+        itertools.product(
+            config["gap_offsets_m"],
+            config["braking_accelerations_mps2"],
+            config["braking_start_times_s"],
+            cav_accelerations,
+            cav_durations,
+        )
+    )
     if len(combinations) > config["max_candidates"]:
         raise ValueError(
             f"Grid has {len(combinations)} candidates, above max_candidates={config['max_candidates']}"
         )
 
     records = []
-    for index, (gap_offset, braking_accel, braking_start) in enumerate(combinations):
+    for index, (
+        gap_offset,
+        braking_accel,
+        braking_start,
+        cav_accel,
+        cav_duration,
+    ) in enumerate(combinations):
         initial_gap = source_gap + float(gap_offset)
         record = {
             "candidate_index": index,
@@ -76,6 +128,16 @@ def generate_calibration_candidates(
             "braking_start_time_s": float(braking_start),
             "braking_duration_s": float(config["braking_duration_s"]),
         }
+        if schema_version == 2:
+            record.update(
+                {
+                    "cav_override_acceleration_mps2": float(cav_accel),
+                    "cav_override_start_time_s": float(
+                        config["cav_override_start_time_s"]
+                    ),
+                    "cav_override_duration_s": float(cav_duration),
+                }
+            )
         if initial_gap < config["minimum_initial_gap_m"]:
             record.update({
                 "status": "rejected_before_run",
@@ -90,8 +152,25 @@ def generate_calibration_candidates(
             })
             records.append(record)
             continue
+        if schema_version == 2 and (
+            config["cav_override_start_time_s"] + float(cav_duration)
+            > source_template.duration
+        ):
+            record.update({
+                "status": "rejected_before_run",
+                "reason": "CAV calibration action extends beyond template duration",
+            })
+            records.append(record)
+            continue
         candidate = _calibrated_template(
-            source, index, initial_gap, float(braking_accel), float(braking_start), config
+            source,
+            index,
+            initial_gap,
+            float(braking_accel),
+            float(braking_start),
+            config,
+            cav_accel=None if cav_accel is None else float(cav_accel),
+            cav_duration=None if cav_duration is None else float(cav_duration),
         )
         ScenarioTemplate.from_dict(candidate)
         path = output / "templates" / f"{candidate['template_id']}.json"
@@ -104,9 +183,14 @@ def generate_calibration_candidates(
         "source_template": str(source_path),
         "source_scenario_id": source.get("bridge_metadata", {}).get("source_scenario_id"),
         "source_split": config["source_split"],
+        "schema_version": schema_version,
         "target_collision_time_s": float(config["target_collision_time_s"]),
         "time_tolerance_s": float(config["time_tolerance_s"]),
         "minimum_initial_gap_m": float(config["minimum_initial_gap_m"]),
+        "initial_gap_semantics": (
+            "longitudinal position delta from CAV to BV_primary; "
+            "not physical bumper clearance"
+        ),
         "candidate_count": len(records),
         "generated_count": sum(record["status"] == "generated" for record in records),
         "rejected_count": sum(record["status"] != "generated" for record in records),
@@ -117,6 +201,11 @@ def generate_calibration_candidates(
             "Selection uses only train-split inputs; validation is reserved for freezing the calibration protocol.",
         ],
     }
+    if schema_version == 2:
+        manifest["limitations"].insert(
+            1,
+            "The CAV action is a reachability intervention, not a perception-delay, control-delay, or human-response model.",
+        )
     _write_json(output / "calibration_manifest.json", manifest)
     return manifest
 
@@ -173,7 +262,16 @@ def _validate_source_template(source: dict[str, Any], template: ScenarioTemplate
         raise ValueError("Template duration must exceed target_collision_time_s")
 
 
-def _calibrated_template(source, index, initial_gap, braking_accel, braking_start, config):
+def _calibrated_template(
+    source,
+    index,
+    initial_gap,
+    braking_accel,
+    braking_start,
+    config,
+    cav_accel=None,
+    cav_duration=None,
+):
     candidate = copy.deepcopy(source)
     candidate["template_id"] = (
         f"{source['template_id']}_cal_{index:03d}_gap_{initial_gap:.3f}_brake_{abs(braking_accel):.2f}_at_{braking_start:.2f}"
@@ -195,19 +293,54 @@ def _calibrated_template(source, index, initial_gap, braking_accel, braking_star
             "apply_once": False,
             "multi_bv_num": 2,
             "calibration_only": True,
+            "not_for_d2rl_training": True,
         },
     }]
+    if int(config["schema_version"]) == 2:
+        candidate["events"].append({
+            "type": "calibration_cav_action",
+            "actor": candidate["ego"]["id"],
+            "start_time": float(config["cav_override_start_time_s"]),
+            "duration": cav_duration,
+            "params": {
+                "lateral": "central",
+                "longitudinal": cav_accel,
+                "apply_once": False,
+                "calibration_only": True,
+                "not_for_d2rl_training": True,
+            },
+        })
     candidate["perturbations"] = []
     candidate["calibration_metadata"] = {
-        "protocol": "rear_end_braking_grid_v1",
+        "protocol": (
+            "rear_end_braking_grid_v1"
+            if int(config["schema_version"]) == 1
+            else "rear_end_reachability_grid_v2"
+        ),
         "source_split": config["source_split"],
         "initial_gap_m": initial_gap,
+        "initial_gap_semantics": (
+            "longitudinal position delta from CAV to BV_primary; "
+            "not physical bumper clearance"
+        ),
         "braking_acceleration_mps2": braking_accel,
         "braking_start_time_s": braking_start,
         "braking_duration_s": config["braking_duration_s"],
         "target_collision_time_s": config["target_collision_time_s"],
         "not_for_d2rl_training": True,
     }
+    if int(config["schema_version"]) == 2:
+        candidate["description"] = (
+            "Reachability candidate derived from a high-quality SHRP2 rear-end "
+            "initialization. Its BV braking and CAV response hold are declared "
+            "calibration interventions, not an exact crash replay or delay model."
+        )
+        candidate["calibration_metadata"].update({
+            "cav_override_acceleration_mps2": cav_accel,
+            "cav_override_start_time_s": config["cav_override_start_time_s"],
+            "cav_override_duration_s": cav_duration,
+            "cav_override_semantics": "calibration reachability intervention; not a delay model",
+        })
     return candidate
 
 
