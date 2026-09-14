@@ -1,0 +1,37 @@
+{
+  "status": "bounded CEM reachability diagnostic; not D2RL, a crash-rate estimator, or a proof of global collision impossibility",
+  "dataset": "highD-v1.0",
+  "manifest_sha256": "63dbfc42edc28da0dc3bdd325e5bd01f392cb36699bd7903961fc579af6940db",
+  "implementation_sha256": "734218528466d11fecfecc8adf35603e388b0a985d43c1f10d95503eccaf4247",
+  "method": "CEM over bounded four-parameter timed action pulses",
+  "action_parameters": ["ax_mps2", "ay_mps2", "start_delay_s", "hold_s"],
+  "budget_tiers": [24, 100, 500, 2000],
+  "test_split_used": false,
+  "runs": {
+    "train_high_conflict": {
+      "scene_count": 5,
+      "recording_count": 3,
+      "24": {"target_collision_scenes": 1, "near_miss_scenes": 1, "mean_clearance_m": 7.810095, "feasible_candidates": 66, "evaluations": 120},
+      "100": {"target_collision_scenes": 2, "near_miss_scenes": 0, "mean_clearance_m": 6.079390, "feasible_candidates": 423, "evaluations": 500},
+      "500": {"target_collision_scenes": 2, "near_miss_scenes": 0, "mean_clearance_m": 5.098765, "feasible_candidates": 1999, "evaluations": 2500},
+      "2000": {"target_collision_scenes": 2, "near_miss_scenes": 1, "mean_clearance_m": 4.704996, "feasible_candidates": 7689, "evaluations": 10000}
+    },
+    "validation_high_conflict": {
+      "scene_count": 2,
+      "recording_count": 2,
+      "24": {"target_collision_scenes": 0, "near_miss_scenes": 0, "mean_clearance_m": 19.966931, "feasible_candidates": 22, "evaluations": 48},
+      "100": {"target_collision_scenes": 0, "near_miss_scenes": 0, "mean_clearance_m": 19.648752, "feasible_candidates": 171, "evaluations": 200},
+      "500": {"target_collision_scenes": 0, "near_miss_scenes": 0, "mean_clearance_m": 18.774668, "feasible_candidates": 716, "evaluations": 1000},
+      "2000": {"target_collision_scenes": 0, "near_miss_scenes": 0, "mean_clearance_m": 14.678690, "feasible_candidates": 2367, "evaluations": 4000}
+    },
+    "validation_all": {
+      "scene_count": 60,
+      "recording_count": 5,
+      "24": {"target_collision_scenes": 0, "near_miss_scenes": 0, "mean_clearance_m": 30.045492, "feasible_candidates": 774, "evaluations": 1440},
+      "100": {"target_collision_scenes": 0, "near_miss_scenes": 0, "mean_clearance_m": 29.192827, "feasible_candidates": 5147, "evaluations": 6000},
+      "500": {"target_collision_scenes": 0, "near_miss_scenes": 0, "mean_clearance_m": 28.675479, "feasible_candidates": 25702, "evaluations": 30000},
+      "2000": {"target_collision_scenes": 0, "near_miss_scenes": 0, "mean_clearance_m": 28.178787, "feasible_candidates": 101471, "evaluations": 120000}
+    }
+  },
+  "interpretation": "The high-conflict label differentiates train reachability under this model, but validation has no collision or near miss even at 2000 evaluations. The present timed-action space and lightweight open-loop-BV/IDM screen are insufficient for a general collision-generation claim."
+}
