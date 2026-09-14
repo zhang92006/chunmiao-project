@@ -169,6 +169,7 @@ def rear_end_template_from_seed(record: dict[str, Any], config: dict[str, Any]) 
             "source_scenario_id": record["scenario_id"],
             "source_event_id": source.get("event_id"),
             "source_target_id": source.get("associated_target_id"),
+            "source_split": source.get("source_split"),
             "source_quality": conditioning.get("quality"),
             "source_initial_longitudinal_gap_m": source_gap_m,
             "source_requested_impact_time_s": conditioning.get("requested_impact_time_s"),

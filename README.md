@@ -86,6 +86,11 @@ it does not claim closed-loop crash reproduction. See
 [`docs/SHRP2到SUMO映射分析.md`](docs/SHRP2到SUMO映射分析.md) for the executed
 mapping result, blocked road topologies, and calibration requirements.
 
+The rear-end calibration interface deliberately generates candidates before it
+runs SUMO; see
+[`docs/SHRP2追尾碰撞校准协议.md`](docs/SHRP2追尾碰撞校准协议.md) for the
+train-only search protocol and user-run batch command.
+
 Detailed implementation and experiment notes are under
 `scenario_reconstruction/`.
 
