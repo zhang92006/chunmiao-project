@@ -142,6 +142,12 @@ class ScenarioTemplate:
                     raise ValueError(
                         "calibration_cav_action supports longitudinal calibration only."
                     )
+            if event.type in {"perception_delay", "perception_dropout", "perception_position_bias", "control_delay"} and event.actor != self.ego.id:
+                raise ValueError(f"{event.type} may target only the ego CAV.")
+            if event.type in {"perception_delay", "control_delay"}:
+                _require_positive_finite(event.params, "delay_s", event.type)
+            if event.type == "perception_position_bias":
+                _require_finite(event.params, "offset_x_m", event.type)
 
         for item in self.perturbations:
             if item.distribution != "uniform":
@@ -324,6 +330,18 @@ def _event_from_dict(data: dict[str, Any]) -> EventSpec:
         duration=float(data["duration"]),
         params=dict(data.get("params", {})),
     )
+
+
+def _require_positive_finite(params: dict[str, Any], name: str, event_type: str) -> None:
+    _require_finite(params, name, event_type)
+    if float(params[name]) <= 0:
+        raise ValueError(f"{event_type}.{name} must be positive.")
+
+
+def _require_finite(params: dict[str, Any], name: str, event_type: str) -> None:
+    value = params.get(name)
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or value != value or value in (float("inf"), float("-inf")):
+        raise ValueError(f"{event_type}.{name} must be a finite number.")
 
 
 def _perturbation_from_dict(data: dict[str, Any]) -> PerturbationSpec:

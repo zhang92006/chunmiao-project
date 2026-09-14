@@ -8,6 +8,8 @@ from mtlsp.controller.vehicle_controller.controller import Controller
 from mtlsp.vehicle.vehicle import Vehicle
 
 from .multibv import select_multibv_training_actors
+from .cav_fault_model import CAVFaultModel
+from .fault_aware_vehicle import FaultAwareVehicle
 from .templates import EventSpec, ScenarioTemplate, VehicleSpec, load_template
 
 
@@ -21,9 +23,10 @@ class ScenarioNADE(NADE):
             else template
         )
         self._logged_training_events: set[str] = set()
+        self.cav_fault_model = CAVFaultModel(self.scenario_template.events)
         super().__init__(
             BVController=TreeSearchNADEBackgroundController,
-            cav_model="IDM",
+            cav_model="FaultAwareIDM" if self.cav_fault_model.enabled else "IDM",
         )
 
     def generate_traffic_flow(self, init_info=None):
@@ -40,6 +43,47 @@ class ScenarioNADE(NADE):
 
         for actor in self.scenario_template.actors:
             self._generate_actor(actor)
+
+    def generate_av(
+        self,
+        speed=15.0,
+        id="CAV",
+        route="route_0",
+        type_id="IDM",
+        position=400.0,
+        av_lane_id=None,
+        controller_type=None,
+    ):
+        if not self.cav_fault_model.enabled:
+            return super().generate_av(
+                speed=speed,
+                id=id,
+                route=route,
+                type_id=type_id,
+                position=position,
+                av_lane_id=av_lane_id,
+                controller_type=controller_type or self.default_av_controller,
+            )
+        vehicle = FaultAwareVehicle(
+            id=id,
+            controller=Controller(),
+            routeID=route,
+            simulator=self.simulator,
+            initial_speed=speed,
+            initial_position=position,
+            initial_lane_id=av_lane_id,
+        )
+        self.simulator._add_vehicle_to_sumo(vehicle, typeID=type_id)
+        vehicle.install_controller((controller_type or self.default_av_controller)())
+        vehicle.controller.fault_model = self.cav_fault_model
+        self.vehicle_list.add_vehicles([vehicle])
+        return id, {
+            "speed": speed,
+            "lane_id": av_lane_id,
+            "route_id": route,
+            "position": position,
+            "fault_validation_only": True,
+        }
 
     def apply_template_events(self):
         current_time = self.simulator.get_time()
@@ -58,6 +102,10 @@ class ScenarioNADE(NADE):
     def _step(self):
         control_info_list = super()._step()
         self.apply_template_events()
+        if self.cav_fault_model.enabled:
+            self.info_extractor.episode_log.setdefault("cav_fault_step_info", {})[
+                f"{self.simulator.get_time():.6f}"
+            ] = self.cav_fault_model.last_audit
         return control_info_list
 
     def _terminate_check(self):
