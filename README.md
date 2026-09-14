@@ -72,6 +72,8 @@ See [零碰撞修正记录](docs/零碰撞修正记录.md) for the future target
 timed action pulse, between-frame collision checks, and latest negative-result pilot.
 The next reachability stage starts with the auditable offline labels documented in
 [高冲突潜力标签](docs/高冲突潜力标签.md); held-out test recordings remain inaccessible.
+The bounded CEM budget curve and its interpretation are documented in
+[CEM可达性诊断](docs/CEM可达性诊断.md).
 
 ## Batch reconstruction
 

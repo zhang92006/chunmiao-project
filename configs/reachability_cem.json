@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "seed": 19,
+  "budget_tiers": [24, 100, 500, 2000],
+  "population_size": 32,
+  "elite_fraction": 0.2,
+  "initial_std_fraction": 0.35,
+  "minimum_std_fraction": 0.05
+}
