@@ -70,6 +70,8 @@ lane-fixed IDM response, not a complete SUMO/Autoware planner evaluation.
 
 See [零碰撞修正记录](docs/零碰撞修正记录.md) for the future target-pair objective,
 timed action pulse, between-frame collision checks, and latest negative-result pilot.
+The next reachability stage starts with the auditable offline labels documented in
+[高冲突潜力标签](docs/高冲突潜力标签.md); held-out test recordings remain inaccessible.
 
 ## Batch reconstruction
 
