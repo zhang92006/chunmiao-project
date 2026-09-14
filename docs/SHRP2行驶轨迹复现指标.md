@@ -1,0 +1,62 @@
+# SHRP2 行驶轨迹复现指标
+
+## 1. 计算范围
+
+本次计算针对 SHRP2 `Crash` 类别中的训练事件 `131785457`，目标车辆 `22038`，比较窗口为碰撞前 `0–4 s`，共 41 个 `0.1 s` 采样点。
+
+这不是完整数据集的复现率统计，而是对当前已经完成桥接和故障语义验证的一个高质量追尾事件做可审计基准。指标分成两段：
+
+1. **SHRP2 原始轨迹 → 运动学种子**：衡量用恒定航向、恒定速度和碰撞时刻条件替代原始轨迹造成的信息损失。
+2. **运动学桥接参考 → SUMO 闭环**：衡量 SUMO 路网、IDM 控制器和碰撞故障语义相对桥接参考的偏离，不等于原始 SHRP2 回放误差。
+
+原始轨迹以碰撞时刻附近的 CAV 状态平移并按其航向旋转；目标车中心按 SHRP2 目标车前保险杠和车长换算。SUMO 轨迹取 v3 故障接口验证 episode，目标车从 `av_obs` 中按车辆 ID 对齐。
+
+## 2. 数值结果
+
+结果文件：[`shrp2_trajectory_metrics_event_131785457.json`](../results/shrp2_trajectory_metrics_event_131785457.json)
+
+### 2.1 原始 SHRP2 与运动学种子
+
+| 车辆 | ADE (m) | FDE (m) | 位置 RMSE (m) | 速度 MAE (m/s) | 速度 RMSE (m/s) | 航向 MAE (rad) | 最大位置误差 (m) |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| CAV | 1.147 | 0.010 | 1.599 | 0.794 | 0.924 | 0.009 | 3.175 |
+| BV_primary | 2.792 | 0.740 | 3.100 | 1.310 | 1.773 | 1.777 | 6.137 |
+
+解释：CAV 的碰撞末状态被条件化得较好，因此 FDE 很小；但全窗口 ADE 和速度误差仍较大，说明恒速种子不能复现真实制动/加速过程。目标车误差更大，尤其航向误差约 `1.78 rad`，表明目标车的原始转向/坐标方向变化没有被当前简单运动学模型保留。
+
+### 2.2 SUMO 闭环与桥接运动学参考
+
+| 车辆 | ADE (m) | FDE (m) | 位置 RMSE (m) | 速度 MAE (m/s) | 速度 RMSE (m/s) | 航向 MAE (rad) | 最大位置误差 (m) |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| CAV | 0.695 | 1.129 | 0.728 | 0.182 | 0.182 | 0.011 | 1.129 |
+| BV_primary | 0.871 | 1.898 | 1.054 | 0.485 | 0.497 | 0.000 | 1.898 |
+
+该 episode 确认发生碰撞，碰撞 ID 为 `BV_primary` 和 `CAV`。碰撞前最小 TTC 约 `0.0055 s`，最小中心距离约 `0.0182 m`。这里的 TTC/距离是 SUMO 故障语义运行结果，不应解释为 SHRP2 原始碰撞时间误差。
+
+## 3. 结论
+
+- 当前管线已经能够对一个事件给出位置、速度、航向、TTC 和距离等可复核指标，但还不能声称“完整 SHRP2 行驶数据已复现”。
+- 主要误差来源在 **SHRP2 → 种子**：当前只使用碰撞附近状态和恒速/恒航向外推，没有回放真实加速度、制动、横向运动和车辆控制。
+- **种子 → SUMO** 的闭环误差相对较小，但这只说明当前 2Lane 桥接模板与 SUMO 控制器的一致性尚可，不代表 SUMO 已复现真实道路轨迹。
+- 目标车应优先改为分段速度/加速度和分段航向回放；同时应保留原始道路横向位置、车道变化和目标车关联置信度。
+
+## 4. 复现实验命令
+
+基础 Python 环境需要安装 `pandas`、`PyTables`、`numpy`。在仓库根目录执行：
+
+```powershell
+& 'D:\Anaconda3\python.exe' -m scenario_reconstruction.shrp2_trajectory_metrics `
+  --source_root 'G:\chunmiao\SHRP2_Public' `
+  --seed 'data_analysis/raw_data/shrp2_collision_pilot_v7/scenarios/shrp2_131785457_rear_end_source_speed.json' `
+  --sumo_episode 'data_analysis/raw_data/shrp2_rear_end_fault_v3_interface_smoke/episode/crash/0.json' `
+  --sumo_template 'data_analysis/raw_data/shrp2_rear_end_fault_v3_interface_smoke/template.json' `
+  --output 'results/shrp2_trajectory_metrics_event_131785457.json'
+```
+
+## 5. 下一步指标扩展
+
+1. 对 v7 中全部 12 个桥接场景和 v2/v3 校准候选批量计算同一套指标。
+2. 按 `train/validation/test` 分开报告 ADE/FDE、碰撞成功率和初始碰撞率。
+3. 加入真实轨迹的加速度、横向偏移、车道保持和冲突前 TTC 曲线误差。
+4. 对目标车关联规则做人工抽样审计，避免把错误目标车匹配造成的误差归因于算法。
+5. 把“原始轨迹回放误差”和“SUMO 控制器闭环误差”作为两个独立实验，不合并为一个分数。
