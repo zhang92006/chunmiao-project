@@ -81,3 +81,5 @@ $summary.selected | Select-Object candidate_index, initial_gap_m, cav_override_a
 ```
 
 完整结果出来后，再冻结一个最接近 4.0 s 的候选，并在验证集上只执行冻结协议，不重新调参。
+
+完整网格现已完成；结果、数值边界重评分和冻结候选见 [SHRP2 追尾碰撞校准 v2：完整网格结果](SHRP2追尾碰撞校准V2网格结果.md)。

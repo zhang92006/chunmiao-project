@@ -19,6 +19,8 @@ from typing import Any
 from .run_template import run_template
 from .templates import ScenarioTemplate
 
+SELECTION_NUMERICAL_EPSILON = 1e-9
+
 
 def validate_config(config: dict[str, Any]) -> None:
     schema_version = config.get("schema_version")
@@ -231,9 +233,52 @@ def run_calibration(manifest_path: str | Path, max_candidates: int | None = None
             outcome = {**record, "status": "run_error", "error": str(exc)}
         outcomes.append(outcome)
 
+    return _write_calibration_summary(
+        manifest_path,
+        manifest,
+        outcomes,
+        status=(
+            "calibration execution; selected records are SUMO calibration results, "
+            "not exact SHRP2 replays"
+        ),
+    )
+
+
+def rescore_calibration(manifest_path: str | Path) -> dict[str, Any]:
+    """Re-evaluate completed episodes without launching SUMO again."""
+    manifest_path = Path(manifest_path)
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    generated = [record for record in manifest["records"] if record["status"] == "generated"]
+    episode_root = manifest_path.parent / "episodes"
+    outcomes = []
+    for record in generated:
+        index = int(record["candidate_index"])
+        try:
+            episode_path, episode = _load_episode(episode_root, index)
+            outcome = _outcome(record, episode_path, episode, manifest)
+        except Exception as exc:
+            outcome = {**record, "status": "rescore_error", "error": str(exc)}
+        outcomes.append(outcome)
+    return _write_calibration_summary(
+        manifest_path,
+        manifest,
+        outcomes,
+        status=(
+            "calibration rescore of completed episodes; selected records are SUMO "
+            "calibration results, not exact SHRP2 replays"
+        ),
+    )
+
+
+def _write_calibration_summary(
+    manifest_path: Path,
+    manifest: dict[str, Any],
+    outcomes: list[dict[str, Any]],
+    status: str,
+) -> dict[str, Any]:
     selected = [record for record in outcomes if record.get("selection_status") == "selected"]
     summary = {
-        "status": "calibration execution; selected records are SUMO calibration results, not exact SHRP2 replays",
+        "status": status,
         "manifest": str(manifest_path),
         "executed_count": len(outcomes),
         "selected_count": len(selected),
@@ -242,6 +287,7 @@ def run_calibration(manifest_path: str | Path, max_candidates: int | None = None
             "collision_result": True,
             "collision_actor": "BV_primary",
             "absolute_collision_time_error_s_at_most": manifest["time_tolerance_s"],
+            "numerical_epsilon_s": SELECTION_NUMERICAL_EPSILON,
         },
         "outcomes": outcomes,
         "selected": selected,
@@ -354,7 +400,7 @@ def _outcome(record, episode_path, episode, manifest):
         record["initial_gap_m"] >= manifest["minimum_initial_gap_m"]
         and is_target_collision
         and error is not None
-        and abs(error) <= manifest["time_tolerance_s"]
+        and abs(error) <= manifest["time_tolerance_s"] + SELECTION_NUMERICAL_EPSILON
     )
     return {
         **record,
@@ -405,12 +451,31 @@ def _write_json(path: Path, value: Any) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("template", help="High-quality rear-end JSON template from shrp2_sumo_bridge")
-    parser.add_argument("--output", required=True, help="New or empty calibration output directory")
+    parser.add_argument(
+        "template", nargs="?", help="High-quality rear-end JSON template from shrp2_sumo_bridge"
+    )
+    parser.add_argument("--output", help="New or empty calibration output directory")
     parser.add_argument("--config", default="configs/shrp2_rear_end_calibration.json")
     parser.add_argument("--run", action="store_true", help="Execute generated SUMO candidates")
     parser.add_argument("--max_candidates", type=int, help="Optional cap when --run is set")
+    parser.add_argument(
+        "--rescore",
+        metavar="MANIFEST",
+        help="Re-score existing completed episodes without launching SUMO",
+    )
     args = parser.parse_args()
+    if args.rescore:
+        if args.template or args.output or args.run or args.max_candidates is not None:
+            parser.error("--rescore cannot be combined with template, --output, --run, or --max_candidates")
+        summary = rescore_calibration(args.rescore)
+        print(json.dumps({
+            "calibration_summary_path": str(Path(args.rescore).parent / "calibration_summary.json"),
+            "executed_count": summary["executed_count"],
+            "selected_count": summary["selected_count"],
+        }, ensure_ascii=False, indent=2))
+        return
+    if not args.template or not args.output:
+        parser.error("template and --output are required unless --rescore is used")
     config = json.loads(Path(args.config).read_text(encoding="utf-8"))
     manifest = generate_calibration_candidates(args.template, args.output, config)
     result = {
