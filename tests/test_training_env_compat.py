@@ -1,6 +1,7 @@
 import unittest
 
 from d2rl_training.d2rl_training_env import D2RLTrainingEnv
+from scenario_reconstruction.environment import _duration_reached
 
 
 class MultiBVCompatibilityTests(unittest.TestCase):
@@ -18,6 +19,11 @@ class MultiBVCompatibilityTests(unittest.TestCase):
             "per_agent": [primary, list(range(10, 20))],
         }
         self.assertEqual(D2RLTrainingEnv._primary_observation(record), primary)
+
+    def test_scenario_duration_boundary_is_inclusive(self):
+        self.assertFalse(_duration_reached(5.99, 6.0))
+        self.assertTrue(_duration_reached(6.0, 6.0))
+        self.assertTrue(_duration_reached(6.01, 6.0))
 
 
 if __name__ == "__main__":

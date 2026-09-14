@@ -57,6 +57,19 @@ class ScenarioNADE(NADE):
         self.apply_template_events()
         return control_info_list
 
+    def _terminate_check(self):
+        """Preserve safety exits and also honor the template duration."""
+        reason, stop, additional_info = super()._terminate_check()
+        if stop or not _duration_reached(
+            self.simulator.get_time(), self.scenario_template.duration
+        ):
+            return reason, stop, additional_info
+        return (
+            {5: "scenario duration reached"},
+            True,
+            {"scenario_duration": self.scenario_template.duration},
+        )
+
     def _generate_actor(self, actor: VehicleSpec):
         vehicle = Vehicle(
             id=actor.id,
@@ -233,3 +246,7 @@ def _product(values: list[float]) -> float:
     for value in values:
         result *= float(value)
     return result
+
+
+def _duration_reached(current_time: float, duration: float) -> bool:
+    return float(current_time) >= float(duration)

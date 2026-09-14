@@ -25,15 +25,16 @@
     "initial_longitudinal_gap_m": 16.355100306780805,
     "cav_speed_mps": 3.1173562720683066,
     "primary_bv_speed_mps": 0.5215703254443228,
+    "duration_semantics_fixed": true,
     "collision_result": false,
     "collision_ids": [],
-    "simulation_end_time_s": 20.8,
-    "minimum_ttc_s": 4.31784191829767,
-    "minimum_distance_m": 8.82303711877637
+    "simulation_end_time_s": 5.9,
+    "minimum_ttc_s": 4.31783435811457,
+    "minimum_distance_m": 8.84559224703315
   },
   "interpretation": [
     "The bridge preserves initial longitudinal geometry and executes in SUMO, but the default IDM policy avoids the source-conditioned collision.",
     "This is a negative reproduction result, not evidence that the SHRP2 event was safe.",
-    "The current run_template entry point does not use ScenarioTemplate.duration as a simulation stopping condition."
+    "ScenarioTemplate.duration now stops the scenario at the configured horizon; the recorded end time is one simulator step below the boundary by existing episode logging convention."
   ]
 }
