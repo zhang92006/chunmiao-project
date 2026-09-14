@@ -66,6 +66,21 @@ Automatic Qwen template generation reads `DASHSCOPE_API_KEY` or `QWEN_API_KEY`
 from the environment. Never commit either value. The pipeline can be exercised
 without an API key using `--no_llm`.
 
+## SHRP2 collision seeds
+
+The SHRP2 importer creates deterministic, impact-conditioned kinematic
+collision seeds from the public bird's-eye trajectory reconstruction. Keep the
+multi-gigabyte source data outside Git and pass its extracted root explicitly:
+
+```bash
+python -m scenario_reconstruction.shrp2_collision --source_root path/to/SHRP2_Public --config configs/shrp2_collision_pilot.json --output data_analysis/raw_data/shrp2_collision_pilot
+```
+
+The generated trajectories are collision seeds, not exact crash replays or
+closed-loop SUMO results. See
+[`docs/SHRP2碰撞数据处理.md`](docs/SHRP2碰撞数据处理.md) for provenance,
+quality tiers, limitations, and the SUMO integration plan.
+
 Detailed implementation and experiment notes are under
 `scenario_reconstruction/`.
 
