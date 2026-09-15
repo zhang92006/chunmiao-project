@@ -1,0 +1,37 @@
+{
+  "status": "full v2 grid completed and rescored without rerunning SUMO",
+  "source": {
+    "manifest": "data_analysis/raw_data/shrp2_rear_end_calibration_v2_grid_run/calibration_manifest.json",
+    "source_scenario_id": "shrp2_131785457_rear_end_source_speed",
+    "source_split": "train"
+  },
+  "execution": {
+    "candidate_count": 45,
+    "executed_count": 45,
+    "collision_count": 37,
+    "non_collision_count": 8,
+    "collision_rate": 0.8222222222222222,
+    "original_selected_count": 6,
+    "rescored_selected_count": 7,
+    "selection_numerical_epsilon_s": 1e-09
+  },
+  "frozen_candidate": {
+    "candidate_index": 19,
+    "initial_position_delta_m": 18.3551003067808,
+    "bv_braking_acceleration_mps2": -2.0,
+    "bv_braking_start_time_s": 0.0,
+    "bv_braking_duration_s": 5.0,
+    "cav_override_acceleration_mps2": 0.0,
+    "cav_override_start_time_s": 0.0,
+    "cav_override_duration_s": 4.0,
+    "collision_time_s": 4.1,
+    "collision_time_error_s": 0.1,
+    "selection_reason": "smallest absolute collision-time error; among the 4.1 s duplicates, uses the shorter CAV override window"
+  },
+  "selected_candidate_indices": [0, 1, 2, 19, 20, 33, 34],
+  "limitations": [
+    "The CAV override is a calibration reachability intervention, not an estimated perception, planning, or control delay.",
+    "The grid is calibrated on one train-split high-confidence SHRP2 initialization and cannot establish generalization or crash probability.",
+    "initial_gap_m is a longitudinal position delta, not bumper-to-bumper clearance."
+  ]
+}

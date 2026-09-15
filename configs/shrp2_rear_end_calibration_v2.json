@@ -1,0 +1,15 @@
+{
+  "schema_version": 2,
+  "source_split": "train",
+  "gap_offsets_m": [1.0, 0.0, 2.0, -1.0, 3.0],
+  "braking_accelerations_mps2": [-2.0],
+  "braking_start_times_s": [0.0],
+  "braking_duration_s": 5.0,
+  "cav_override_accelerations_mps2": [0.0, 0.5, -0.5],
+  "cav_override_start_time_s": 0.0,
+  "cav_override_durations_s": [3.5, 4.0, 4.5],
+  "minimum_initial_gap_m": 7.0,
+  "target_collision_time_s": 4.0,
+  "time_tolerance_s": 0.3,
+  "max_candidates": 45
+}
