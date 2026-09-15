@@ -46,3 +46,19 @@ The generated `episodes/` folder contains `crash/`, `tested_and_safe/`,
 python -m scenario_reconstruction.validate_training_env \
   data_analysis/raw_data/ScenarioReconstructionMultiBV/episodes
 ```
+
+To train a centralized two-BV policy rather than use the legacy first-BV
+projection, set `multi_bv_training: true` and `multi_bv_num: 2` in the D2RL
+training configuration. The policy must then accept the 14-D joint observation
+and emit two epsilon values. Validate a generated K=2 episode set with:
+
+```bash
+python -m scenario_reconstruction.validate_training_env \
+  data_analysis/raw_data/ScenarioReconstructionMultiBV/episodes \
+  --multi_bv_training --multi_bv_num 2
+```
+
+Measured SHRP2 windows are only sources for multi-BV scenario seeds; they are
+not D2RL episodes until SUMO/NADE produces the joint observations, actions,
+NDD probabilities, and importance weights described in
+[`docs/多智能体D2RL联合训练接口.md`](../docs/多智能体D2RL联合训练接口.md).

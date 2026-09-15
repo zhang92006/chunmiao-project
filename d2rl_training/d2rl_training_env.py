@@ -35,8 +35,14 @@ class D2RLTrainingEnv(core.Env):
 		data_folders = [yaml_conf["root_folder"] + folder for folder in yaml_conf["data_folders"]]
 		data_folder_weights = yaml_conf["data_folder_weights"]
 		self.yaml_conf = yaml_conf
-		self.action_space = spaces.Box(low=0.001, high=0.999, shape=(1, ))
-		self.observation_space = spaces.Box(low=-5, high=5, shape=(10, ))
+		self.multi_bv_training = bool(yaml_conf.get("multi_bv_training", False))
+		self.multi_bv_num = int(yaml_conf.get("multi_bv_num", 2))
+		if self.multi_bv_training and self.multi_bv_num < 1:
+			raise ValueError("multi_bv_num must be positive when multi_bv_training=true")
+		self.action_dim = self.multi_bv_num if self.multi_bv_training else 1
+		self.observation_dim = 6 + 4 * self.multi_bv_num if self.multi_bv_training else 10
+		self.action_space = spaces.Box(low=0.001, high=0.999, shape=(self.action_dim, ))
+		self.observation_space = spaces.Box(low=-5, high=5, shape=(self.observation_dim, ))
 		
 		self.constant, self.weight_reward, self.exposure, self.positive_weight_reward=0,0,0,0 # some customized metric logging
 		self.total_episode, self.total_steps = 0, 0
@@ -118,7 +124,7 @@ class D2RLTrainingEnv(core.Env):
 			all_obs = self.episode_data["drl_obs_step_info"]
 			time_step_list = list(all_obs.keys())
 			if len(time_step_list):
-				init_obs = np.float32(self._primary_observation(all_obs[time_step_list[0]]))
+				init_obs = np.float32(self._training_observation(all_obs[time_step_list[0]]))
 				return init_obs
 			else:
 				return self._reset()
@@ -126,7 +132,7 @@ class D2RLTrainingEnv(core.Env):
 			return self._reset()
 	
 	def step(self, action):
-		action = action.item()
+		action = self._normalize_action(action)
 		obs = self._get_observation()
 		done, _ = self._get_done()
 		time_step_list = list(self.episode_data["drl_obs_step_info"].keys())
@@ -147,10 +153,10 @@ class D2RLTrainingEnv(core.Env):
 		all_obs = self.episode_data["drl_obs_step_info"]
 		time_step_list = list(all_obs.keys())
 		try:
-			obs = np.float32(self._primary_observation(all_obs[time_step_list[self.total_steps]]))
+			obs = np.float32(self._training_observation(all_obs[time_step_list[self.total_steps]]))
 		except:
 			print(self.total_steps, time_step_list)
-			obs = np.float32(self._primary_observation(all_obs[time_step_list[-1]]))
+			obs = np.float32(self._training_observation(all_obs[time_step_list[-1]]))
 		return obs
 
 	@staticmethod
@@ -169,6 +175,36 @@ class D2RLTrainingEnv(core.Env):
 				raise ValueError("MultiBV observation has no per_agent entries")
 			return per_agent[0]
 		return record
+
+	def _training_observation(self, record):
+		"""Return the configured legacy or centralized MultiBV observation.
+
+		The legacy path deliberately keeps the original 10-D first-agent view.
+		With ``multi_bv_training=true``, the learner instead receives the logged
+		joint CAV-plus-K-BV observation and must provide one epsilon per BV.
+		"""
+		if not self.multi_bv_training:
+			return self._primary_observation(record)
+		if not isinstance(record, dict):
+			raise ValueError("MultiBV training requires joint observation records")
+		joint = record.get("joint")
+		if not isinstance(joint, list) or len(joint) != self.observation_dim:
+			raise ValueError(
+				f"Expected {self.observation_dim}-D joint observation for "
+				f"K={self.multi_bv_num}"
+			)
+		return joint
+
+	def _normalize_action(self, action):
+		"""Validate a policy output and retain all K epsilon values in joint mode."""
+		values = np.asarray(action, dtype=np.float32).reshape(-1)
+		if len(values) != self.action_dim:
+			raise ValueError(
+				f"Expected {self.action_dim}-D action, got {len(values)} values"
+			)
+		if not np.isfinite(values).all() or (values < 0.001).any() or (values > 0.999).any():
+			raise ValueError("D2RL epsilon actions must be finite and lie in [0.001, 0.999]")
+		return values.tolist() if self.multi_bv_training else float(values[0])
 
 	def get_multiple_adv_action_num(self, weight_info):
 		adv_action_num = 0
@@ -201,6 +237,13 @@ class D2RLTrainingEnv(core.Env):
 		total_q_amplifier = 1
 		for timestep in epsilon_info:
 			if timestep in weight_info:
+				if self.multi_bv_training:
+					total_q_amplifier *= self._joint_epsilon_weight(
+						weight_info[timestep],
+						epsilon_info[timestep],
+						ndd_info.get(timestep) if ndd_info is not None else None,
+					)
+					continue
 				weight = self._joint_value(weight_info[timestep])
 				epsilon = epsilon_info[timestep]
 				if isinstance(epsilon, list):
@@ -214,6 +257,28 @@ class D2RLTrainingEnv(core.Env):
 						ndd_tmp = self._joint_value(ndd_info[timestep])
 					total_q_amplifier = total_q_amplifier * (1/(1- epsilon)) * ndd_tmp
 		return total_q_amplifier	
+
+	@staticmethod
+	def _joint_epsilon_weight(weight_record, epsilon_record, ndd_record):
+		"""Multiply importance terms per controlled BV at one decision step."""
+		if not isinstance(weight_record, dict) or not isinstance(ndd_record, dict):
+			raise ValueError("MultiBV importance weighting requires joint step records")
+		weights = weight_record.get("per_agent")
+		ndd_values = ndd_record.get("per_agent")
+		epsilons = np.asarray(epsilon_record, dtype=float).reshape(-1)
+		if not isinstance(weights, list) or not isinstance(ndd_values, list):
+			raise ValueError("MultiBV importance weighting requires per_agent values")
+		if not (len(weights) == len(ndd_values) == len(epsilons)):
+			raise ValueError("MultiBV weight, epsilon, and NDD lengths must match")
+		result = 1.0
+		for weight, epsilon, ndd in zip(weights, epsilons, ndd_values):
+			if not np.isfinite(epsilon) or epsilon <= 0 or epsilon >= 1:
+				raise ValueError("MultiBV epsilon values must lie strictly between zero and one")
+			if float(weight) > 1:
+				result *= 1 / float(epsilon)
+			elif float(weight) < 0.999:
+				result *= float(ndd) / (1 - float(epsilon))
+		return result
 
 	def _get_done(self):
 		stop = False

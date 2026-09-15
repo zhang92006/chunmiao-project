@@ -1,4 +1,9 @@
+import json
+from pathlib import Path
+import tempfile
 import unittest
+
+import numpy as np
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
@@ -22,6 +27,82 @@ class MultiBVCompatibilityTests(unittest.TestCase):
             "per_agent": [primary, list(range(10, 20))],
         }
         self.assertEqual(D2RLTrainingEnv._primary_observation(record), primary)
+
+    def test_joint_training_uses_joint_observation_and_vector_action(self):
+        env = D2RLTrainingEnv.__new__(D2RLTrainingEnv)
+        env.multi_bv_training = True
+        env.multi_bv_num = 2
+        env.observation_dim = 14
+        env.action_dim = 2
+        record = {
+            "joint": list(range(14)),
+            "per_agent": [list(range(10)), list(range(10, 20))],
+        }
+
+        self.assertEqual(env._training_observation(record), list(range(14)))
+        self.assertTrue(
+            np.allclose(env._normalize_action([0.2, 0.8]), [0.2, 0.8])
+        )
+        with self.assertRaisesRegex(ValueError, "Expected 2-D action"):
+            env._normalize_action([0.2])
+
+    def test_joint_importance_weight_multiplies_per_agent_terms(self):
+        result = D2RLTrainingEnv._joint_epsilon_weight(
+            {"joint": 0.125, "per_agent": [0.5, 0.25]},
+            [0.5, 0.25],
+            {"joint": 0.02, "per_agent": [0.1, 0.2]},
+        )
+        self.assertAlmostEqual(result, (0.1 / (1 - 0.5)) * (0.2 / (1 - 0.25)))
+
+    def test_joint_training_env_reset_and_step_keep_two_actions(self):
+        episode = {
+            "collision_result": 1,
+            "weight_step_info": {
+                "forced_0.100000": {"joint": 0.125, "per_agent": [0.5, 0.25]}
+            },
+            "drl_obs_step_info": {
+                "forced_0.100000": {
+                    "joint": list(range(14)),
+                    "per_agent": [list(range(10)), list(range(10, 20))],
+                }
+            },
+            "drl_epsilon_step_info": {"forced_0.100000": [0.5, 0.5]},
+            "real_epsilon_step_info": {"forced_0.100000": [0.5, 0.5]},
+            "criticality_step_info": {"forced_0.100000": 1.0},
+            "ndd_step_info": {
+                "forced_0.100000": {"joint": 0.02, "per_agent": [0.1, 0.2]}
+            },
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            episode_path = root / "episode.json"
+            episode_path.write_text(json.dumps(episode), encoding="utf-8")
+            (root / "crash_weight_dict.json").write_text(
+                json.dumps({str(episode_path): [0.125, 0.125]}), encoding="utf-8"
+            )
+            env = D2RLTrainingEnv(
+                {
+                    "root_folder": "",
+                    "data_folders": [str(root)],
+                    "data_folder_weights": [1],
+                    "clip_reward_threshold": 100,
+                    "multi_bv_training": True,
+                    "multi_bv_num": 2,
+                }
+            )
+            observation = env.reset()
+            _, _, done, _ = env.step(np.array([0.2, 0.8], dtype=np.float32))
+
+        self.assertEqual(env.observation_space.shape, (14,))
+        self.assertEqual(env.action_space.shape, (2,))
+        self.assertEqual(len(observation), 14)
+        self.assertTrue(done)
+        self.assertTrue(
+            np.allclose(
+                env.episode_data["drl_epsilon_step_info"]["forced_0.100000"],
+                [0.2, 0.8],
+            )
+        )
 
     def test_scenario_duration_boundary_is_inclusive(self):
         self.assertFalse(_duration_reached(5.99, 6.0))
