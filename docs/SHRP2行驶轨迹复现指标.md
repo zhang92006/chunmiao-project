@@ -109,3 +109,29 @@ python -m scenario_reconstruction.shrp2_reference_audit `
   --source_root 'path/to/SHRP2_Public' `
   --output 'results/shrp2_leading_reference_audit_train.json'
 ```
+
+## 8. 进入 SUMO 参数拟合
+
+事件 `116591908` 已转换为桥接初始化模板：初始纵向位置差 `15.087 m`，CAV 初速 `5.972 m/s`，BV 初速 `0.898 m/s`。模板只使用参考轨迹的初始状态，不会把后续每一帧坐标强行写入 SUMO。
+
+本地生成的模板位于被 Git 排除的 `data_analysis/raw_data/shrp2_reference_trajectory_v1/`。生成命令如下：
+
+```powershell
+python -m scenario_reconstruction.shrp2_reference_to_seed `
+  --reference 'data_analysis/raw_data/shrp2_reference_trajectory_v1/event_116591908_reference.json' `
+  --output 'data_analysis/raw_data/shrp2_reference_trajectory_v1/event_116591908_initial_state_seed.json' `
+  --bridge_config 'configs/shrp2_sumo_bridge_pilot.json' `
+  --bridge_output 'data_analysis/raw_data/shrp2_reference_trajectory_v1/sumo_shrp2_116591908_rear_end_reference_initial_state.json'
+```
+
+下一条命令会顺序执行 SUMO 校准候选，属于长时间运行任务，请由用户在本地执行；本轮未自动启动：
+
+```powershell
+python -m scenario_reconstruction.shrp2_collision_calibration `
+  'data_analysis/raw_data/shrp2_reference_trajectory_v1/sumo_shrp2_116591908_rear_end_reference_initial_state.json' `
+  --config 'configs/shrp2_rear_end_calibration_v2.json' `
+  --output 'data_analysis/raw_data/shrp2_reference_116591908_calibration_v2' `
+  --run
+```
+
+运行结束后只看 `calibration_summary.json` 的 `executed_count`、`selected_count`、碰撞时间误差和最小间距；不要仅根据 PowerShell 的 SUMO stderr 警告判断失败。

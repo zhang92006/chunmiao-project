@@ -110,6 +110,17 @@ python -m scenario_reconstruction.shrp2_reference_audit \
   --output results/shrp2_leading_reference_audit_train.json
 ```
 
+Convert a selected reference to an initial-state seed and a 2Lane bridge
+template before running the documented calibration grid:
+
+```bash
+python -m scenario_reconstruction.shrp2_reference_to_seed \
+  --reference data_analysis/raw_data/shrp2_reference/event_116591908_reference.json \
+  --output data_analysis/raw_data/shrp2_reference/event_116591908_seed.json \
+  --bridge_config configs/shrp2_sumo_bridge_pilot.json \
+  --bridge_output data_analysis/raw_data/shrp2_reference/sumo_event_116591908.json
+```
+
 Detailed implementation and experiment notes are under
 `scenario_reconstruction/`.
 
