@@ -62,3 +62,16 @@ Measured SHRP2 windows are only sources for multi-BV scenario seeds; they are
 not D2RL episodes until SUMO/NADE produces the joint observations, actions,
 NDD probabilities, and importance weights described in
 [`docs/多智能体D2RL联合训练接口.md`](../docs/多智能体D2RL联合训练接口.md).
+
+Export context-augmented K=2 source-frame seeds from a completed SHRP2 audit:
+
+```bash
+python -m scenario_reconstruction.shrp2_multibv_seed_export \
+  --source_root path/to/SHRP2_Public \
+  --audit_root data_analysis/raw_data/shrp2_diffusion_windows_v1 \
+  --output data_analysis/raw_data/shrp2_multibv_seeds_v1 \
+  --bv_count 2
+```
+
+This is a long HDF5 scan. The output is still `drl_training_ready=false` until
+the source-frame seed is mapped to a valid SUMO route and simulated by NADE.
