@@ -36,8 +36,10 @@ def validate_config(config: dict[str, Any]) -> None:
             for value in values
         ):
             raise ValueError(f"{name} must be a non-empty list of finite numbers")
-    if any(value >= 0 for value in config["braking_accelerations_mps2"]):
-        raise ValueError("braking_accelerations_mps2 values must be negative")
+    if any(value > 0 for value in config["braking_accelerations_mps2"]):
+        raise ValueError(
+            "braking_accelerations_mps2 values must be non-positive; zero denotes an explicit speed hold"
+        )
     if schema_version == 2:
         for name in (
             "cav_override_accelerations_mps2",
@@ -199,7 +201,7 @@ def generate_calibration_candidates(
         "rejected_count": sum(record["status"] != "generated" for record in records),
         "records": records,
         "limitations": [
-            "Candidate braking is an explicitly declared simulation intervention, not inferred driver behavior.",
+            "Candidate primary-BV longitudinal action is an explicitly declared simulation intervention, not inferred driver behavior.",
             "Generated files are calibration inputs and must not be inserted directly into D2RL training data.",
             "Selection uses only train-split inputs; validation is reserved for freezing the calibration protocol.",
         ],
@@ -327,7 +329,7 @@ def _calibrated_template(
     )
     candidate["description"] = (
         "Calibration candidate derived from a high-quality or quality-audited SHRP2 rear-end initialization. "
-        "Its scripted primary-BV braking is a declared SUMO intervention, not an exact crash replay."
+        "Its scripted primary-BV longitudinal action is a declared SUMO intervention, not an exact crash replay."
     )
     primary = _find_actor(candidate, "BV_primary")
     primary["position"] = float(candidate["ego"]["position"]) + initial_gap
@@ -375,13 +377,16 @@ def _calibrated_template(
         "braking_acceleration_mps2": braking_accel,
         "braking_start_time_s": braking_start,
         "braking_duration_s": config["braking_duration_s"],
+        "primary_bv_action_semantics": (
+            "negative value denotes braking; zero denotes an explicit speed hold"
+        ),
         "target_collision_time_s": config["target_collision_time_s"],
         "not_for_d2rl_training": True,
     }
     if int(config["schema_version"]) == 2:
         candidate["description"] = (
             "Reachability candidate derived from a high-quality or quality-audited SHRP2 rear-end "
-            "initialization. Its BV braking and CAV response hold are declared "
+            "initialization. Its BV longitudinal action and CAV response hold are declared "
             "calibration interventions, not an exact crash replay or delay model."
         )
         candidate["calibration_metadata"].update({

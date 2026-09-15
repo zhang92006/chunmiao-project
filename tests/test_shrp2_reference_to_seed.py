@@ -15,6 +15,7 @@ class SHRP2ReferenceToSeedTests(unittest.TestCase):
                 "associated_target_id": 2,
             },
             "alignment": {"reference_time_s": [0.0, 4.0]},
+            "collision_audit": {"first_sampled_contact_time_s": 3.6},
             "actors": {
                 "CAV": {
                     "length_m": 4.5,
@@ -37,6 +38,11 @@ class SHRP2ReferenceToSeedTests(unittest.TestCase):
         self.assertEqual(seed["actors"][0]["xy_m"][0], [0.0, 0.0])
         self.assertEqual(seed["actors"][1]["xy_m"][0], [15.0, 0.0])
         self.assertEqual(seed["bridge_policy"]["uses"], "initial positions, speeds and headings only")
+        self.assertEqual(seed["impact_conditioning"]["requested_impact_time_s"], 3.6)
+        self.assertEqual(
+            seed["impact_conditioning"]["source"],
+            "collision_audit.first_sampled_contact_time_s",
+        )
 
 
 if __name__ == "__main__":

@@ -146,6 +146,24 @@ class SHRP2CollisionCalibrationTests(unittest.TestCase):
             )
         self.assertEqual(manifest["generated_count"], 2)
 
+    def test_zero_primary_action_is_a_declared_speed_hold(self):
+        config = {**self.config, "braking_accelerations_mps2": [0.0]}
+        with tempfile.TemporaryDirectory() as temporary:
+            temporary_path = Path(temporary)
+            source_path = temporary_path / "source.json"
+            source_path.write_text(json.dumps(self._source_template()), encoding="utf-8")
+            manifest = generate_calibration_candidates(
+                source_path, temporary_path / "output", config
+            )
+            candidate = json.loads(
+                Path(manifest["records"][0]["template_path"]).read_text(encoding="utf-8")
+            )
+        self.assertEqual(candidate["events"][0]["params"]["longitudinal"], 0.0)
+        self.assertEqual(
+            candidate["calibration_metadata"]["primary_bv_action_semantics"],
+            "negative value denotes braking; zero denotes an explicit speed hold",
+        )
+
     def test_cav_calibration_action_cannot_be_used_as_training_event(self):
         source = self._source_template()
         source["events"] = [{

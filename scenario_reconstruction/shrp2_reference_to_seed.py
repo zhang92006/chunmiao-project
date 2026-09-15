@@ -30,6 +30,17 @@ def reference_to_seed(
         for key in ("xy_m", "reported_speed_mps", "reported_heading_rad"):
             if not actor.get(key):
                 raise ValueError(f"{actor_id} reference lacks {key}")
+    collision_audit = reference.get("collision_audit") or {}
+    impact_time = collision_audit.get("first_sampled_contact_time_s")
+    if (
+        isinstance(impact_time, bool)
+        or not isinstance(impact_time, (int, float))
+        or not math.isfinite(impact_time)
+        or impact_time <= 0
+    ):
+        raise ValueError(
+            "reference collision_audit lacks a positive first_sampled_contact_time_s"
+        )
     times = np.arange(0.0, duration_s + 0.5 / sample_hz, 1.0 / sample_hz)
     records = []
     for actor_id, actor in (("CAV", cav), ("BV_primary", target)):
@@ -74,7 +85,9 @@ def reference_to_seed(
             "target_speed_scale": 1.0,
         },
         "impact_conditioning": {
-            "requested_impact_time_s": float(reference["alignment"]["reference_time_s"][1]),
+            "requested_impact_time_s": float(impact_time),
+            "source": "collision_audit.first_sampled_contact_time_s",
+            "measurement": "first 10 Hz resampled oriented-box contact; no between-sample interpolation",
             "quality": "audited",
             "quality_rule": "selected by source position/speed/heading consistency",
         },

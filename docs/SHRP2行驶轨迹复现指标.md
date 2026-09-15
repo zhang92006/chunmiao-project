@@ -126,13 +126,23 @@ python -m scenario_reconstruction.shrp2_reference_to_seed `
   --bridge_output 'data_analysis/raw_data/shrp2_reference_trajectory_v1/sumo_shrp2_116591908_rear_end_reference_initial_state.json'
 ```
 
-下一条命令会顺序执行 SUMO 校准候选，属于长时间运行任务，请由用户在本地执行；本轮未自动启动：
+此前 v2 网格在该事件上已经完成 45/45 条目标车碰撞，但全部发生在 `1.4–2.4 s`，早于来源审计的首次接触 `3.6 s`；因此 `selected_count=0` 不是 SUMO 接口故障，而是“前车强制急刹”的干预假设与该来源轨迹不符。后续使用源轨迹对齐的 v3 协议，不再重跑 v2。详见 [SHRP2 源轨迹对齐校准 v3](SHRP2源轨迹对齐校准V3.md)。
+
+v3 会顺序执行 48 个 SUMO 校准候选，属于长时间运行任务，请由用户在本地执行。先重新生成桥接模板，使其目标碰撞时刻来自审计的 `3.6 s`：
+
+```powershell
+python -m scenario_reconstruction.shrp2_reference_to_seed `
+  --reference 'data_analysis/raw_data/shrp2_reference_trajectory_v1/event_116591908_reference.json' `
+  --output 'data_analysis/raw_data/shrp2_reference_trajectory_v1/event_116591908_initial_state_seed.json' `
+  --bridge_config 'configs/shrp2_sumo_bridge_pilot.json' `
+  --bridge_output 'data_analysis/raw_data/shrp2_reference_trajectory_v1/sumo_shrp2_116591908_rear_end_reference_initial_state.json'
+```
 
 ```powershell
 python -m scenario_reconstruction.shrp2_collision_calibration `
   'data_analysis/raw_data/shrp2_reference_trajectory_v1/sumo_shrp2_116591908_rear_end_reference_initial_state.json' `
-  --config 'configs/shrp2_rear_end_calibration_v2.json' `
-  --output 'data_analysis/raw_data/shrp2_reference_116591908_calibration_v2' `
+  --config 'configs/shrp2_rear_end_calibration_116591908_v3.json' `
+  --output 'data_analysis/raw_data/shrp2_reference_116591908_calibration_v3' `
   --run
 ```
 
