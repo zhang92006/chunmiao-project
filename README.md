@@ -121,6 +121,21 @@ python -m scenario_reconstruction.shrp2_reference_to_seed \
   --bridge_output data_analysis/raw_data/shrp2_reference/sumo_event_116591908.json
 ```
 
+Inventory all public SHRP2 categories before conditional diffusion training.
+The default scans metadata only; trajectory scanning needs pandas and PyTables:
+
+```bash
+python -m scenario_reconstruction.shrp2_diffusion_data_audit \
+  --source_root path/to/SHRP2_Public \
+  --output data_analysis/raw_data/shrp2_diffusion_windows_v1 \
+  --scan_trajectories --export_windows
+```
+
+Exports are measured pair references with explicit position conventions and
+heading masks, not simulator control labels or full multi-agent scenes. See
+[`docs/SHRP2条件扩散数据准备.md`](docs/SHRP2条件扩散数据准备.md) for inventory,
+completed calibration fidelity, split rules, and the user-run long task.
+
 Detailed implementation and experiment notes are under
 `scenario_reconstruction/`.
 

@@ -147,3 +147,5 @@ python -m scenario_reconstruction.shrp2_collision_calibration `
 ```
 
 运行结束后只看 `calibration_summary.json` 的 `executed_count`、`selected_count`、碰撞时间误差和最小间距；不要仅根据 PowerShell 的 SUMO stderr 警告判断失败。
+
+v3 已完成：47/48 条目标追尾，3 条满足时间窗。已补算相对实测 SHRP2 的共同窗口指标：CAV ADE 约 `0.41–0.43 m`，BV 前保险杠 ADE 约 `2.89–3.70 m`。窗口为 `0–3.2 s`，不能当作完整 4 秒拟合结果。全类别数据盘点、参考点修正与下一条条件扩散数据导出命令见 [SHRP2 条件扩散数据准备](SHRP2条件扩散数据准备.md)。
