@@ -89,3 +89,17 @@ python -m scenario_reconstruction.shrp2_multibv_seed_export \
   --bv_count 2 \
   --context_mode anchor_only
 ```
+
+Map the anchor-only seeds to autonomous 2Lane templates (no forced actions):
+
+```bash
+python -m scenario_reconstruction.shrp2_multibv_sumo_bridge \
+  --seed_root data_analysis/raw_data/shrp2_multibv_seeds_anchor_v1 \
+  --output data_analysis/raw_data/shrp2_multibv_sumo_templates_v1 \
+  --config configs/shrp2_multibv_sumo_bridge.json
+```
+
+The bridge blocks unsupported topologies and writes a `bridge_summary.json`.
+Templates are only initialization candidates; run them through autonomous
+NADE/D2RL and require `joint`, `per_agent`, NDD, and weight fields before using
+the resulting episodes for learning.

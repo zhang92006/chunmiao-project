@@ -60,3 +60,5 @@ RLlib/PPO 的模型输入输出层也必须随之设为 14 与 2；仅改 JSON �
 当前已增加 `shrp2_multibv_seed_export`。它从已完成审计的窗口回到原始 HDF5，按事件级 split 选择主风险 BV 外最近的上下文 BV，输出 `shrp2_measured_multibv_seed_v1`。输出明确标记 `drl_training_ready=false`，下一阶段才进行 2Lane/目标路网映射和 SUMO 验证。
 
 导出器有两个数据层：`context_mode=full` 要求上下文 BV 也有完整 4 秒历史，适合高保真验证；`context_mode=anchor_only` 只要求上下文 BV 在关键时刻有状态，输出是一帧关键时刻初始化种子，适合扩大 SUMO 场景池，但不得与完整历史样本合并统计。
+
+`shrp2_multibv_sumo_bridge` 将 `anchor_only` 种子投影到当前 `2Lane` 路网。它只支持 `leading`、`adjacent_lane`、`merging` 和 `none` 这类可近似为同向两车道初始状态的事件；横穿、行人、动物和对向转弯会进入 blocked 清单。生成模板的 `events` 为空，确保后续行为由 NADE/D2RL 自主采样，而不是把 SHRP2 观测动作写成标签。

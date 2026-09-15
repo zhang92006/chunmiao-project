@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "map": "2Lane",
+  "route": "route_0",
+  "duration_s": 12.0,
+  "cav_position_m": 400.0,
+  "cav_lane_index": 1,
+  "default_bv_lane_index": 0,
+  "lane_offset_threshold_m": 1.6,
+  "minimum_gap_m": 5.1,
+  "maximum_gap_m": 120.0,
+  "allowed_conflicts": ["leading", "adjacent_lane", "merging", "none"]
+}
