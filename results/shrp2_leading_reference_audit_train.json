@@ -1,0 +1,1188 @@
+{
+  "schema_version": 1,
+  "status": "SHRP2 candidate trajectory quality audit; no SUMO execution",
+  "dataset": "SHRP2 NDS public bird's-eye trajectory reconstruction",
+  "dataset_doi": "10.15787/VTT1/T7UUC1",
+  "source_category": "Crash",
+  "source_split": "train",
+  "conflict": "leading",
+  "source_file_sha256": {
+    "event_meta.csv": "5c064b48c4807a5c7a79735814c60fee35886585d3ffa1391b3b58ff6ea727d0",
+    "event_data.h5": "de6d83de850aedb52094de9960878f2dfdc21538c270d21f1bd854468e334662"
+  },
+  "candidate_count_in_split": 67,
+  "audited_count": 39,
+  "reconstruction_ready_count": 2,
+  "top_ranked_event_ids": [
+    116591908,
+    2934487,
+    10858068,
+    61427019,
+    16992777,
+    128888508,
+    10560148,
+    131785457,
+    9700632,
+    29730845
+  ],
+  "records": [
+    {
+      "event_id": 2843842,
+      "target_id": 13479,
+      "source_box_clearance_m": -0.42985366099906486,
+      "source_sample_dt_s": 0.0039999999999054126,
+      "trajectory_window_s": [
+        1059.5,
+        1089.4
+      ],
+      "status": "audited",
+      "reconstruction_ready": false,
+      "ranking_score": 7.238106698281167,
+      "collision": {
+        "initial_collision": true,
+        "first_sampled_contact_time_s": 0.0,
+        "collision_in_reference_window": true
+      },
+      "quality": {
+        "cav_speed_path_rmse_mps": 0.03012834589440679,
+        "cav_heading_path_mae_rad": 0.0001037752007865637,
+        "bv_center_speed_path_rmse_mps": 0.7301789558968956,
+        "bv_front_bumper_speed_path_rmse_mps": 0.06787457718597359,
+        "bv_front_bumper_heading_path_mae_rad": null
+      }
+    },
+    {
+      "event_id": 2934487,
+      "target_id": 13483,
+      "source_box_clearance_m": -1.6574725974633395,
+      "source_sample_dt_s": 0.035999999999830834,
+      "trajectory_window_s": [
+        1649.2,
+        1677.2
+      ],
+      "status": "audited",
+      "reconstruction_ready": true,
+      "ranking_score": 0.896856386784493,
+      "collision": {
+        "initial_collision": false,
+        "first_sampled_contact_time_s": 3.6,
+        "collision_in_reference_window": true
+      },
+      "quality": {
+        "cav_speed_path_rmse_mps": 0.14728981480241382,
+        "cav_heading_path_mae_rad": 0.00010325034129839252,
+        "bv_center_speed_path_rmse_mps": 0.31837059192891715,
+        "bv_front_bumper_speed_path_rmse_mps": 0.3166066108943084,
+        "bv_front_bumper_heading_path_mae_rad": 0.0328567107464724
+      }
+    },
+    {
+      "event_id": 5592471,
+      "target_id": 13522,
+      "source_box_clearance_m": -1.719705825511582,
+      "status": "insufficient_trajectory_window",
+      "reason": "pre-impact history is shorter than configured window"
+    },
+    {
+      "event_id": 5592867,
+      "target_id": 13527,
+      "source_box_clearance_m": -1.152659329053506,
+      "status": "insufficient_trajectory_window",
+      "reason": "trajectory does not reach annotated impact"
+    },
+    {
+      "event_id": 7303270,
+      "target_id": 13575,
+      "source_box_clearance_m": -1.7462979456337955,
+      "source_sample_dt_s": -0.03600000000005821,
+      "trajectory_window_s": [
+        1392.3,
+        1422.0
+      ],
+      "status": "audited",
+      "reconstruction_ready": false,
+      "ranking_score": 4.218089580260211,
+      "collision": {
+        "initial_collision": true,
+        "first_sampled_contact_time_s": 0.0,
+        "collision_in_reference_window": true
+      },
+      "quality": {
+        "cav_speed_path_rmse_mps": 0.06693123802805181,
+        "cav_heading_path_mae_rad": 0.00024076540132807433,
+        "bv_center_speed_path_rmse_mps": 0.2245579684020787,
+        "bv_front_bumper_speed_path_rmse_mps": 0.05106388821268488,
+        "bv_front_bumper_heading_path_mae_rad": 0.09985368861814668
+      }
+    },
+    {
+      "event_id": 7347423,
+      "target_id": 13582,
+      "source_box_clearance_m": -1.9000000000000057,
+      "status": "insufficient_trajectory_window",
+      "reason": "trajectory does not reach annotated impact"
+    },
+    {
+      "event_id": 9700611,
+      "target_id": 13642,
+      "source_box_clearance_m": -1.7269097469714636,
+      "source_sample_dt_s": 0.008000000000038199,
+      "trajectory_window_s": [
+        468.5,
+        498.3
+      ],
+      "status": "audited",
+      "reconstruction_ready": false,
+      "ranking_score": 4.222226776574428,
+      "collision": {
+        "initial_collision": true,
+        "first_sampled_contact_time_s": 0.0,
+        "collision_in_reference_window": true
+      },
+      "quality": {
+        "cav_speed_path_rmse_mps": 0.12058229102096905,
+        "cav_heading_path_mae_rad": 6.515720569046817e-05,
+        "bv_center_speed_path_rmse_mps": 0.07535742042641506,
+        "bv_front_bumper_speed_path_rmse_mps": 0.0589247390409825,
+        "bv_front_bumper_heading_path_mae_rad": 0.04265458930678609
+      }
+    },
+    {
+      "event_id": 9700632,
+      "target_id": 13653,
+      "source_box_clearance_m": -1.75,
+      "source_sample_dt_s": 0.01500000000001478,
+      "trajectory_window_s": [
+        166.9,
+        178.9
+      ],
+      "status": "audited",
+      "reconstruction_ready": false,
+      "ranking_score": 1.564298931416035,
+      "collision": {
+        "initial_collision": false,
+        "first_sampled_contact_time_s": 3.8000000000000003,
+        "collision_in_reference_window": true
+      },
+      "quality": {
+        "cav_speed_path_rmse_mps": 0.1649923850173849,
+        "cav_heading_path_mae_rad": 0.0006086349713977612,
+        "bv_center_speed_path_rmse_mps": 0.729876920829785,
+        "bv_front_bumper_speed_path_rmse_mps": 0.8321720601380426,
+        "bv_front_bumper_heading_path_mae_rad": 0.36652585128920995
+      }
+    },
+    {
+      "event_id": 9886399,
+      "status": "no_target_association"
+    },
+    {
+      "event_id": 10528168,
+      "target_id": 13741,
+      "source_box_clearance_m": -1.7499999999999991,
+      "status": "insufficient_trajectory_window",
+      "reason": "trajectory does not reach annotated impact"
+    },
+    {
+      "event_id": 10528253,
+      "target_id": 13769,
+      "source_box_clearance_m": -1.8000000000000007,
+      "status": "insufficient_trajectory_window",
+      "reason": "pre-impact history is shorter than configured window"
+    },
+    {
+      "event_id": 10554388,
+      "target_id": 13808,
+      "source_box_clearance_m": -1.7126684558288652,
+      "status": "insufficient_trajectory_window",
+      "reason": "pre-impact history is shorter than configured window"
+    },
+    {
+      "event_id": 10556978,
+      "status": "no_target_association"
+    },
+    {
+      "event_id": 10560148,
+      "target_id": 13858,
+      "source_box_clearance_m": -1.6912338730211331,
+      "source_sample_dt_s": -0.021999999999934516,
+      "trajectory_window_s": [
+        994.0,
+        1008.2
+      ],
+      "status": "audited",
+      "reconstruction_ready": false,
+      "ranking_score": 1.307462041786146,
+      "collision": {
+        "initial_collision": false,
+        "first_sampled_contact_time_s": 3.0,
+        "collision_in_reference_window": true
+      },
+      "quality": {
+        "cav_speed_path_rmse_mps": 0.11016233741405326,
+        "cav_heading_path_mae_rad": 0.00037429326905511536,
+        "bv_center_speed_path_rmse_mps": 0.16105833945844036,
+        "bv_front_bumper_speed_path_rmse_mps": 0.16001810618364,
+        "bv_front_bumper_heading_path_mae_rad": 0.036907304919397615
+      }
+    },
+    {
+      "event_id": 10814075,
+      "status": "no_target_association"
+    },
+    {
+      "event_id": 10814076,
+      "target_id": 13904,
+      "source_box_clearance_m": -1.7500000000000107,
+      "status": "insufficient_trajectory_window",
+      "reason": "trajectory does not reach annotated impact"
+    },
+    {
+      "event_id": 10858068,
+      "target_id": 13918,
+      "source_box_clearance_m": -1.632336392876823,
+      "source_sample_dt_s": -0.01799999999980173,
+      "trajectory_window_s": [
+        1110.7,
+        1139.9
+      ],
+      "status": "audited",
+      "reconstruction_ready": false,
+      "ranking_score": 1.0333517028367603,
+      "collision": {
+        "initial_collision": false,
+        "first_sampled_contact_time_s": 3.3000000000000003,
+        "collision_in_reference_window": true
+      },
+      "quality": {
+        "cav_speed_path_rmse_mps": 0.09723043299718011,
+        "cav_heading_path_mae_rad": 9.939439314455546e-05,
+        "bv_center_speed_path_rmse_mps": 0.2338277157200184,
+        "bv_front_bumper_speed_path_rmse_mps": 0.2337529558640966,
+        "bv_front_bumper_heading_path_mae_rad": 0.0022689195823391885
+      }
+    },
+    {
+      "event_id": 10858129,
+      "status": "no_target_association"
+    },
+    {
+      "event_id": 16992777,
+      "target_id": 13969,
+      "source_box_clearance_m": -1.127828396138824,
+      "source_sample_dt_s": 0.045000000000015916,
+      "trajectory_window_s": [
+        145.4,
+        152.8
+      ],
+      "status": "audited",
+      "reconstruction_ready": false,
+      "ranking_score": 1.1689432861060154,
+      "collision": {
+        "initial_collision": false,
+        "first_sampled_contact_time_s": 3.2,
+        "collision_in_reference_window": true
+      },
+      "quality": {
+        "cav_speed_path_rmse_mps": 0.08415758621283352,
+        "cav_heading_path_mae_rad": 0.00017053488019599193,
+        "bv_center_speed_path_rmse_mps": 0.255328535308534,
+        "bv_front_bumper_speed_path_rmse_mps": 0.25375312393115385,
+        "bv_front_bumper_heading_path_mae_rad": 0.030862041081832277
+      }
+    },
+    {
+      "event_id": 16992778,
+      "target_id": 13983,
+      "source_box_clearance_m": 1.418233099392582,
+      "source_sample_dt_s": 0.014999999999986358,
+      "trajectory_window_s": [
+        591.0,
+        601.2
+      ],
+      "status": "audited",
+      "reconstruction_ready": false,
+      "ranking_score": 4.557282938498632,
+      "collision": {
+        "initial_collision": true,
+        "first_sampled_contact_time_s": 0.0,
+        "collision_in_reference_window": true
+      },
+      "quality": {
+        "cav_speed_path_rmse_mps": 0.06918655986996089,
+        "cav_heading_path_mae_rad": 6.12005786580679e-05,
+        "bv_center_speed_path_rmse_mps": 0.6632683961390387,
+        "bv_front_bumper_speed_path_rmse_mps": 0.1003965315997792,
+        "bv_front_bumper_heading_path_mae_rad": 0.38763864645023416
+      }
+    },
+    {
+      "event_id": 16992779,
+      "target_id": 13997,
+      "source_box_clearance_m": -1.7499999999999716,
+      "status": "insufficient_trajectory_window",
+      "reason": "pre-impact history is shorter than configured window"
+    },
+    {
+      "event_id": 16992780,
+      "target_id": 14013,
+      "source_box_clearance_m": 0.6712932952280917,
+      "status": "insufficient_trajectory_window",
+      "reason": "pre-impact history is shorter than configured window"
+    },
+    {
+      "event_id": 17726433,
+      "target_id": 14035,
+      "source_box_clearance_m": -1.8000000000000185,
+      "source_sample_dt_s": -0.0020000000000095497,
+      "trajectory_window_s": [
+        322.2,
+        348.8
+      ],
+      "status": "audited",
+      "reconstruction_ready": false,
+      "ranking_score": 1.6866401867656065,
+      "collision": {
+        "initial_collision": false,
+        "first_sampled_contact_time_s": 2.7,
+        "collision_in_reference_window": true
+      },
+      "quality": {
+        "cav_speed_path_rmse_mps": 0.11729111359709958,
+        "cav_heading_path_mae_rad": 0.0001779575242900703,
+        "bv_center_speed_path_rmse_mps": 0.24974566930062284,
+        "bv_front_bumper_speed_path_rmse_mps": 0.24846091504346132,
+        "bv_front_bumper_heading_path_mae_rad": 0.020710200600755683
+      }
+    },
+    {
+      "event_id": 22484772,
+      "target_id": 14073,
+      "source_box_clearance_m": -1.6384735622786124,
+      "status": "insufficient_trajectory_window",
+      "reason": "pre-impact history is shorter than configured window"
+    },
+    {
+      "event_id": 22485021,
+      "target_id": 14089,
+      "source_box_clearance_m": -1.75,
+      "status": "insufficient_trajectory_window",
+      "reason": "pre-impact history is shorter than configured window"
+    },
+    {
+      "event_id": 22586763,
+      "target_id": 14090,
+      "source_box_clearance_m": -0.32690186674193455,
+      "source_sample_dt_s": -0.004999999999999005,
+      "trajectory_window_s": [
+        6.6,
+        34.6
+      ],
+      "status": "audited",
+      "reconstruction_ready": false,
+      "ranking_score": 4.330510631753127,
+      "collision": {
+        "initial_collision": true,
+        "first_sampled_contact_time_s": 0.0,
+        "collision_in_reference_window": true
+      },
+      "quality": {
+        "cav_speed_path_rmse_mps": 0.034176030627935686,
+        "cav_heading_path_mae_rad": 0.0001718853387915775,
+        "bv_center_speed_path_rmse_mps": 0.8967931343051749,
+        "bv_front_bumper_speed_path_rmse_mps": 0.16651999220278768,
+        "bv_front_bumper_heading_path_mae_rad": 0.12964272358361187
+      }
+    },
+    {
+      "event_id": 22994846,
+      "status": "no_target_association"
+    },
+    {
+      "event_id": 23668565,
+      "target_id": 14192,
+      "source_box_clearance_m": -1.6183111581878933,
+      "source_sample_dt_s": 0.04099999999993997,
+      "trajectory_window_s": [
+        1114.8,
+        1128.5
+      ],
+      "status": "audited",
+      "reconstruction_ready": false,
+      "ranking_score": 1.6491479733600438,
+      "collision": {
+        "initial_collision": false,
+        "first_sampled_contact_time_s": 2.8000000000000003,
+        "collision_in_reference_window": true
+      },
+      "quality": {
+        "cav_speed_path_rmse_mps": 0.1444905115019845,
+        "cav_heading_path_mae_rad": 0.00010003218143837574,
+        "bv_center_speed_path_rmse_mps": 0.30155557860420484,
+        "bv_front_bumper_speed_path_rmse_mps": 0.3014785555191754,
+        "bv_front_bumper_heading_path_mae_rad": 0.003078874157445682
+      }
+    },
+    {
+      "event_id": 23675203,
+      "target_id": 14224,
+      "source_box_clearance_m": 1.3089390562399301,
+      "source_sample_dt_s": -0.027000000000043656,
+      "trajectory_window_s": [
+        258.6,
+        280.6
+      ],
+      "status": "audited",
+      "reconstruction_ready": false,
+      "ranking_score": 12.233159328715779,
+      "collision": {
+        "initial_collision": false,
+        "first_sampled_contact_time_s": null,
+        "collision_in_reference_window": false
+      },
+      "quality": {
+        "cav_speed_path_rmse_mps": 0.025947108062178134,
+        "cav_heading_path_mae_rad": null,
+        "bv_center_speed_path_rmse_mps": 1.9981489932186485,
+        "bv_front_bumper_speed_path_rmse_mps": 0.4839217492465982,
+        "bv_front_bumper_heading_path_mae_rad": 0.7232904714070019
+      }
+    },
+    {
+      "event_id": 24118240,
+      "target_id": 14300,
+      "source_box_clearance_m": -1.6979309015190864,
+      "source_sample_dt_s": 0.0,
+      "trajectory_window_s": [
+        181.4,
+        191.9
+      ],
+      "status": "audited",
+      "reconstruction_ready": false,
+      "ranking_score": 4.321507040753289,
+      "collision": {
+        "initial_collision": true,
+        "first_sampled_contact_time_s": 0.0,
+        "collision_in_reference_window": true
+      },
+      "quality": {
+        "cav_speed_path_rmse_mps": 0.08825615477479731,
+        "cav_heading_path_mae_rad": 8.277293675489667e-05,
+        "bv_center_speed_path_rmse_mps": 0.2780432974808755,
+        "bv_front_bumper_speed_path_rmse_mps": 0.09077517893386995,
+        "bv_front_bumper_heading_path_mae_rad": 0.1423929341078667
+      }
+    },
+    {
+      "event_id": 29712223,
+      "target_id": 14626,
+      "source_box_clearance_m": -1.7977638237534421,
+      "status": "insufficient_trajectory_window",
+      "reason": "pre-impact history is shorter than configured window"
+    },
+    {
+      "event_id": 29714734,
+      "target_id": 14854,
+      "source_box_clearance_m": -1.6575223323192674,
+      "source_sample_dt_s": 0.0010000000000012221,
+      "trajectory_window_s": [
+        15.7,
+        30.6
+      ],
+      "status": "audited",
+      "reconstruction_ready": false,
+      "ranking_score": 4.35105284605942,
+      "collision": {
+        "initial_collision": true,
+        "first_sampled_contact_time_s": 0.0,
+        "collision_in_reference_window": true
+      },
+      "quality": {
+        "cav_speed_path_rmse_mps": 0.1197330303445317,
+        "cav_heading_path_mae_rad": 0.00011801586448017691,
+        "bv_center_speed_path_rmse_mps": 0.2375783647015634,
+        "bv_front_bumper_speed_path_rmse_mps": 0.10878757077506986,
+        "bv_front_bumper_heading_path_mae_rad": 0.12241422907533855
+      }
+    },
+    {
+      "event_id": 29714736,
+      "status": "no_target_association"
+    },
+    {
+      "event_id": 29730845,
+      "target_id": 15024,
+      "source_box_clearance_m": -1.4193238570737252,
+      "source_sample_dt_s": 0.0060000000000854925,
+      "trajectory_window_s": [
+        1099.7,
+        1112.6
+      ],
+      "status": "audited",
+      "reconstruction_ready": false,
+      "ranking_score": 1.6302811114456446,
+      "collision": {
+        "initial_collision": false,
+        "first_sampled_contact_time_s": 2.7,
+        "collision_in_reference_window": true
+      },
+      "quality": {
+        "cav_speed_path_rmse_mps": 0.05810947412823072,
+        "cav_heading_path_mae_rad": 0.00013958963834018924,
+        "bv_center_speed_path_rmse_mps": 0.5393840290595503,
+        "bv_front_bumper_speed_path_rmse_mps": 0.14099797729615052,
+        "bv_front_bumper_heading_path_mae_rad": 0.13103407038292328
+      }
+    },
+    {
+      "event_id": 29750783,
+      "target_id": 15123,
+      "source_box_clearance_m": 0.03304818728552907,
+      "source_sample_dt_s": 0.0009999999999763531,
+      "trajectory_window_s": [
+        398.6,
+        426.9
+      ],
+      "status": "audited",
+      "reconstruction_ready": false,
+      "ranking_score": 10.526687213288344,
+      "collision": {
+        "initial_collision": false,
+        "first_sampled_contact_time_s": null,
+        "collision_in_reference_window": false
+      },
+      "quality": {
+        "cav_speed_path_rmse_mps": 0.07614387512569601,
+        "cav_heading_path_mae_rad": 0.0005435325224252274,
+        "bv_center_speed_path_rmse_mps": 0.49503299517236937,
+        "bv_front_bumper_speed_path_rmse_mps": 0.05143375994619399,
+        "bv_front_bumper_heading_path_mae_rad": 0.398566045694029
+      }
+    },
+    {
+      "event_id": 33575051,
+      "target_id": 16949,
+      "source_box_clearance_m": -1.75,
+      "status": "insufficient_trajectory_window",
+      "reason": "pre-impact history is shorter than configured window"
+    },
+    {
+      "event_id": 33994002,
+      "target_id": 17020,
+      "source_box_clearance_m": -1.5567952877700248,
+      "source_sample_dt_s": 0.0010000000000331966,
+      "trajectory_window_s": [
+        251.5,
+        281.3
+      ],
+      "status": "audited",
+      "reconstruction_ready": false,
+      "ranking_score": 3.672713764662828,
+      "collision": {
+        "initial_collision": false,
+        "first_sampled_contact_time_s": 0.6000000000000001,
+        "collision_in_reference_window": true
+      },
+      "quality": {
+        "cav_speed_path_rmse_mps": 0.07261160557526845,
+        "cav_heading_path_mae_rad": 3.4674151721728795e-05,
+        "bv_center_speed_path_rmse_mps": 0.17867233175817063,
+        "bv_front_bumper_speed_path_rmse_mps": 0.17869587906978576,
+        "bv_front_bumper_heading_path_mae_rad": 0.02137160586605237
+      }
+    },
+    {
+      "event_id": 35257206,
+      "target_id": 17087,
+      "source_box_clearance_m": 4.262374308683735,
+      "source_sample_dt_s": 0.03200000000001069,
+      "trajectory_window_s": [
+        136.1,
+        165.9
+      ],
+      "status": "audited",
+      "reconstruction_ready": false,
+      "ranking_score": 10.49735924000797,
+      "collision": {
+        "initial_collision": false,
+        "first_sampled_contact_time_s": null,
+        "collision_in_reference_window": false
+      },
+      "quality": {
+        "cav_speed_path_rmse_mps": 0.1477502271883423,
+        "cav_heading_path_mae_rad": 0.00133569507283206,
+        "bv_center_speed_path_rmse_mps": 0.2776625070081921,
+        "bv_front_bumper_speed_path_rmse_mps": 0.3173445783102108,
+        "bv_front_bumper_heading_path_mae_rad": 0.03092873943658435
+      }
+    },
+    {
+      "event_id": 35257227,
+      "target_id": 17187,
+      "source_box_clearance_m": -1.2526875524550736,
+      "source_sample_dt_s": -0.0010000000000047748,
+      "trajectory_window_s": [
+        61.4,
+        91.1
+      ],
+      "status": "audited",
+      "reconstruction_ready": false,
+      "ranking_score": 2.936025936785493,
+      "collision": {
+        "initial_collision": false,
+        "first_sampled_contact_time_s": 1.2000000000000002,
+        "collision_in_reference_window": true
+      },
+      "quality": {
+        "cav_speed_path_rmse_mps": 0.034563219031072144,
+        "cav_heading_path_mae_rad": 7.434916649031135e-05,
+        "bv_center_speed_path_rmse_mps": 0.06878565903307648,
+        "bv_front_bumper_speed_path_rmse_mps": 0.06968147471180772,
+        "bv_front_bumper_heading_path_mae_rad": 0.03170689387612296
+      }
+    },
+    {
+      "event_id": 35257230,
+      "target_id": 17210,
+      "source_box_clearance_m": -0.822777613922625,
+      "source_sample_dt_s": 0.0,
+      "trajectory_window_s": [
+        655.7,
+        663.3
+      ],
+      "status": "audited",
+      "reconstruction_ready": false,
+      "ranking_score": 2.635630028252298,
+      "collision": {
+        "initial_collision": false,
+        "first_sampled_contact_time_s": 1.7000000000000002,
+        "collision_in_reference_window": true
+      },
+      "quality": {
+        "cav_speed_path_rmse_mps": 0.056639959930590775,
+        "cav_heading_path_mae_rad": 0.0002820213387161942,
+        "bv_center_speed_path_rmse_mps": 0.19868127652676662,
+        "bv_front_bumper_speed_path_rmse_mps": 0.20224898481175715,
+        "bv_front_bumper_heading_path_mae_rad": 0.07645906217123431
+      }
+    },
+    {
+      "event_id": 35449257,
+      "target_id": 17390,
+      "source_box_clearance_m": -1.3757732820793933,
+      "source_sample_dt_s": -0.014000000000010004,
+      "trajectory_window_s": [
+        742.6,
+        770.7
+      ],
+      "status": "audited",
+      "reconstruction_ready": false,
+      "ranking_score": 2.404010074642621,
+      "collision": {
+        "initial_collision": false,
+        "first_sampled_contact_time_s": 1.9000000000000001,
+        "collision_in_reference_window": true
+      },
+      "quality": {
+        "cav_speed_path_rmse_mps": 0.09942394024029454,
+        "cav_heading_path_mae_rad": 0.00033203591428967126,
+        "bv_center_speed_path_rmse_mps": 0.15492750608776343,
+        "bv_front_bumper_speed_path_rmse_mps": 0.14814940725320738,
+        "bv_front_bumper_heading_path_mae_rad": 0.056104691234829675
+      }
+    },
+    {
+      "event_id": 36841165,
+      "target_id": 17496,
+      "source_box_clearance_m": -0.5554048767943982,
+      "status": "insufficient_trajectory_window",
+      "reason": "pre-impact history is shorter than configured window"
+    },
+    {
+      "event_id": 51722201,
+      "status": "no_target_association"
+    },
+    {
+      "event_id": 60633157,
+      "status": "no_target_association"
+    },
+    {
+      "event_id": 61211797,
+      "target_id": 19383,
+      "source_box_clearance_m": -1.3871418358288636,
+      "source_sample_dt_s": 0.046999999999997044,
+      "trajectory_window_s": [
+        32.0,
+        43.3
+      ],
+      "status": "audited",
+      "reconstruction_ready": false,
+      "ranking_score": 2.8719899944674525,
+      "collision": {
+        "initial_collision": false,
+        "first_sampled_contact_time_s": 1.4000000000000001,
+        "collision_in_reference_window": true
+      },
+      "quality": {
+        "cav_speed_path_rmse_mps": 0.06518503208727494,
+        "cav_heading_path_mae_rad": 0.00021021218077908236,
+        "bv_center_speed_path_rmse_mps": 0.12404050579053812,
+        "bv_front_bumper_speed_path_rmse_mps": 0.1252212877000198,
+        "bv_front_bumper_heading_path_mae_rad": 0.0813734624993793
+      }
+    },
+    {
+      "event_id": 61216941,
+      "target_id": 19811,
+      "source_box_clearance_m": -1.6580845633323593,
+      "source_sample_dt_s": 0.04600000000004911,
+      "trajectory_window_s": [
+        718.5,
+        748.2
+      ],
+      "status": "audited",
+      "reconstruction_ready": false,
+      "ranking_score": 4.239436565159867,
+      "collision": {
+        "initial_collision": true,
+        "first_sampled_contact_time_s": 0.0,
+        "collision_in_reference_window": true
+      },
+      "quality": {
+        "cav_speed_path_rmse_mps": 0.08438227516288141,
+        "cav_heading_path_mae_rad": 0.00012028185947693528,
+        "bv_center_speed_path_rmse_mps": 0.14376020678373475,
+        "bv_front_bumper_speed_path_rmse_mps": 0.14353155041736118,
+        "bv_front_bumper_heading_path_mae_rad": 0.011402457720147724
+      }
+    },
+    {
+      "event_id": 61427019,
+      "target_id": 20421,
+      "source_box_clearance_m": -1.1214322260214997,
+      "source_sample_dt_s": 0.018000000000000682,
+      "trajectory_window_s": [
+        182.1,
+        212.0
+      ],
+      "status": "audited",
+      "reconstruction_ready": false,
+      "ranking_score": 1.0388993944541882,
+      "collision": {
+        "initial_collision": false,
+        "first_sampled_contact_time_s": 3.4000000000000004,
+        "collision_in_reference_window": true
+      },
+      "quality": {
+        "cav_speed_path_rmse_mps": 0.06524258414297786,
+        "cav_heading_path_mae_rad": 0.00010108785892670724,
+        "bv_center_speed_path_rmse_mps": 0.5708243085427273,
+        "bv_front_bumper_speed_path_rmse_mps": 0.04166710073335185,
+        "bv_front_bumper_heading_path_mae_rad": 0.3318886217189321
+      }
+    },
+    {
+      "event_id": 116163026,
+      "target_id": 20837,
+      "source_box_clearance_m": -1.7500000000000009,
+      "source_sample_dt_s": 0.02299999999991087,
+      "trajectory_window_s": [
+        672.0,
+        701.7
+      ],
+      "status": "audited",
+      "reconstruction_ready": false,
+      "ranking_score": 2.0689183034364453,
+      "collision": {
+        "initial_collision": false,
+        "first_sampled_contact_time_s": 2.2,
+        "collision_in_reference_window": true
+      },
+      "quality": {
+        "cav_speed_path_rmse_mps": 0.05541914444401357,
+        "cav_heading_path_mae_rad": 0.00012691328074577166,
+        "bv_center_speed_path_rmse_mps": 0.10095311886816159,
+        "bv_front_bumper_speed_path_rmse_mps": 0.10454187781242996,
+        "bv_front_bumper_heading_path_mae_rad": 0.10883036789925613
+      }
+    },
+    {
+      "event_id": 116163144,
+      "target_id": 20855,
+      "source_box_clearance_m": -1.730845086398321,
+      "status": "insufficient_trajectory_window",
+      "reason": "trajectory does not reach annotated impact"
+    },
+    {
+      "event_id": 116168855,
+      "target_id": 20959,
+      "source_box_clearance_m": -1.8000000000000114,
+      "status": "insufficient_trajectory_window",
+      "reason": "pre-impact history is shorter than configured window"
+    },
+    {
+      "event_id": 116168870,
+      "target_id": 20994,
+      "source_box_clearance_m": -1.7193906365114344,
+      "source_sample_dt_s": -0.03100000000000591,
+      "trajectory_window_s": [
+        189.3,
+        199.4
+      ],
+      "status": "audited",
+      "reconstruction_ready": false,
+      "ranking_score": 1.8460943705215622,
+      "collision": {
+        "initial_collision": false,
+        "first_sampled_contact_time_s": 2.8000000000000003,
+        "collision_in_reference_window": true
+      },
+      "quality": {
+        "cav_speed_path_rmse_mps": 0.0464694053741398,
+        "cav_heading_path_mae_rad": 0.00025553254754029635,
+        "bv_center_speed_path_rmse_mps": 1.2557181480898714,
+        "bv_front_bumper_speed_path_rmse_mps": 0.3636774309501834,
+        "bv_front_bumper_heading_path_mae_rad": 0.23569200164969906
+      }
+    },
+    {
+      "event_id": 116168876,
+      "target_id": 21010,
+      "source_box_clearance_m": 19.293812420637057,
+      "status": "source_clearance_exceeds_limit"
+    },
+    {
+      "event_id": 116168907,
+      "target_id": 21088,
+      "source_box_clearance_m": 10.646049962253365,
+      "status": "source_clearance_exceeds_limit"
+    },
+    {
+      "event_id": 116168909,
+      "target_id": 21100,
+      "source_box_clearance_m": 2.116045874471074,
+      "source_sample_dt_s": -0.015000000000100044,
+      "trajectory_window_s": [
+        574.5,
+        581.7
+      ],
+      "status": "audited",
+      "reconstruction_ready": false,
+      "ranking_score": 11.301351405408946,
+      "collision": {
+        "initial_collision": false,
+        "first_sampled_contact_time_s": null,
+        "collision_in_reference_window": false
+      },
+      "quality": {
+        "cav_speed_path_rmse_mps": 0.14762454077256507,
+        "cav_heading_path_mae_rad": 0.0024220011188180735,
+        "bv_center_speed_path_rmse_mps": 2.1620387665122607,
+        "bv_front_bumper_speed_path_rmse_mps": 0.6039411425588925,
+        "bv_front_bumper_heading_path_mae_rad": 0.5473637209586703
+      }
+    },
+    {
+      "event_id": 116591908,
+      "target_id": 21258,
+      "source_box_clearance_m": -0.5363741861325195,
+      "source_sample_dt_s": -0.05000000000001137,
+      "trajectory_window_s": [
+        389.8,
+        400.8
+      ],
+      "status": "audited",
+      "reconstruction_ready": true,
+      "ranking_score": 0.6731202386078258,
+      "collision": {
+        "initial_collision": false,
+        "first_sampled_contact_time_s": 3.6,
+        "collision_in_reference_window": true
+      },
+      "quality": {
+        "cav_speed_path_rmse_mps": 0.07141138491269257,
+        "cav_heading_path_mae_rad": 0.00011480810677449586,
+        "bv_center_speed_path_rmse_mps": 0.10229715605350874,
+        "bv_front_bumper_speed_path_rmse_mps": 0.07593648521818934,
+        "bv_front_bumper_heading_path_mae_rad": 0.12565756037016942
+      }
+    },
+    {
+      "event_id": 116591910,
+      "target_id": 21275,
+      "source_box_clearance_m": -1.7273455775188609,
+      "source_sample_dt_s": 0.0,
+      "trajectory_window_s": [
+        31.9,
+        48.6
+      ],
+      "status": "audited",
+      "reconstruction_ready": false,
+      "ranking_score": 4.311448399095972,
+      "collision": {
+        "initial_collision": true,
+        "first_sampled_contact_time_s": 0.0,
+        "collision_in_reference_window": true
+      },
+      "quality": {
+        "cav_speed_path_rmse_mps": 0.10121851734936832,
+        "cav_heading_path_mae_rad": 6.19371967643701e-05,
+        "bv_center_speed_path_rmse_mps": 0.13652043875193579,
+        "bv_front_bumper_speed_path_rmse_mps": 0.14164960542352667,
+        "bv_front_bumper_heading_path_mae_rad": 0.06851833912631247
+      }
+    },
+    {
+      "event_id": 116592027,
+      "target_id": 21360,
+      "source_box_clearance_m": -1.712570104432361,
+      "source_sample_dt_s": 0.0010000000000047748,
+      "trajectory_window_s": [
+        110.5,
+        136.9
+      ],
+      "status": "audited",
+      "reconstruction_ready": false,
+      "ranking_score": 4.172071598915346,
+      "collision": {
+        "initial_collision": false,
+        "first_sampled_contact_time_s": 0.1,
+        "collision_in_reference_window": true
+      },
+      "quality": {
+        "cav_speed_path_rmse_mps": 0.0162022576015774,
+        "cav_heading_path_mae_rad": 3.406850849710578e-05,
+        "bv_center_speed_path_rmse_mps": 0.2603218657329263,
+        "bv_front_bumper_speed_path_rmse_mps": 0.03219938524680963,
+        "bv_front_bumper_heading_path_mae_rad": 0.2236358875584618
+      }
+    },
+    {
+      "event_id": 128888508,
+      "target_id": 21512,
+      "source_box_clearance_m": -1.4219770767217987,
+      "source_sample_dt_s": -0.023000000000024556,
+      "trajectory_window_s": [
+        775.5,
+        804.2
+      ],
+      "status": "audited",
+      "reconstruction_ready": false,
+      "ranking_score": 1.2857698105606274,
+      "collision": {
+        "initial_collision": false,
+        "first_sampled_contact_time_s": 3.1,
+        "collision_in_reference_window": true
+      },
+      "quality": {
+        "cav_speed_path_rmse_mps": 0.08910660743458143,
+        "cav_heading_path_mae_rad": 0.00012214494347944515,
+        "bv_center_speed_path_rmse_mps": 0.27166781214161384,
+        "bv_front_bumper_speed_path_rmse_mps": 0.27136651264881,
+        "bv_front_bumper_heading_path_mae_rad": 0.02517454553375661
+      }
+    },
+    {
+      "event_id": 131785457,
+      "target_id": 22038,
+      "source_box_clearance_m": -0.37084187647335654,
+      "source_sample_dt_s": 0.0030000000000001137,
+      "trajectory_window_s": [
+        64.6,
+        75.0
+      ],
+      "status": "audited",
+      "reconstruction_ready": false,
+      "ranking_score": 1.518820229993619,
+      "collision": {
+        "initial_collision": false,
+        "first_sampled_contact_time_s": 3.9000000000000004,
+        "collision_in_reference_window": true
+      },
+      "quality": {
+        "cav_speed_path_rmse_mps": 0.068539335170034,
+        "cav_heading_path_mae_rad": 8.030490763501445e-05,
+        "bv_center_speed_path_rmse_mps": 2.4889023740318796,
+        "bv_front_bumper_speed_path_rmse_mps": 0.8744741361677234,
+        "bv_front_bumper_heading_path_mae_rad": 0.4757264537482271
+      }
+    },
+    {
+      "event_id": 132704674,
+      "target_id": 22310,
+      "source_box_clearance_m": -1.4036132547502227,
+      "status": "insufficient_trajectory_window",
+      "reason": "trajectory does not reach annotated impact"
+    },
+    {
+      "event_id": 135278513,
+      "target_id": 22752,
+      "source_box_clearance_m": 2.601885588002547,
+      "source_sample_dt_s": -0.016000000000000014,
+      "trajectory_window_s": [
+        5.1,
+        16.4
+      ],
+      "status": "audited",
+      "reconstruction_ready": false,
+      "ranking_score": 10.416543628312022,
+      "collision": {
+        "initial_collision": false,
+        "first_sampled_contact_time_s": null,
+        "collision_in_reference_window": false
+      },
+      "quality": {
+        "cav_speed_path_rmse_mps": 0.019300796940476376,
+        "cav_heading_path_mae_rad": 0.00014312399381335438,
+        "bv_center_speed_path_rmse_mps": 1.6851265907442352,
+        "bv_front_bumper_speed_path_rmse_mps": 0.17466755903716963,
+        "bv_front_bumper_heading_path_mae_rad": 0.22243214834056257
+      }
+    },
+    {
+      "event_id": 142053492,
+      "target_id": 23702,
+      "source_box_clearance_m": -1.0731679937740068,
+      "source_sample_dt_s": 0.0,
+      "trajectory_window_s": [
+        149.1,
+        177.0
+      ],
+      "status": "audited",
+      "reconstruction_ready": false,
+      "ranking_score": 2.689157067774077,
+      "collision": {
+        "initial_collision": false,
+        "first_sampled_contact_time_s": 1.9000000000000001,
+        "collision_in_reference_window": true
+      },
+      "quality": {
+        "cav_speed_path_rmse_mps": 0.1840680951985161,
+        "cav_heading_path_mae_rad": 0.001341798548785713,
+        "bv_center_speed_path_rmse_mps": 0.4516856954516353,
+        "bv_front_bumper_speed_path_rmse_mps": 0.32302864738138254,
+        "bv_front_bumper_heading_path_mae_rad": 0.08071852664539297
+      }
+    },
+    {
+      "event_id": 151337351,
+      "target_id": 24314,
+      "source_box_clearance_m": -1.7500000000000004,
+      "source_sample_dt_s": -0.026999999999986812,
+      "trajectory_window_s": [
+        463.8,
+        489.6
+      ],
+      "status": "audited",
+      "reconstruction_ready": false,
+      "ranking_score": 3.986781551377728,
+      "collision": {
+        "initial_collision": false,
+        "first_sampled_contact_time_s": 0.6000000000000001,
+        "collision_in_reference_window": true
+      },
+      "quality": {
+        "cav_speed_path_rmse_mps": 0.0912745437435976,
+        "cav_heading_path_mae_rad": 7.736014699796643e-05,
+        "bv_center_speed_path_rmse_mps": 1.9929438878498005,
+        "bv_front_bumper_speed_path_rmse_mps": 0.3456344413487854,
+        "bv_front_bumper_heading_path_mae_rad": 0.14979520613834715
+      }
+    },
+    {
+      "event_id": 151337488,
+      "target_id": 24318,
+      "source_box_clearance_m": -1.7500000000000009,
+      "source_sample_dt_s": 0.010999999999967258,
+      "trajectory_window_s": [
+        438.5,
+        467.8
+      ],
+      "status": "audited",
+      "reconstruction_ready": false,
+      "ranking_score": 4.195751045659142,
+      "collision": {
+        "initial_collision": true,
+        "first_sampled_contact_time_s": 0.0,
+        "collision_in_reference_window": true
+      },
+      "quality": {
+        "cav_speed_path_rmse_mps": 0.07859432859801173,
+        "cav_heading_path_mae_rad": 0.00012336934445008417,
+        "bv_center_speed_path_rmse_mps": 0.09808859281849094,
+        "bv_front_bumper_speed_path_rmse_mps": 0.09342070918208341,
+        "bv_front_bumper_heading_path_mae_rad": 0.023612638534596646
+      }
+    },
+    {
+      "event_id": 151856667,
+      "target_id": 26164,
+      "source_box_clearance_m": -1.6763453552850507,
+      "source_sample_dt_s": 0.04000000000000625,
+      "trajectory_window_s": [
+        63.4,
+        75.2
+      ],
+      "status": "audited",
+      "reconstruction_ready": false,
+      "ranking_score": 4.248519886635817,
+      "collision": {
+        "initial_collision": true,
+        "first_sampled_contact_time_s": 0.0,
+        "collision_in_reference_window": true
+      },
+      "quality": {
+        "cav_speed_path_rmse_mps": 0.04981338664727801,
+        "cav_heading_path_mae_rad": 0.0003709977952005085,
+        "bv_center_speed_path_rmse_mps": 0.1521645375921674,
+        "bv_front_bumper_speed_path_rmse_mps": 0.07573597168282137,
+        "bv_front_bumper_heading_path_mae_rad": 0.12259953051051709
+      }
+    },
+    {
+      "event_id": 151865074,
+      "status": "no_target_association"
+    },
+    {
+      "event_id": 151865183,
+      "target_id": 26976,
+      "source_box_clearance_m": 3.912155525908472,
+      "source_sample_dt_s": -0.03499999999999659,
+      "trajectory_window_s": [
+        102.0,
+        113.9
+      ],
+      "status": "audited",
+      "reconstruction_ready": false,
+      "ranking_score": 10.308155611351824,
+      "collision": {
+        "initial_collision": false,
+        "first_sampled_contact_time_s": null,
+        "collision_in_reference_window": false
+      },
+      "quality": {
+        "cav_speed_path_rmse_mps": 0.11691139967405928,
+        "cav_heading_path_mae_rad": 0.0005909451852921352,
+        "bv_center_speed_path_rmse_mps": 0.13784368817703865,
+        "bv_front_bumper_speed_path_rmse_mps": 0.14055038966043443,
+        "bv_front_bumper_heading_path_mae_rad": 0.05010287683203852
+      }
+    }
+  ],
+  "selection_rule": {
+    "CAV": "position-speed consistency and heading consistency pass",
+    "BV": "front-bumper speed RMSE and heading MAE pass",
+    "event": "initial state is collision-free and collision time is within the configured error tolerance",
+    "maximum_collision_time_error_s": 0.5,
+    "hard_exclusions": [
+      "missing target association",
+      "source clearance above collision-config limit",
+      "pre-impact history shorter than reference window"
+    ]
+  },
+  "interpretation": [
+    "This audit identifies source events suitable for soft fitting; it does not claim exact accident replay.",
+    "The measured target position is kept at its front bumper; center conversion is not accepted as a hard truth when psi_sur is unstable.",
+    "If reconstruction_ready_count is zero, review the top-ranked events and relax no threshold silently; change thresholds only in a documented ablation."
+  ]
+}

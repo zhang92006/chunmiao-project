@@ -102,6 +102,14 @@ python -m scenario_reconstruction.shrp2_reference_trajectory \
   --summary_output results/shrp2_reference_summary.json
 ```
 
+Audit all train-split leading candidates before SUMO fitting:
+
+```bash
+python -m scenario_reconstruction.shrp2_reference_audit \
+  --source_root path/to/SHRP2_Public \
+  --output results/shrp2_leading_reference_audit_train.json
+```
+
 Detailed implementation and experiment notes are under
 `scenario_reconstruction/`.
 

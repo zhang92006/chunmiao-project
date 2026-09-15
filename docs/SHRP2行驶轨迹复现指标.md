@@ -55,10 +55,10 @@ python -m scenario_reconstruction.shrp2_trajectory_metrics `
 
 ## 5. 下一步指标扩展
 
-1. 对 v7 中全部 12 个桥接场景和 v2/v3 校准候选批量计算同一套指标。
-2. 按 `train/validation/test` 分开报告 ADE/FDE、碰撞成功率和初始碰撞率。
-3. 加入真实轨迹的加速度、横向偏移、车道保持和冲突前 TTC 曲线误差。
-4. 对目标车关联规则做人工抽样审计，避免把错误目标车匹配造成的误差归因于算法。
+1. 用 `116591908` 的质量合格参考轨迹拟合 SUMO 的分段加速度、反应时间和控制延迟参数。
+2. 用 `2934487` 做独立备选复核，确认参数不是单一事件过拟合。
+3. 按 `train/validation/test` 分开报告 ADE/FDE、碰撞成功率和初始碰撞率。
+4. 加入真实轨迹的加速度、横向偏移、车道保持和冲突前 TTC 曲线误差。
 5. 把“原始轨迹回放误差”和“SUMO 控制器闭环误差”作为两个独立实验，不合并为一个分数。
 
 ## 6. 第一阶段：软约束参考轨迹
@@ -87,4 +87,25 @@ python -m scenario_reconstruction.shrp2_reference_trajectory `
   --seed 'data_analysis/raw_data/shrp2_collision_pilot_v7/scenarios/shrp2_131785457_rear_end_source_speed.json' `
   --output 'data_analysis/raw_data/shrp2_reference_trajectory_v1/event_131785457_reference.json' `
   --summary_output 'results/shrp2_reference_trajectory_event_131785457_summary.json'
+```
+
+## 7. 追尾候选质量审计
+
+已对训练划分中全部 `leading` Crash 候选进行一次 HDF5 单次读取审计：67 个候选中 39 个具有完整的 4 秒参考窗口，只有 2 个同时满足轨迹质量和事故事件门槛：
+
+| 事件 | 目标车 | BV 前保险杠速度 RMSE | BV 前保险杠航向 MAE | 首次采样接触 | 状态 |
+|---:|---:|---:|---:|---:|---|
+| 116591908 | 21258 | 0.076 m/s | 0.126 rad | 3.6 s | 推荐首选 |
+| 2934487 | 13483 | 0.317 m/s | 0.033 rad | 3.6 s | 推荐备选 |
+
+审计硬门槛是：初态无碰撞、参考窗口内发生碰撞、碰撞时间误差不超过 `0.5 s`、CAV 和 BV 的位置—速度—航向一致性通过。`0.5 s` 是源数据 10 Hz 重采样和碰撞标注/几何换算的审计容差，不等同于后续 SUMO 校准的 `±0.3 s` 目标。
+
+审计结果：[`shrp2_leading_reference_audit_train.json`](../results/shrp2_leading_reference_audit_train.json)。排名第一的 `116591908` 已导出完整参考轨迹：[`shrp2_reference_trajectory_event_116591908_summary.json`](../results/shrp2_reference_trajectory_event_116591908_summary.json)。因此后续 SUMO 参数拟合应优先使用 `116591908`，保留 `2934487` 作为独立备选，不再围绕 `131785457` 这个目标车质量不合格的事件继续调参。
+
+批量审计命令：
+
+```powershell
+python -m scenario_reconstruction.shrp2_reference_audit `
+  --source_root 'path/to/SHRP2_Public' `
+  --output 'results/shrp2_leading_reference_audit_train.json'
 ```

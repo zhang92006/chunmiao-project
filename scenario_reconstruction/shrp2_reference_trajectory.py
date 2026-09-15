@@ -26,6 +26,7 @@ def validate_config(config: dict[str, Any]) -> None:
         "heading_speed_threshold_mps",
         "maximum_speed_path_rmse_mps",
         "maximum_heading_path_mae_rad",
+        "maximum_collision_time_error_s",
     ):
         value = config.get(name)
         if isinstance(value, bool) or value is None or not np.isfinite(value) or value <= 0:
@@ -36,13 +37,16 @@ def validate_config(config: dict[str, Any]) -> None:
 
 def build_reference(
     source_root: str | Path,
-    seed_path: str | Path,
+    seed_path: str | Path | dict[str, Any],
     config: dict[str, Any],
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """Build full trajectory and concise quality summary for one SHRP2 seed."""
     validate_config(config)
-    seed_path = Path(seed_path)
-    seed = json.loads(seed_path.read_text(encoding="utf-8"))
+    if isinstance(seed_path, dict):
+        seed = seed_path
+    else:
+        seed_path = Path(seed_path)
+        seed = json.loads(seed_path.read_text(encoding="utf-8"))
     source = seed.get("source") or {}
     if "event_id" not in source or "associated_target_id" not in source:
         raise ValueError(
@@ -370,13 +374,28 @@ def _write_json(path, value):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source_root", required=True)
-    parser.add_argument("--seed", required=True)
+    parser.add_argument("--seed")
+    parser.add_argument("--event_id", type=int)
+    parser.add_argument("--target_id", type=int)
+    parser.add_argument("--source_split", default="train")
     parser.add_argument("--config", default="configs/shrp2_reference_trajectory.json")
     parser.add_argument("--output", required=True)
     parser.add_argument("--summary_output")
     args = parser.parse_args()
     config = json.loads(Path(args.config).read_text(encoding="utf-8"))
-    reference, summary = build_reference(args.source_root, args.seed, config)
+    if args.seed:
+        seed = args.seed
+    elif args.event_id is not None and args.target_id is not None:
+        seed = {
+            "source": {
+                "event_id": args.event_id,
+                "associated_target_id": args.target_id,
+                "source_split": args.source_split,
+            }
+        }
+    else:
+        parser.error("provide --seed or both --event_id and --target_id")
+    reference, summary = build_reference(args.source_root, seed, config)
     _write_json(args.output, reference)
     if args.summary_output:
         _write_json(args.summary_output, summary)

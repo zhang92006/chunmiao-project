@@ -19,6 +19,7 @@ class SHRP2ReferenceTrajectoryTests(unittest.TestCase):
             "heading_speed_threshold_mps": 0.5,
             "maximum_speed_path_rmse_mps": 1.0,
             "maximum_heading_path_mae_rad": 0.35,
+            "maximum_collision_time_error_s": 0.5,
         }
 
     def test_angle_interpolation_crosses_pi_without_discontinuity(self):
