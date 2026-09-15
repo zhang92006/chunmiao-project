@@ -65,6 +65,26 @@ def _finite_track(rows, config, anchor_s, origin, rotation, reference_yaw):
     )
 
 
+def _anchor_state(rows, anchor_s, origin, rotation, reference_yaw):
+    """Return one finite context state at the critical timestamp."""
+    finite = rows.replace([np.inf, -np.inf], np.nan).dropna(
+        subset=["time", "x_sur", "y_sur", "v_sur", "psi_sur"]
+    )
+    if finite.empty:
+        raise ValueError("missing_context_anchor")
+    index = (finite["time"] - anchor_s).abs().idxmin()
+    row = finite.loc[index]
+    if float(row["v_sur"]) < 0:
+        raise ValueError("negative_context_speed")
+    xy = np.array([float(row["x_sur"]), float(row["y_sur"])])
+    heading = float(row["psi_sur"])
+    return [
+        *((xy - origin) @ rotation.T),
+        float(row["v_sur"]),
+        float(_wrap_array(np.asarray([heading - reference_yaw]))[0]),
+    ]
+
+
 def _target_distance_at_anchor(rows, anchor_s):
     finite = rows.replace([np.inf, -np.inf], np.nan).dropna(
         subset=["time", "x_ego", "y_ego", "x_sur", "y_sur"]
@@ -78,10 +98,14 @@ def _target_distance_at_anchor(rows, anchor_s):
     )
 
 
-def build_multibv_seed(window, event_rows, metadata_row, config, bv_count=2):
+def build_multibv_seed(
+    window, event_rows, metadata_row, config, bv_count=2, context_mode="full"
+):
     """Add nearest measured context BVs to one quality-passed pair window."""
     if bv_count < 2:
         raise ValueError("bv_count must be at least 2")
+    if context_mode not in {"full", "anchor_only"}:
+        raise ValueError("context_mode must be 'full' or 'anchor_only'")
     primary_id = int(window["source"]["target_id"])
     anchor_s = float(metadata_row["impact_timestamp"]) / 1000.0
     start_s = anchor_s - float(config["history_s"])
@@ -119,8 +143,18 @@ def build_multibv_seed(window, event_rows, metadata_row, config, bv_count=2):
     if len(selected) != bv_count:
         raise ValueError("insufficient_context_targets")
 
-    tracks = [np.asarray(window["states"], dtype=float)[:, 1, :]]
-    masks = [np.asarray(window["state_mask"], dtype=bool)[:, 1, :]]
+    if context_mode == "full":
+        times = window["time_s"]
+        cav_states = np.asarray(window["states"], dtype=float)[:, 0, :]
+        cav_masks = np.asarray(window["state_mask"], dtype=bool)[:, 0, :]
+        tracks = [np.asarray(window["states"], dtype=float)[:, 1, :]]
+        masks = [np.asarray(window["state_mask"], dtype=bool)[:, 1, :]]
+    else:
+        times = [float(window["condition"]["critical_time_s"])]
+        cav_states = np.asarray(window["states"], dtype=float)[-1, 0, :][None, :]
+        cav_masks = np.asarray(window["state_mask"], dtype=bool)[-1, 0, :][None, :]
+        tracks = [np.asarray(window["states"], dtype=float)[-1, 1, :][None, :]]
+        masks = [np.asarray(window["state_mask"], dtype=bool)[-1, 1, :][None, :]]
     actor_records = [{
         "id": "BV_primary",
         "role": "primary_risk_bv",
@@ -129,17 +163,26 @@ def build_multibv_seed(window, event_rows, metadata_row, config, bv_count=2):
     }]
     context_quality = {}
     for target_id, actor_id in selected[1:]:
-        track = _finite_track(
-            grouped.get_group(target_id), config, anchor_s, origin, rotation, yaw
-        )
-        quality = _quality_summary(track, config)
-        if not quality["position_speed_consistent"]:
-            raise ValueError("context_quality_fail")
-        tracks.append(np.column_stack([
-            track["xy_m"], track["reported_speed_mps"], track["reported_heading_rad"]
-        ]))
-        context_mask = np.ones_like(tracks[-1], dtype=bool)
-        context_mask[:, 3] = quality["heading_usable"]
+        if context_mode == "full":
+            track = _finite_track(
+                grouped.get_group(target_id), config, anchor_s, origin, rotation, yaw
+            )
+            quality = _quality_summary(track, config)
+            if not quality["position_speed_consistent"]:
+                raise ValueError("context_quality_fail")
+            context_state = np.column_stack([
+                track["xy_m"], track["reported_speed_mps"], track["reported_heading_rad"]
+            ])
+            context_mask = np.ones_like(context_state, dtype=bool)
+            context_mask[:, 3] = quality["heading_usable"]
+        else:
+            context_state = np.asarray([_anchor_state(
+                grouped.get_group(target_id), anchor_s, origin, rotation, yaw
+            )], dtype=float)
+            context_mask = np.ones_like(context_state, dtype=bool)
+            quality = {"mode": "anchor_only", "position_speed_consistent": None,
+                       "heading_usable": True}
+        tracks.append(context_state)
         masks.append(context_mask)
         context_quality[actor_id] = quality
         actor_records.append({
@@ -150,10 +193,10 @@ def build_multibv_seed(window, event_rows, metadata_row, config, bv_count=2):
         })
 
     states = np.stack([
-        np.asarray(window["states"], dtype=float)[:, 0, :], *tracks
+        cav_states, *tracks
     ], axis=1)
     state_mask = np.stack([
-        np.asarray(window["state_mask"], dtype=bool)[:, 0, :], *masks
+        cav_masks, *masks
     ], axis=1)
     actor_records.insert(0, {
         "id": "CAV",
@@ -168,7 +211,7 @@ def build_multibv_seed(window, event_rows, metadata_row, config, bv_count=2):
     })
     return {
         "record_type": "shrp2_measured_multibv_seed_v1",
-        "time_s": window["time_s"],
+        "time_s": times,
         "state_channels": window["state_channels"],
         "position_reference": ["CAV_centroid", "BV_front_bumper"],
         "states": states.tolist(),
@@ -180,6 +223,7 @@ def build_multibv_seed(window, event_rows, metadata_row, config, bv_count=2):
             "initial_state_mask": state_mask[0].tolist(),
             "critical_time_s": float(window["condition"]["critical_time_s"]),
             "mapping_status": "source_frame_only; lane and route mapping pending",
+            "context_mode": context_mode,
         },
         "quality": {
             "primary": window["quality"]["BV"],
@@ -206,7 +250,9 @@ def _read_windows(audit_root):
     return windows
 
 
-def export_multibv_seeds(source_root, audit_root, output, config, bv_count=2):
+def export_multibv_seeds(
+    source_root, audit_root, output, config, bv_count=2, context_mode="full"
+):
     """Export context-augmented seeds, loading one SHRP2 category at a time."""
     validate_config(config)
     output = Path(output)
@@ -229,7 +275,10 @@ def export_multibv_seeds(source_root, audit_root, output, config, bv_count=2):
             try:
                 rows = data[data["event_id"] == event_id]
                 meta = metadata_by_id.loc[event_id]
-                seed = build_multibv_seed(window, rows, meta, config, bv_count=bv_count)
+                seed = build_multibv_seed(
+                    window, rows, meta, config, bv_count=bv_count,
+                    context_mode=context_mode,
+                )
                 split = window["source"]["split"]
                 destination = output / split / "seeds.jsonl"
                 destination.parent.mkdir(parents=True, exist_ok=True)
@@ -252,6 +301,7 @@ def export_multibv_seeds(source_root, audit_root, output, config, bv_count=2):
         "source_root": str(locate_export_online(source_root)),
         "audit_root": str(audit_root),
         "bv_count": bv_count,
+        "context_mode": context_mode,
         "window_count": len(windows),
         "exported_count": len(records),
         "exported_by_split": dict(counts),
@@ -279,10 +329,17 @@ def main():
     parser.add_argument("--output", required=True)
     parser.add_argument("--config", default="configs/shrp2_diffusion_data_audit.json")
     parser.add_argument("--bv_count", type=int, default=2)
+    parser.add_argument(
+        "--context_mode",
+        choices=("full", "anchor_only"),
+        default="full",
+        help="Use full 4-second context history or only critical-time context states.",
+    )
     args = parser.parse_args()
     config = json.loads(Path(args.config).read_text(encoding="utf-8"))
     result = export_multibv_seeds(
-        args.source_root, args.audit_root, args.output, config, bv_count=args.bv_count
+        args.source_root, args.audit_root, args.output, config,
+        bv_count=args.bv_count, context_mode=args.context_mode,
     )
     print(json.dumps({
         key: result[key]

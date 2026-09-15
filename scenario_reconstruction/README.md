@@ -75,3 +75,17 @@ python -m scenario_reconstruction.shrp2_multibv_seed_export \
 
 This is a long HDF5 scan. The output is still `drl_training_ready=false` until
 the source-frame seed is mapped to a valid SUMO route and simulated by NADE.
+
+For the larger context-anchor pool, use the explicitly weaker mode below. It
+keeps the complete CAV/primary-BV history but only requires a context BV state
+at the critical timestamp; these records must remain separate from the strict
+full-history validation pool:
+
+```bash
+python -m scenario_reconstruction.shrp2_multibv_seed_export \
+  --source_root path/to/SHRP2_Public \
+  --audit_root data_analysis/raw_data/shrp2_diffusion_windows_v1 \
+  --output data_analysis/raw_data/shrp2_multibv_seeds_anchor_v1 \
+  --bv_count 2 \
+  --context_mode anchor_only
+```

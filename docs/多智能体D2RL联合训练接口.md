@@ -58,3 +58,5 @@ RLlib/PPO 的模型输入输出层也必须随之设为 14 与 2；仅改 JSON �
 在该导出器完成前，不应把 `windows.jsonl` 直接放入 `crash_weight_dict.json`，因为它缺少 NADE 采样动作、自然驾驶概率、importance 权重和 SUMO 可执行路网映射。
 
 当前已增加 `shrp2_multibv_seed_export`。它从已完成审计的窗口回到原始 HDF5，按事件级 split 选择主风险 BV 外最近的上下文 BV，输出 `shrp2_measured_multibv_seed_v1`。输出明确标记 `drl_training_ready=false`，下一阶段才进行 2Lane/目标路网映射和 SUMO 验证。
+
+导出器有两个数据层：`context_mode=full` 要求上下文 BV 也有完整 4 秒历史，适合高保真验证；`context_mode=anchor_only` 只要求上下文 BV 在关键时刻有状态，输出是一帧关键时刻初始化种子，适合扩大 SUMO 场景池，但不得与完整历史样本合并统计。

@@ -76,6 +76,24 @@ class MultiBVSeedExportTests(unittest.TestCase):
                 bv_count=2,
             )
 
+    def test_anchor_only_mode_accepts_context_without_full_history(self):
+        short_context = self.rows[(self.rows.target_id == 3) & (self.rows.time >= 3.8)]
+        short_rows = pd.concat([
+            self.rows[self.rows.target_id == 2], short_context
+        ], ignore_index=True)
+        seed = build_multibv_seed(
+            self.pair, short_rows, self.meta, self.config,
+            bv_count=2, context_mode="anchor_only",
+        )
+        self.assertEqual(seed["condition"]["context_mode"], "anchor_only")
+        self.assertEqual(seed["time_s"], [4.0])
+        self.assertEqual(np.asarray(seed["states"]).shape, (1, 3, 4))
+        with self.assertRaisesRegex(ValueError, "insufficient_context_history"):
+            build_multibv_seed(
+                self.pair, short_rows, self.meta, self.config,
+                bv_count=2, context_mode="full",
+            )
+
 
 if __name__ == "__main__":
     unittest.main()
