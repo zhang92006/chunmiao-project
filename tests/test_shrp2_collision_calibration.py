@@ -134,6 +134,18 @@ class SHRP2CollisionCalibrationTests(unittest.TestCase):
                 "calibration reachability intervention; not a delay model",
             )
 
+    def test_quality_audited_source_template_can_be_calibrated(self):
+        source = self._source_template()
+        source["bridge_metadata"]["source_quality"] = "audited"
+        with tempfile.TemporaryDirectory() as temporary:
+            temporary_path = Path(temporary)
+            source_path = temporary_path / "source.json"
+            source_path.write_text(json.dumps(source), encoding="utf-8")
+            manifest = generate_calibration_candidates(
+                source_path, temporary_path / "output", self.config
+            )
+        self.assertEqual(manifest["generated_count"], 2)
+
     def test_cav_calibration_action_cannot_be_used_as_training_event(self):
         source = self._source_template()
         source["events"] = [{

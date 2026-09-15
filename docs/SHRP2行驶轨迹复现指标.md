@@ -114,6 +114,8 @@ python -m scenario_reconstruction.shrp2_reference_audit `
 
 事件 `116591908` 已转换为桥接初始化模板：初始纵向位置差 `15.087 m`，CAV 初速 `5.972 m/s`，BV 初速 `0.898 m/s`。模板只使用参考轨迹的初始状态，不会把后续每一帧坐标强行写入 SUMO。
 
+校准器接受历史 `source_quality=high` 模板，以及本轮批量轨迹审计产生的 `source_quality=audited` 模板。`audited` 表示该来源已通过位置、速度、航向和碰撞时刻门槛；它的使用范围仍严格限于**校准**，不能作为 D2RL 的训练事件。
+
 本地生成的模板位于被 Git 排除的 `data_analysis/raw_data/shrp2_reference_trajectory_v1/`。生成命令如下：
 
 ```powershell

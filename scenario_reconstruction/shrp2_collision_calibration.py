@@ -20,6 +20,7 @@ from .run_template import run_template
 from .templates import ScenarioTemplate
 
 SELECTION_NUMERICAL_EPSILON = 1e-9
+CALIBRATION_SOURCE_QUALITIES = {"high", "audited"}
 
 
 def validate_config(config: dict[str, Any]) -> None:
@@ -298,8 +299,10 @@ def _write_calibration_summary(
 
 def _validate_source_template(source: dict[str, Any], template: ScenarioTemplate, config: dict[str, Any]) -> None:
     metadata = source.get("bridge_metadata", {})
-    if metadata.get("source_quality") != "high":
-        raise ValueError("Only high-quality SHRP2 bridge templates may be calibrated")
+    if metadata.get("source_quality") not in CALIBRATION_SOURCE_QUALITIES:
+        raise ValueError(
+            "Calibration requires source_quality='high' or a quality-audited SHRP2 bridge template"
+        )
     if metadata.get("source_split") not in (None, config["source_split"]):
         raise ValueError("Template source_split does not match calibration source_split")
     if "rear_end" not in template.tags or template.map != "2Lane":
@@ -323,7 +326,7 @@ def _calibrated_template(
         f"{source['template_id']}_cal_{index:03d}_gap_{initial_gap:.3f}_brake_{abs(braking_accel):.2f}_at_{braking_start:.2f}"
     )
     candidate["description"] = (
-        "Calibration candidate derived from a high-quality SHRP2 rear-end initialization. "
+        "Calibration candidate derived from a high-quality or quality-audited SHRP2 rear-end initialization. "
         "Its scripted primary-BV braking is a declared SUMO intervention, not an exact crash replay."
     )
     primary = _find_actor(candidate, "BV_primary")
@@ -377,7 +380,7 @@ def _calibrated_template(
     }
     if int(config["schema_version"]) == 2:
         candidate["description"] = (
-            "Reachability candidate derived from a high-quality SHRP2 rear-end "
+            "Reachability candidate derived from a high-quality or quality-audited SHRP2 rear-end "
             "initialization. Its BV braking and CAV response hold are declared "
             "calibration interventions, not an exact crash replay or delay model."
         )
