@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "history_s": 4.0,
+  "sample_hz": 10,
+  "heading_speed_threshold_mps": 0.5,
+  "maximum_speed_path_rmse_mps": 1.0,
+  "maximum_heading_path_mae_rad": 0.35
+}

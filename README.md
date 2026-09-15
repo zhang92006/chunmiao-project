@@ -91,6 +91,17 @@ runs SUMO; see
 [`docs/SHRP2追尾碰撞校准协议.md`](docs/SHRP2追尾碰撞校准协议.md) for the
 train-only search protocol and user-run batch command.
 
+Export a quality-gated pre-impact trajectory for use as a soft reconstruction
+reference (the complete trajectory remains under the ignored raw-data tree):
+
+```bash
+python -m scenario_reconstruction.shrp2_reference_trajectory \
+  --source_root path/to/SHRP2_Public \
+  --seed data_analysis/raw_data/shrp2_collision_pilot/scenarios/SEED.json \
+  --output data_analysis/raw_data/shrp2_reference/REFERENCE.json \
+  --summary_output results/shrp2_reference_summary.json
+```
+
 Detailed implementation and experiment notes are under
 `scenario_reconstruction/`.
 

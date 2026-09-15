@@ -22,7 +22,7 @@
 | CAV | 1.147 | 0.010 | 1.599 | 0.794 | 0.924 | 0.009 | 3.175 |
 | BV_primary | 2.792 | 0.740 | 3.100 | 1.310 | 1.773 | 1.777 | 6.137 |
 
-解释：CAV 的碰撞末状态被条件化得较好，因此 FDE 很小；但全窗口 ADE 和速度误差仍较大，说明恒速种子不能复现真实制动/加速过程。目标车误差更大，尤其航向误差约 `1.78 rad`，表明目标车的原始转向/坐标方向变化没有被当前简单运动学模型保留。
+解释：CAV 的碰撞末状态被条件化得较好，因此 FDE 很小；但全窗口 ADE 和速度误差仍较大，说明恒速种子不能复现真实制动/加速过程。目标车误差更大，尤其航向误差约 `1.78 rad`，说明恒航向种子没有保留源轨迹中的大幅航向变化；第 6 节进一步检查了这些变化本身的可用性。
 
 ### 2.2 SUMO 闭环与桥接运动学参考
 
@@ -38,15 +38,15 @@
 - 当前管线已经能够对一个事件给出位置、速度、航向、TTC 和距离等可复核指标，但还不能声称“完整 SHRP2 行驶数据已复现”。
 - 主要误差来源在 **SHRP2 → 种子**：当前只使用碰撞附近状态和恒速/恒航向外推，没有回放真实加速度、制动、横向运动和车辆控制。
 - **种子 → SUMO** 的闭环误差相对较小，但这只说明当前 2Lane 桥接模板与 SUMO 控制器的一致性尚可，不代表 SUMO 已复现真实道路轨迹。
-- 目标车应优先改为分段速度/加速度和分段航向回放；同时应保留原始道路横向位置、车道变化和目标车关联置信度。
+- 下一步应使用质量门控后的分段速度/加速度和分段航向作为软约束；不应在检查目标车重构一致性之前直接逐点回放。
 
 ## 4. 复现实验命令
 
 基础 Python 环境需要安装 `pandas`、`PyTables`、`numpy`。在仓库根目录执行：
 
 ```powershell
-& 'D:\Anaconda3\python.exe' -m scenario_reconstruction.shrp2_trajectory_metrics `
-  --source_root 'G:\chunmiao\SHRP2_Public' `
+python -m scenario_reconstruction.shrp2_trajectory_metrics `
+  --source_root 'path/to/SHRP2_Public' `
   --seed 'data_analysis/raw_data/shrp2_collision_pilot_v7/scenarios/shrp2_131785457_rear_end_source_speed.json' `
   --sumo_episode 'data_analysis/raw_data/shrp2_rear_end_fault_v3_interface_smoke/episode/crash/0.json' `
   --sumo_template 'data_analysis/raw_data/shrp2_rear_end_fault_v3_interface_smoke/template.json' `
@@ -60,3 +60,31 @@
 3. 加入真实轨迹的加速度、横向偏移、车道保持和冲突前 TTC 曲线误差。
 4. 对目标车关联规则做人工抽样审计，避免把错误目标车匹配造成的误差归因于算法。
 5. 把“原始轨迹回放误差”和“SUMO 控制器闭环误差”作为两个独立实验，不合并为一个分数。
+
+## 6. 第一阶段：软约束参考轨迹
+
+已实现 `scenario_reconstruction.shrp2_reference_trajectory`，从原始 HDF5 导出碰撞前 `4 s`、10 Hz 的 CAV 与目标车轨迹，包括位置、报告速度、路径速度、报告航向、路径切向航向和速度差分加速度。完整逐点数据保存在被 Git 排除的 `data_analysis/raw_data/`；Git 只保存配置、代码和精简质量摘要。
+
+SHRP2 数据字典明确说明：`psi_ego/psi_sur` 都是相对重构坐标系 x 轴的航向，`x_sur/y_sur` 是目标车**前保险杠**坐标。因此导出器同时保留前保险杠原始轨迹和按报告航向换算的车心轨迹，避免混淆两种参考点。
+
+质量摘要：[`shrp2_reference_trajectory_event_131785457_summary.json`](../results/shrp2_reference_trajectory_event_131785457_summary.json)
+
+| 检查项 | CAV | BV_primary | 判定 |
+|---|---:|---:|---|
+| 报告速度 vs 路径速度 RMSE | 0.069 m/s | 2.489 m/s（车心） | CAV 通过，BV 不通过 |
+| 报告航向 vs 路径航向 MAE | 0.00008 rad | 0.754 rad（车心） | CAV 通过，BV 不通过 |
+| 目标车前保险杠速度 RMSE | — | 0.874 m/s | 换算车心放大了航向噪声 |
+| 目标车前保险杠航向 MAE | — | 0.476 rad | 仍超过 0.35 rad 门槛 |
+| 原始参考窗口首次采样接触 | 3.9 s | 3.9 s | 初态无碰撞，窗口内有碰撞 |
+
+这意味着第一阶段已经完成，但不能立刻生成可信的“双车分段控制轨迹”：CAV 位置、速度和航向可进入软拟合目标；目标车的前保险杠位置可以作为软参考，报告速度单独作为软参考，目标车航向与车心换算目前只能用于诊断。下一步应先批量审计候选追尾事件的目标轨迹一致性，再选择满足质量门槛的事件进入 SUMO 参数拟合。
+
+导出命令：
+
+```powershell
+python -m scenario_reconstruction.shrp2_reference_trajectory `
+  --source_root 'path/to/SHRP2_Public' `
+  --seed 'data_analysis/raw_data/shrp2_collision_pilot_v7/scenarios/shrp2_131785457_rear_end_source_speed.json' `
+  --output 'data_analysis/raw_data/shrp2_reference_trajectory_v1/event_131785457_reference.json' `
+  --summary_output 'results/shrp2_reference_trajectory_event_131785457_summary.json'
+```
