@@ -99,6 +99,20 @@ def multibv_template_from_seed(seed, config):
             "source_target_id": actor_meta.get("source_target_id"),
             "source_role": role,
         })
+    projected = [("CAV", cav_position, int(config["cav_lane_index"]))]
+    projected.extend(
+        (actor["id"], float(actor["position"]), int(actor["lane_index"]))
+        for actor in actors
+    )
+    for index, (left_id, left_position, left_lane) in enumerate(projected):
+        for right_id, right_position, right_lane in projected[index + 1 :]:
+            if left_lane != right_lane:
+                continue
+            same_lane_gap = abs(left_position - right_position)
+            if same_lane_gap < float(config["minimum_gap_m"]):
+                raise ValueError(
+                    f"same_lane_gap_out_of_range:{left_id}:{right_id}:{same_lane_gap:.3f}"
+                )
     return {
         "template_id": template_id,
         "description": (

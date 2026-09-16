@@ -50,6 +50,13 @@ class MultiBVSumoBridgeTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "primary_gap_out_of_range"):
             multibv_template_from_seed(seed, self.config)
 
+    def test_blocks_context_overlap_after_lane_projection(self):
+        seed = json.loads(json.dumps(self.seed))
+        seed["states"][0][2][0] = 1.0
+        seed["states"][0][2][1] = 0.1
+        with self.assertRaisesRegex(ValueError, "same_lane_gap_out_of_range"):
+            multibv_template_from_seed(seed, self.config)
+
 
 if __name__ == "__main__":
     unittest.main()

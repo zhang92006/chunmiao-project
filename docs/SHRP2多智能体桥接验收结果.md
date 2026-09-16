@@ -39,8 +39,11 @@ SUMO 正常结束，collision_result=0
 
 ## 下一步验收顺序
 
-1. 先对少量模板做自主 rollout，统计 `selected_count=2` 的比例，而不是立即运行全部 1748 个模板；
-2. 确认输出 JSON 同时出现：
+此前 20 个 train 模板的 pilot 结果是 19 次完成、1 次失败，且联合训练样本为 0。19 个输出中的最大实际选中数为 0 或 1，没有出现两个 BV 同时通过 NADE 临界度筛选。失败样本 `116168907` 是上下文车辆在投影后与 CAV 同车道重叠，已在桥接器中增加成对间距检查；首步碰撞日志也已修复。旧批次模板需要重新生成后再统计。
+
+1. 重新运行桥接器，排除所有同车道初始化重叠；
+2. 先对少量模板做自主 rollout，统计 `selected_count=2` 的比例，而不是立即运行全部模板；
+3. 确认输出 JSON 同时出现：
    - `drl_obs_step_info[t].joint` 长度 14；
    - `drl_obs_step_info[t].per_agent` 为 2 个长度 10 的观测；
    - `weight_step_info[t].per_agent` 和 `ndd_step_info[t].per_agent` 长度均为 2；

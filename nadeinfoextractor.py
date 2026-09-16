@@ -38,6 +38,8 @@ class NADEInfoExtractor(InfoExtractor):
         if conf.experiment_config["mode"] == "DRL_train":
             return None
         if stop:
+            if not hasattr(self, "save_dir"):
+                self.save_dir = self.env.simulator.experiment_path
             self.episode_log["episode_info"] = self.env.episode_info
             if 1 in reason:  # have crash
                 self.episode_log["collision_result"] = 1
@@ -45,8 +47,10 @@ class NADEInfoExtractor(InfoExtractor):
                 crash_decision_info = {}
                 all_vehicle_list = self.env.vehicle_list
                 for id in self.episode_log["collision_id"]:
-                    crash_decision_info[id] = all_vehicle_list[id].controller.ego_info
-                    crash_decision_info[id]["action"] = all_vehicle_list[id].controller.action
+                    controller = all_vehicle_list[id].controller
+                    decision = copy.deepcopy(controller.ego_info) or {}
+                    decision["action"] = controller.action
+                    crash_decision_info[id] = decision
                 self.episode_log["crash_decision_info"] = crash_decision_info
             else:
                 self.episode_log["collision_result"] = 0
