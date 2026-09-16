@@ -93,6 +93,7 @@ def run_template_manifest(
             multi_bv=True,
             agent_num=2,
         )
+    joint_stats = _joint_rollout_stats(experiment_path)
     summary = {
         "manifest": str(manifest_path),
         "experiment_path": str(experiment_path),
@@ -101,6 +102,7 @@ def run_template_manifest(
         "failed_runs": sum(1 for item in results if item["status"] != "ok"),
         "training_ready_crashes": len(crash_weight_dict),
         "training_ready_safe": len(safe_weight_dict),
+        **joint_stats,
         "results": results,
     }
     with (experiment_path / "manifest_run_summary.json").open(
@@ -108,6 +110,44 @@ def run_template_manifest(
     ) as stream:
         json.dump(summary, stream, indent=4)
     return summary
+
+
+def _joint_rollout_stats(experiment_path: Path) -> dict[str, int]:
+    """Summarize actual K-agent records without treating debug candidates as samples."""
+    episode_count = 0
+    joint_step_count = 0
+    debug_step_count = 0
+    max_selected_count = 0
+    for episode_path in (
+        sorted((experiment_path / "crash").glob("*.json"))
+        + sorted((experiment_path / "tested_and_safe").glob("*.json"))
+    ):
+        with episode_path.open("r", encoding="utf-8") as stream:
+            episode = json.load(stream)
+        debug = episode.get("multibv_selection_debug_step_info", {})
+        debug_step_count += len(debug)
+        for value in debug.values():
+            max_selected_count = max(
+                max_selected_count, len(value.get("selected_candidate_ids", []))
+            )
+        joint_steps = 0
+        for timestep, obs in episode.get("drl_obs_step_info", {}).items():
+            if not isinstance(obs, dict) or not isinstance(obs.get("joint"), list):
+                continue
+            if not isinstance(obs.get("per_agent"), list):
+                continue
+            if len(episode.get("controlled_bv_ids_step_info", {}).get(timestep, [])) < 2:
+                continue
+            joint_steps += 1
+        if joint_steps:
+            episode_count += 1
+            joint_step_count += joint_steps
+    return {
+        "joint_training_episode_count": episode_count,
+        "joint_training_step_count": joint_step_count,
+        "selection_debug_step_count": debug_step_count,
+        "max_selected_bv_count": max_selected_count,
+    }
 
 
 def main() -> None:
