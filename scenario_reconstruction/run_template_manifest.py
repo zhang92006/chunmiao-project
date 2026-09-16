@@ -13,6 +13,9 @@ def run_template_manifest(
     experiment_path: str | Path,
     max_ndd_possi: float | None = 0.01,
     gui_episode: int | None = None,
+    split: str | None = None,
+    start: int = 0,
+    limit: int | None = None,
 ) -> dict:
     manifest_path = Path(manifest_path)
     experiment_path = Path(experiment_path)
@@ -22,7 +25,25 @@ def run_template_manifest(
     with manifest_path.open("r", encoding="utf-8") as stream:
         manifest = json.load(stream)
 
-    records = manifest.get("records", [])
+    records = []
+    for record in manifest.get("records", []):
+        if split is not None and record.get("split") != split:
+            continue
+        if record.get("status") not in (None, "generated", "template_created"):
+            continue
+        template_path = record.get("path") or record.get("template_path")
+        if not template_path:
+            continue
+        normalized_record = dict(record)
+        normalized_record["path"] = template_path
+        records.append(normalized_record)
+    if start < 0:
+        raise ValueError("start must be non-negative")
+    records = records[start:]
+    if limit is not None:
+        if limit < 1:
+            raise ValueError("limit must be positive when provided")
+        records = records[:limit]
     if gui_episode is not None:
         if gui_episode < 0 or gui_episode >= len(records):
             raise ValueError(f"gui_episode={gui_episode} is out of range 0..{len(records) - 1}")
@@ -101,6 +122,9 @@ def main() -> None:
         help="Output directory where episode JSON files are written.",
     )
     parser.add_argument("--max_ndd_possi", type=float, default=0.01)
+    parser.add_argument("--split", choices=("train", "validation", "test"))
+    parser.add_argument("--start", type=int, default=0)
+    parser.add_argument("--limit", type=int, default=None)
     parser.add_argument(
         "--gui_episode",
         type=int,
@@ -114,6 +138,9 @@ def main() -> None:
         experiment_path=args.experiment_path,
         max_ndd_possi=args.max_ndd_possi,
         gui_episode=args.gui_episode,
+        split=args.split,
+        start=args.start,
+        limit=args.limit,
     )
     print("Manifest run finished.")
     print(f"attempted={summary['attempted']}")

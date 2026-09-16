@@ -103,3 +103,19 @@ The bridge blocks unsupported topologies and writes a `bridge_summary.json`.
 Templates are only initialization candidates; run them through autonomous
 NADE/D2RL and require `joint`, `per_agent`, NDD, and weight fields before using
 the resulting episodes for learning.
+
+Run a bounded pilot directly from that bridge summary before launching a full
+split. The runner accepts both the older `path` manifest field and the bridge's
+`template_path` field:
+
+```bash
+python -m scenario_reconstruction.run_template_manifest \
+  data_analysis/raw_data/shrp2_multibv_sumo_templates_v1/bridge_summary.json \
+  --split train --start 0 --limit 20 \
+  --experiment_path data_analysis/raw_data/shrp2_multibv_rollout_pilot_train20
+```
+
+Inspect `manifest_run_summary.json` and the episode JSON files. A joint sample
+must contain two controlled IDs and the `joint`/`per_agent` fields described in
+the MultiBV contract; a safe episode without those fields is not a training
+sample.
