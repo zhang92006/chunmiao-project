@@ -141,5 +141,5 @@ not for a GUI run. For example, after rebuilding a fresh bridge directory:
 python -m scenario_reconstruction.run_template_manifest \
   data_analysis/raw_data/shrp2_multibv_sumo_templates_v4/bridge_summary.json \
   --split train --start 0 --limit 50 --repeats 5 --epsilon 0.01 \
-  --experiment_path data_analysis/raw_data/shrp2_multibv_joint_rollout_train50_x5_epsilon001
+  --experiment_path data_analysis/raw_data/shrp2_multibv_highspeed_rollout_v4_train50_x5_epsilon001
 ```
