@@ -112,6 +112,7 @@ split. The runner accepts both the older `path` manifest field and the bridge's
 python -m scenario_reconstruction.run_template_manifest \
   data_analysis/raw_data/shrp2_multibv_sumo_templates_v1/bridge_summary.json \
   --split train --start 0 --limit 20 \
+  --epsilon 0.1 \
   --experiment_path data_analysis/raw_data/shrp2_multibv_rollout_pilot_train20
 ```
 
@@ -119,3 +120,9 @@ Inspect `manifest_run_summary.json` and the episode JSON files. A joint sample
 must contain two controlled IDs and the `joint`/`per_agent` fields described in
 the MultiBV contract; a safe episode without those fields is not a training
 sample.
+
+`--epsilon` is the fixed naturalistic-mixture probability used while collecting
+NADE importance-sampling episodes. The default `0.99` is close to ordinary NDD
+sampling and is useful for safety smoke tests. Use a documented lower pilot
+value such as `0.1` when collecting candidate D2RL training records, then run
+an epsilon sensitivity study before treating the data as a final experiment.

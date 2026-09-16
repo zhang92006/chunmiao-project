@@ -4,10 +4,12 @@ from controller.treesearchnadecontroller import TreeSearchNADEBackgroundControll
 import numpy as np
 from copy import deepcopy
 import collections
+from itertools import combinations
 import utils
 from conf import conf
 from controller.nddglobalcontroller import NDDBVGlobalController
 from scenario_reconstruction.multibv import build_multibv_joint_obs
+from scenario_reconstruction.joint_criticality import pairwise_joint_criticality_arrays
 
 class NADEBVGlobalController(NDDBVGlobalController):
     controlled_bv_num = 4
@@ -149,17 +151,38 @@ class NADEBVGlobalController(NDDBVGlobalController):
         self._joint_full_obs = full_obs
         self.nade_candidates = controlled_bvs_list
         bv_criticality_list, criticality_array_list, bv_action_idx_list, weight_list, ndd_possi_list, IS_possi_list = self.calculate_criticality_list(controlled_bvs_list, CAV_obs, full_obs)
+        if self.joint_control_num > 1:
+            bv_criticality_list, criticality_array_list = self._augment_pairwise_criticality(
+                controlled_bvs_list, full_obs, criticality_array_list
+            )
         whole_weight_list = []
         self.control_log["criticality"] = sum(bv_criticality_list)
-    
-        discriminator_input = self.collect_discriminator_input_simplified(full_obs, controlled_bvs_list, bv_criticality_list) # get D2RL agent observation
+        selected_bv_idx = sorted(
+            range(len(bv_criticality_list)), key=lambda i: bv_criticality_list[i]
+        )[-num_controlled_critical_bvs:]
+        if self.joint_control_num > 1 and len(selected_bv_idx) == self.joint_control_num:
+            selected_ids = [controlled_bvs_list[index].id for index in selected_bv_idx]
+            discriminator_input = np.asarray(
+                build_multibv_joint_obs(
+                    full_obs,
+                    selected_ids,
+                    self.env.info_extractor.episode_log["weight_episode"],
+                ),
+                dtype=np.float32,
+            )
+        else:
+            discriminator_input = self.collect_discriminator_input_simplified(
+                full_obs, controlled_bvs_list, bv_criticality_list
+            )
         self.control_log["discriminator_input"] = discriminator_input.tolist()
         self.epsilon_value = -1
         underline_drl_action = self.get_underline_drl_action(discriminator_input, bv_criticality_list)
-        
+        epsilon_by_index, selected_epsilon_values = self._selected_epsilon_values(
+            underline_drl_action, selected_bv_idx
+        )
         if sum(bv_criticality_list) > 0:
-            self.drl_epsilon_value = underline_drl_action
-            self.real_epsilon_value = underline_drl_action
+            self.drl_epsilon_value = selected_epsilon_values
+            self.real_epsilon_value = list(selected_epsilon_values)
 
         for i in range(len(controlled_bvs_list)):
             bv = controlled_bvs_list[i]
@@ -167,7 +190,17 @@ class NADEBVGlobalController(NDDBVGlobalController):
             bv_criticality_array = criticality_array_list[i]
             bv_pdf = bv.controller.get_NDD_possi()
             combined_bv_criticality_array = bv_criticality_array
-            bv_action_idx, weight, ndd_possi, critical_possi, single_weight_list = bv.controller.Decompose_sample_action(np.sum(combined_bv_criticality_array), combined_bv_criticality_array, bv_pdf, underline_drl_action)
+            if i not in selected_bv_idx:
+                bv_action_idx, weight, ndd_possi, critical_possi, single_weight_list = (
+                    None, None, None, None, None
+                )
+            else:
+                bv_action_idx, weight, ndd_possi, critical_possi, single_weight_list = bv.controller.Decompose_sample_action(
+                    np.sum(combined_bv_criticality_array),
+                    combined_bv_criticality_array,
+                    bv_pdf,
+                    epsilon_by_index[i],
+                )
             if bv_action_idx is not None:
                 bv_action_idx = bv_action_idx.item()
             bv_action_idx_list.append(bv_action_idx), weight_list.append(weight), ndd_possi_list.append(ndd_possi), IS_possi_list.append(critical_possi)
@@ -179,9 +212,6 @@ class NADEBVGlobalController(NDDBVGlobalController):
         vehicle_criticality_list = deepcopy(bv_criticality_list)
         raw_weight_list = list(weight_list)
         raw_ndd_possi_list = list(ndd_possi_list)
-        # Select the Principal Other Vehicle (POV) with highest criticality
-        selected_bv_idx = sorted(range(len(bv_criticality_list)),
-                                 key=lambda i: bv_criticality_list[i])[-num_controlled_critical_bvs:]
         for i in range(len(controlled_bvs_list)):
             if i in selected_bv_idx:
                 if whole_weight_list[i] and whole_weight_list[i]*self.env.info_extractor.episode_log["weight_episode"]*self.env.initial_weight < conf.weight_threshold:
@@ -208,6 +238,7 @@ class NADEBVGlobalController(NDDBVGlobalController):
                     and weight_list[index] is not None
                     and ndd_possi_list[index] is not None
                 ],
+                "pair_criticality": self.control_log.get("joint_pair_criticality", []),
             }
         if len(bv_criticality_list):
             max_vehicle_criticality = np.max(bv_criticality_list)
@@ -215,6 +246,42 @@ class NADEBVGlobalController(NDDBVGlobalController):
             max_vehicle_criticality = -np.inf
 
         return bv_action_idx_list, weight_list, max_vehicle_criticality, ndd_possi_list, IS_possi_list, controlled_bvs_list, vehicle_criticality_list, discriminator_input
+
+    def _augment_pairwise_criticality(
+        self, controlled_bvs_list, full_obs, criticality_array_list
+    ):
+        """Add bounded BV-pair risk while preserving factorised NADE sampling."""
+        enhanced_arrays = [np.asarray(values, dtype=float).copy() for values in criticality_array_list]
+        pair_debug = []
+        for first_index, second_index in combinations(range(len(controlled_bvs_list)), 2):
+            first_bv, second_bv = controlled_bvs_list[first_index], controlled_bvs_list[second_index]
+            first_array, second_array, debug = pairwise_joint_criticality_arrays(
+                full_obs,
+                first_bv.id,
+                second_bv.id,
+                first_bv.controller.get_NDD_possi(),
+                second_bv.controller.get_NDD_possi(),
+            )
+            enhanced_arrays[first_index] += first_array
+            enhanced_arrays[second_index] += second_array
+            pair_debug.append(debug)
+        self.control_log["joint_pair_criticality"] = pair_debug
+        enhanced_list = [float(np.sum(values)) for values in enhanced_arrays]
+        return enhanced_list, enhanced_arrays
+
+    def _selected_epsilon_values(self, epsilon, selected_bv_idx):
+        """Assign one epsilon to each selected BV in criticality rank order."""
+        if isinstance(epsilon, (list, tuple, np.ndarray)):
+            values = [float(value) for value in list(epsilon)]
+        elif epsilon is None:
+            values = [float(conf.epsilon_value)]
+        else:
+            values = [float(epsilon)]
+        if not values:
+            values = [float(conf.epsilon_value)]
+        values = values[: len(selected_bv_idx)]
+        values.extend([values[-1]] * (len(selected_bv_idx) - len(values)))
+        return dict(zip(selected_bv_idx, values)), values
 
     def apply_control_permission(self):
         for vehicle in self.get_bv_candidates():
@@ -336,7 +403,11 @@ class NADEBVGlobalController(NDDBVGlobalController):
                 underline_drl_action = conf.discriminator_agent.compute_action(discriminator_input)
                 if sum(bv_criticality_list) > 0:
                     print(underline_drl_action, self.env.info_extractor.episode_log["weight_episode"])
-                underline_drl_action = max(0, min(underline_drl_action, 1))
+                values = np.asarray(underline_drl_action, dtype=float).reshape(-1)
+                if len(values) == 1:
+                    underline_drl_action = float(np.clip(values[0], 0.0, 1.0))
+                else:
+                    underline_drl_action = np.clip(values, 0.0, 1.0).tolist()
             elif conf.simulation_config["epsilon_setting"] == "fixed": # ! need to be corrected
                 underline_drl_action = conf.epsilon_value
                 underline_drl_action = conf.epsilon_value

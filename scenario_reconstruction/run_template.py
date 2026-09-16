@@ -14,9 +14,13 @@ def run_template(
     experiment_path: str,
     gui: bool = False,
     gui_delay: int = 100,
+    epsilon: float = 0.99,
 ) -> float:
+    if not 0.0 < epsilon < 1.0:
+        raise ValueError("epsilon must lie strictly between zero and one")
     conf.experiment_config["mode"] = "behavior_policy"
     conf.simulation_config["epsilon_setting"] = "fixed"
+    conf.epsilon_value = float(epsilon)
     conf.simulation_config["gui_flag"] = gui
     conf.simulation_config["gui_delay"] = gui_delay
     conf.simulation_config["gui_start"] = True
@@ -98,6 +102,12 @@ def main() -> None:
         default=100,
         help="SUMO GUI delay in milliseconds per simulation step.",
     )
+    parser.add_argument(
+        "--epsilon",
+        type=float,
+        default=0.99,
+        help="Naturalistic-mixture probability for fixed NADE importance sampling.",
+    )
     args = parser.parse_args()
 
     weight = run_template(
@@ -106,6 +116,7 @@ def main() -> None:
         args.experiment_path,
         gui=args.gui,
         gui_delay=args.gui_delay,
+        epsilon=args.epsilon,
     )
     print(f"Scenario finished. weight_result={weight}")
 

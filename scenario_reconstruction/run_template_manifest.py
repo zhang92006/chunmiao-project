@@ -16,6 +16,7 @@ def run_template_manifest(
     split: str | None = None,
     start: int = 0,
     limit: int | None = None,
+    epsilon: float = 0.99,
 ) -> dict:
     manifest_path = Path(manifest_path)
     experiment_path = Path(experiment_path)
@@ -60,6 +61,7 @@ def run_template_manifest(
                 episode=episode_id,
                 experiment_path=str(experiment_path),
                 gui=gui_episode is not None,
+                epsilon=epsilon,
             )
             results.append(
                 {
@@ -166,6 +168,12 @@ def main() -> None:
     parser.add_argument("--start", type=int, default=0)
     parser.add_argument("--limit", type=int, default=None)
     parser.add_argument(
+        "--epsilon",
+        type=float,
+        default=0.99,
+        help="Fixed NADE naturalistic-mixture probability used by every rollout.",
+    )
+    parser.add_argument(
         "--gui_episode",
         type=int,
         default=None,
@@ -181,6 +189,7 @@ def main() -> None:
         split=args.split,
         start=args.start,
         limit=args.limit,
+        epsilon=args.epsilon,
     )
     print("Manifest run finished.")
     print(f"attempted={summary['attempted']}")
