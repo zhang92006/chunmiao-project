@@ -28,6 +28,7 @@ def validate_config(config):
         "lane_offset_threshold_m",
         "minimum_gap_m",
         "maximum_gap_m",
+        "minimum_initial_speed_mps",
         "maximum_initial_speed_mps",
     ):
         value = config.get(key)
@@ -35,6 +36,10 @@ def validate_config(config):
             raise ValueError(f"{key} must be positive")
     if config["minimum_gap_m"] >= config["maximum_gap_m"]:
         raise ValueError("minimum_gap_m must be smaller than maximum_gap_m")
+    if config["minimum_initial_speed_mps"] >= config["maximum_initial_speed_mps"]:
+        raise ValueError(
+            "minimum_initial_speed_mps must be smaller than maximum_initial_speed_mps"
+        )
     for key in ("cav_lane_index", "default_bv_lane_index"):
         value = config.get(key)
         if value not in (0, 1):
@@ -80,9 +85,14 @@ def multibv_template_from_seed(seed, config):
         speed = float(actor[2])
         if speed < 0:
             raise ValueError(f"negative_{label}_speed")
+        if speed < float(config["minimum_initial_speed_mps"]):
+            raise ValueError(
+                f"{label}_speed_below_d2rl_domain:{speed:.3f}<"
+                f"{float(config['minimum_initial_speed_mps']):.3f}"
+            )
         if speed > float(config["maximum_initial_speed_mps"]):
             raise ValueError(
-                f"{label}_speed_exceeds_sumo_limit:{speed:.3f}>"
+                f"{label}_speed_exceeds_d2rl_domain:{speed:.3f}>"
                 f"{float(config['maximum_initial_speed_mps']):.3f}"
             )
 
@@ -153,6 +163,7 @@ def multibv_template_from_seed(seed, config):
             "source_state_time_s": seed.get("time_s", [])[-1] if seed.get("time_s") else None,
             "mapping_rule": "align CAV to configured lane/position; preserve source longitudinal gaps and map lateral offset to two lanes",
             "lane_mapping_threshold_m": float(config["lane_offset_threshold_m"]),
+            "minimum_initial_speed_mps": float(config["minimum_initial_speed_mps"]),
             "maximum_initial_speed_mps": float(config["maximum_initial_speed_mps"]),
             "drl_training_ready": False,
             "drl_next_step": "run autonomous NADE/D2RL rollout and require joint episode fields",
@@ -198,14 +209,20 @@ def bridge_seed_directory(seed_root, output, config):
         "output": str(output.resolve()),
         "template_count": sum(item["status"] == "template_created" for item in decisions),
         "blocked_count": sum(item["status"] == "blocked" for item in decisions),
-        "blocked_by_reason": dict(Counter(item.get("reason", "") for item in decisions if item["status"] == "blocked")),
+        "blocked_by_reason": dict(
+            Counter(
+                _reason_code(item.get("reason", ""))
+                for item in decisions
+                if item["status"] == "blocked"
+            )
+        ),
         "created_by_split": dict(Counter(item["split"] for item in decisions if item["status"] == "template_created")),
         "records": decisions,
         "drl_training_ready": False,
         "limitations": [
             "Only two-lane same-direction initializations are mapped; unsupported conflict types are blocked.",
             "Source lateral offsets are collapsed to two lane IDs using a threshold and require SUMO validation.",
-            "Initial speeds above maximum_initial_speed_mps are blocked so SUMO departure validation cannot fail at rollout time.",
+            "Initial speeds outside the configured D2RL speed domain are blocked; source seeds remain unchanged.",
             "Templates contain no forced event; D2RL eligibility requires autonomous NADE joint logs after rollout.",
         ],
     }
@@ -214,6 +231,11 @@ def bridge_seed_directory(seed_root, output, config):
         json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8"
     )
     return summary
+
+
+def _reason_code(reason):
+    """Collapse value-bearing rejection messages into stable audit categories."""
+    return str(reason).split(":", 1)[0]
 
 
 def main():

@@ -9,6 +9,7 @@
   "lane_offset_threshold_m": 1.6,
   "minimum_gap_m": 5.1,
   "maximum_gap_m": 120.0,
+  "minimum_initial_speed_mps": 20.0,
   "maximum_initial_speed_mps": 40.0,
   "allowed_conflicts": ["leading", "adjacent_lane", "merging", "none"]
 }

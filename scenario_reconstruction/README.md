@@ -95,15 +95,16 @@ Map the anchor-only seeds to autonomous 2Lane templates (no forced actions):
 ```bash
 python -m scenario_reconstruction.shrp2_multibv_sumo_bridge \
   --seed_root data_analysis/raw_data/shrp2_multibv_seeds_anchor_v1 \
-  --output data_analysis/raw_data/shrp2_multibv_sumo_templates_v1 \
+  --output data_analysis/raw_data/shrp2_multibv_sumo_templates_v4 \
   --config configs/shrp2_multibv_sumo_bridge.json
 ```
 
 The bridge blocks unsupported topologies, projected same-lane overlap, and
-initial speeds above `maximum_initial_speed_mps` (40 m/s on the current 2Lane
-map), then writes a `bridge_summary.json`. It blocks rather than silently clips
-speed, preserving a traceable boundary between SHRP2 observations and SUMO-
-executable initial states.
+initial speeds outside the configured D2RL domain (20--40 m/s on the current
+high-speed model), then writes a `bridge_summary.json`. It blocks rather than
+silently clips speed, preserving a traceable boundary between SHRP2
+observations and SUMO-executable initial states. Rejected low-speed seeds remain
+available for a future low-speed NDD/controller pipeline.
 Templates are only initialization candidates; run them through autonomous
 NADE/D2RL and require `joint`, `per_agent`, NDD, and weight fields before using
 the resulting episodes for learning.
@@ -138,7 +139,7 @@ not for a GUI run. For example, after rebuilding a fresh bridge directory:
 
 ```bash
 python -m scenario_reconstruction.run_template_manifest \
-  data_analysis/raw_data/shrp2_multibv_sumo_templates_v3/bridge_summary.json \
+  data_analysis/raw_data/shrp2_multibv_sumo_templates_v4/bridge_summary.json \
   --split train --start 0 --limit 50 --repeats 5 --epsilon 0.01 \
   --experiment_path data_analysis/raw_data/shrp2_multibv_joint_rollout_train50_x5_epsilon001
 ```

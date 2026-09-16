@@ -69,6 +69,16 @@ SUMO 正常结束，collision_result=0
 
 但碰撞训练池仍为 0。输出中有 5 个碰撞 episode，其累计 importance weight 介于 0.869 和 1.225，均未低于当前 `prepare_crash_weight_dict` 的默认阈值 0.1。它们表示自然或接近自然驾驶即可发生的碰撞，不能替代低权重反事实碰撞训练样本。
 
-唯一失败模板 `Crash-Crash_10858441` 的 `BV_primary` 初始速度为 43.507 m/s，超过当前 2Lane SUMO 路网的 40 m/s 上限。桥接器现已增加 `maximum_initial_speed_mps` 校验：这类记录会在模板生成阶段以 `*_speed_exceeds_sumo_limit` 被阻断，不再在长时间 rollout 中失败。
+唯一失败模板 `Crash-Crash_10858441` 的 `BV_primary` 初始速度为 43.507 m/s，超过当前高速 D2RL/SUMO 域的 40 m/s 上限。桥接器现已增加速度域校验：这类记录会在模板生成阶段以 `*_speed_exceeds_d2rl_domain` 被阻断，不再在长时间 rollout 中失败。
 
 下一轮应先重新生成 v3 桥接模板，再使用 runner 的 `--repeats` 对每个模板做多次独立 rollout；只降低 epsilon 而不增加重复次数，不能保证得到低权重碰撞。
+
+## v3 重复采样诊断与高速域隔离
+
+v3 对前 50 个 train 模板各重复 5 次，250 次全部完成。共保存 25 个碰撞 episode，但它们只来自 5 个模板，而且每个模板在 5 次重复中都于几乎相同的时刻碰撞；权重范围为 0.8758～1.1717，未产生小于 0.1 的训练碰撞。这说明重复次数不是当前主要瓶颈。
+
+进一步检查发现，这 5 个模板的 CAV 初始速度只有 0～4.6 m/s，而现有 D2RL、NDD 状态表及 `Vehicle.act` 使用 20～40 m/s 高速域。车辆进入 NADE 控制后会受到 20 m/s 下界约束，因此这些结果不能视为可信的高速域反事实碰撞。
+
+v3 的 1658 个模板中，只有 295 个模板的 CAV、主风险 BV 和上下文 BV 全部位于 20～40 m/s；train/validation/test 分别为 201/48/46。其余 1363 个低速或混合速度模板继续保留在 SHRP2 种子层，但不再送入当前高速 D2RL rollout。
+
+桥接配置现同时要求 `minimum_initial_speed_mps=20` 和 `maximum_initial_speed_mps=40`。v4 汇总中的阻断原因按稳定代码聚合，例如 `cav_speed_below_d2rl_domain`，详细原始速度仍保留在每条 record 的 `reason` 字段。下一步只对 v4 高速域模板做小批量重复采样，再决定是否需要调整联合临界度模型；不得用放宽碰撞权重阈值替代速度域校准。

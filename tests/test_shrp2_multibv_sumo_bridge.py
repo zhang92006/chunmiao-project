@@ -2,7 +2,10 @@ import json
 from pathlib import Path
 import unittest
 
-from scenario_reconstruction.shrp2_multibv_sumo_bridge import multibv_template_from_seed
+from scenario_reconstruction.shrp2_multibv_sumo_bridge import (
+    _reason_code,
+    multibv_template_from_seed,
+)
 from scenario_reconstruction.templates import ScenarioTemplate
 
 
@@ -14,7 +17,7 @@ class MultiBVSumoBridgeTests(unittest.TestCase):
         self.seed = {
             "record_type": "shrp2_measured_multibv_seed_v1",
             "time_s": [4.0],
-            "states": [[[0.0, 0.0, 20.0, 0.0], [15.0, 0.2, 18.0, 0.0], [-12.0, 3.5, 19.0, 0.0]]],
+            "states": [[[0.0, 0.0, 20.0, 0.0], [15.0, 0.2, 21.0, 0.0], [-12.0, 3.5, 22.0, 0.0]]],
             "actors": [
                 {"id": "CAV", "role": "CAV"},
                 {"id": "BV_primary", "source_target_id": 2},
@@ -57,11 +60,23 @@ class MultiBVSumoBridgeTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "same_lane_gap_out_of_range"):
             multibv_template_from_seed(seed, self.config)
 
-    def test_blocks_speed_that_sumo_cannot_depart_with(self):
+    def test_blocks_speed_above_d2rl_domain(self):
         seed = json.loads(json.dumps(self.seed))
         seed["states"][0][1][2] = 43.51
-        with self.assertRaisesRegex(ValueError, "primary_speed_exceeds_sumo_limit"):
+        with self.assertRaisesRegex(ValueError, "primary_speed_exceeds_d2rl_domain"):
             multibv_template_from_seed(seed, self.config)
+
+    def test_blocks_speed_below_d2rl_domain(self):
+        seed = json.loads(json.dumps(self.seed))
+        seed["states"][0][2][2] = 4.5
+        with self.assertRaisesRegex(ValueError, "context_speed_below_d2rl_domain"):
+            multibv_template_from_seed(seed, self.config)
+
+    def test_reason_code_omits_numeric_detail(self):
+        self.assertEqual(
+            _reason_code("primary_speed_below_d2rl_domain:4.500<20.000"),
+            "primary_speed_below_d2rl_domain",
+        )
 
 
 if __name__ == "__main__":
