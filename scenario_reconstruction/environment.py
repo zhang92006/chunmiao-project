@@ -23,6 +23,9 @@ class ScenarioNADE(NADE):
             else template
         )
         self._logged_training_events: set[str] = set()
+        self.multi_bv_control_num = (
+            2 if "multibv" in self.scenario_template.tags else 1
+        )
         self.cav_fault_model = CAVFaultModel(self.scenario_template.events)
         super().__init__(
             BVController=TreeSearchNADEBackgroundController,

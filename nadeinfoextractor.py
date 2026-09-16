@@ -94,7 +94,8 @@ class NADEInfoExtractor(InfoExtractor):
                 "episode_info": None, "crash_decision_info": None, "decision_time_info": {}, "weight_step_info":{},
                 "drl_epsilon_step_info": {}, "real_epsilon_step_info": {}, "criticality_this_timestep": 0,
                 "criticality_step_info": {}, "ndd_step_info": {}, "drl_obs_step_info":{},
-                "controlled_bv_ids_step_info": {}, "ttc_step_info":{}, "distance_step_info":{}, "av_obs":{}}
+                "controlled_bv_ids_step_info": {}, "multibv_selection_debug_step_info": {},
+                "ttc_step_info":{}, "distance_step_info":{}, "av_obs":{}}
     
     def meet_log_criteria(self, ttc_dict, distance_dict):
         min_distance, min_ttc = self.calculate_min_distance_ttc(ttc_dict, distance_dict)
@@ -130,6 +131,8 @@ class NADEInfoExtractor(InfoExtractor):
         time_step = self.env.simulator.get_time()-self.env.simulator.step_size
         snapshot_weight_list = self.env.global_controller_instance_list[
             0].control_log["weight_list_per_simulation"]
+        control_log = self.env.global_controller_instance_list[0].control_log
+        joint_training = bool(control_log.get("joint_training", False))
         self.episode_log["weight_episode"] = self.episode_log["weight_episode"] * \
             reduce(lambda x, y: x * y, snapshot_weight_list)
         try:
@@ -137,18 +140,30 @@ class NADEInfoExtractor(InfoExtractor):
         except:
             pass
         self.episode_log["current_weight"] = reduce(lambda x, y: x * y, snapshot_weight_list)
+        weight_record = control_log.get("weight_record", self.episode_log["current_weight"])
+        ndd_record = control_log.get("ndd_record")
         self.episode_log["av_obs"][time_step] = self.env.get_av_obs()
         try:
             self.episode_log["criticality_step_info"][time_step] = self.get_criticality_this_step()
             if not isclose(self.episode_log["current_weight"], 1):
-                self.episode_log["weight_step_info"][time_step] = self.episode_log["current_weight"]
+                self.episode_log["weight_step_info"][time_step] = weight_record
                 self.episode_log["drl_obs_step_info"][time_step] = self.get_current_drl_obs()
             if self.env.global_controller_instance_list[0].drl_epsilon_value != -1:
                 self.episode_log["drl_epsilon_step_info"][time_step] = self.env.global_controller_instance_list[0].drl_epsilon_value
             if self.env.global_controller_instance_list[0].real_epsilon_value != -1:
                 self.episode_log["real_epsilon_step_info"][time_step] = self.env.global_controller_instance_list[0].real_epsilon_value
             
-            if "ndd_possi" in self.env.global_controller_instance_list[0].control_log:
-                self.episode_log["ndd_step_info"][time_step] = self.env.global_controller_instance_list[0].control_log["ndd_possi"]
+            if ndd_record is not None:
+                self.episode_log["ndd_step_info"][time_step] = ndd_record
+            elif "ndd_possi" in control_log:
+                self.episode_log["ndd_step_info"][time_step] = control_log["ndd_possi"]
+            if joint_training:
+                self.episode_log["controlled_bv_ids_step_info"][time_step] = control_log.get(
+                    "joint_controlled_bv_ids", []
+                )
+            if "multibv_selection_debug" in control_log:
+                self.episode_log.setdefault(
+                    "multibv_selection_debug_step_info", {}
+                )[time_step] = control_log["multibv_selection_debug"]
         except Exception as e:
             print("Log error:", e)

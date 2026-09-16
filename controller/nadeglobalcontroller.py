@@ -7,12 +7,14 @@ import collections
 import utils
 from conf import conf
 from controller.nddglobalcontroller import NDDBVGlobalController
+from scenario_reconstruction.multibv import build_multibv_joint_obs
 
 class NADEBVGlobalController(NDDBVGlobalController):
     controlled_bv_num = 4
 
     def __init__(self, env, veh_type="BV"):
         super().__init__(env, veh_type)
+        self.joint_control_num = max(1, int(getattr(env, "multi_bv_control_num", 1)))
         self.drl_info = None
         self.drl_epsilon_value = -1
         self.real_epsilon_value = -1
@@ -62,7 +64,71 @@ class NADEBVGlobalController(NDDBVGlobalController):
             val for val in weight_list if val is not None]
         if len(self.control_log["weight_list_per_simulation"]) == 0:
             self.control_log["weight_list_per_simulation"] = [1]
+        if self.joint_control_num > 1:
+            self._record_joint_training_context(
+                controlled_bvs_list, weight_list, ndd_possi_list, vehicle_criticality_list
+            )
         return vehicle_criticality_list
+
+    def _record_joint_training_context(
+        self, controlled_bvs_list, weight_list, ndd_possi_list, vehicle_criticality_list
+    ):
+        """Expose K selected BV observations and proposal terms to the extractor."""
+        selected = [
+            (index, bv)
+            for index, bv in enumerate(controlled_bvs_list)
+            if weight_list[index] is not None and ndd_possi_list[index] is not None
+        ]
+        if len(selected) != self.joint_control_num:
+            return
+        selected_indices = [index for index, _ in selected]
+        selected_bvs = [bv for _, bv in selected]
+        full_obs = getattr(self, "_joint_full_obs", None)
+        if not full_obs:
+            return
+        selected_ids = [bv.id for bv in selected_bvs]
+        episode_weight = self.env.info_extractor.episode_log.get("weight_episode", 1.0)
+        self.control_log["joint_training"] = True
+        self.control_log["joint_controlled_bv_ids"] = selected_ids
+        self.control_log["weight_list_per_agent"] = [
+            float(weight_list[index]) for index in selected_indices
+        ]
+        self.control_log["ndd_possi_list_per_agent"] = [
+            float(ndd_possi_list[index]) for index in selected_indices
+        ]
+        self.control_log["drl_obs_joint"] = build_multibv_joint_obs(
+            full_obs, selected_ids, episode_weight
+        )
+        self.control_log["drl_obs_per_agent"] = [
+            build_multibv_joint_obs(full_obs, [bv_id], episode_weight)
+            for bv_id in selected_ids
+        ]
+        self.control_log["discriminator_input"] = {
+            "joint": self.control_log["drl_obs_joint"],
+            "per_agent": self.control_log["drl_obs_per_agent"],
+        }
+        self.control_log["weight_record"] = {
+            "joint": float(np.prod(self.control_log["weight_list_per_agent"])),
+            "per_agent": self.control_log["weight_list_per_agent"],
+        }
+        self.control_log["ndd_record"] = {
+            "joint": float(np.prod(self.control_log["ndd_possi_list_per_agent"])),
+            "per_agent": self.control_log["ndd_possi_list_per_agent"],
+        }
+        if self.drl_epsilon_value != -1:
+            epsilon = self.drl_epsilon_value
+            if isinstance(epsilon, (list, tuple, np.ndarray)):
+                epsilon_values = [float(value) for value in list(epsilon)]
+                if not epsilon_values:
+                    epsilon_values = [0.0]
+                epsilon_values = epsilon_values[: len(selected_bvs)]
+                epsilon_values.extend(
+                    [epsilon_values[-1]] * (len(selected_bvs) - len(epsilon_values))
+                )
+            else:
+                epsilon_values = [float(epsilon) for _ in selected_bvs]
+            self.drl_epsilon_value = epsilon_values
+            self.real_epsilon_value = list(epsilon_values)
 
     # @profile
     def select_controlled_bv_and_action(self):
@@ -76,10 +142,11 @@ class NADEBVGlobalController(NDDBVGlobalController):
             list(float): List of critical possibility.
             list(Vehicle): List of all studied vehicles.
         """
-        num_controlled_critical_bvs = 1
+        num_controlled_critical_bvs = self.joint_control_num
         controlled_bvs_list = self.get_bv_candidates()
         CAV_obs = self.env.vehicle_list["CAV"].observation.information
         full_obs = self.get_full_obs_from_cav_obs_and_bv_list(CAV_obs, controlled_bvs_list)
+        self._joint_full_obs = full_obs
         self.nade_candidates = controlled_bvs_list
         bv_criticality_list, criticality_array_list, bv_action_idx_list, weight_list, ndd_possi_list, IS_possi_list = self.calculate_criticality_list(controlled_bvs_list, CAV_obs, full_obs)
         whole_weight_list = []
@@ -110,6 +177,8 @@ class NADEBVGlobalController(NDDBVGlobalController):
                 whole_weight_list.append(None)
                 
         vehicle_criticality_list = deepcopy(bv_criticality_list)
+        raw_weight_list = list(weight_list)
+        raw_ndd_possi_list = list(ndd_possi_list)
         # Select the Principal Other Vehicle (POV) with highest criticality
         selected_bv_idx = sorted(range(len(bv_criticality_list)),
                                  key=lambda i: bv_criticality_list[i])[-num_controlled_critical_bvs:]
@@ -119,6 +188,27 @@ class NADEBVGlobalController(NDDBVGlobalController):
                     bv_action_idx_list[i], weight_list[i], ndd_possi_list[i], IS_possi_list[i] = None, None, None, None
             if i not in selected_bv_idx:
                 bv_action_idx_list[i], weight_list[i], ndd_possi_list[i], IS_possi_list[i] = None, None, None, None
+        if self.joint_control_num > 1:
+            self.control_log["multibv_selection_debug"] = {
+                "candidate_ids": [bv.id for bv in controlled_bvs_list],
+                "criticality": [
+                    None if value is None else float(value)
+                    for value in bv_criticality_list
+                ],
+                "raw_weight": [
+                    None if value is None else float(value) for value in raw_weight_list
+                ],
+                "raw_ndd_possi": [
+                    None if value is None else float(value) for value in raw_ndd_possi_list
+                ],
+                "selected_candidate_ids": [
+                    controlled_bvs_list[index].id
+                    for index in selected_bv_idx
+                    if index < len(controlled_bvs_list)
+                    and weight_list[index] is not None
+                    and ndd_possi_list[index] is not None
+                ],
+            }
         if len(bv_criticality_list):
             max_vehicle_criticality = np.max(bv_criticality_list)
         else:
