@@ -16,6 +16,7 @@ def run_template_manifest(
     split: str | None = None,
     start: int = 0,
     limit: int | None = None,
+    repeats: int = 1,
     epsilon: float = 0.99,
 ) -> dict:
     manifest_path = Path(manifest_path)
@@ -45,15 +46,21 @@ def run_template_manifest(
         if limit < 1:
             raise ValueError("limit must be positive when provided")
         records = records[:limit]
+    if repeats < 1:
+        raise ValueError("repeats must be positive")
     if gui_episode is not None:
         if gui_episode < 0 or gui_episode >= len(records):
             raise ValueError(f"gui_episode={gui_episode} is out of range 0..{len(records) - 1}")
-        records_to_run = [(gui_episode, records[gui_episode])]
+        records_to_run = [(gui_episode, records[gui_episode], 0)]
     else:
-        records_to_run = list(enumerate(records))
+        records_to_run = [
+            (repeat_index * len(records) + record_index, record, repeat_index)
+            for repeat_index in range(repeats)
+            for record_index, record in enumerate(records)
+        ]
 
     results = []
-    for episode_id, record in records_to_run:
+    for episode_id, record, repeat_index in records_to_run:
         template_path = record["path"]
         try:
             weight = run_template(
@@ -66,6 +73,7 @@ def run_template_manifest(
             results.append(
                 {
                     "episode": episode_id,
+                    "repeat": repeat_index,
                     "template": template_path,
                     "status": "ok",
                     "weight_result": weight,
@@ -75,6 +83,7 @@ def run_template_manifest(
             results.append(
                 {
                     "episode": episode_id,
+                    "repeat": repeat_index,
                     "template": template_path,
                     "status": "error",
                     "error": f"{type(exc).__name__}: {exc}",
@@ -100,6 +109,7 @@ def run_template_manifest(
         "manifest": str(manifest_path),
         "experiment_path": str(experiment_path),
         "attempted": len(results),
+        "repeats": repeats,
         "successful_runs": sum(1 for item in results if item["status"] == "ok"),
         "failed_runs": sum(1 for item in results if item["status"] != "ok"),
         "training_ready_crashes": len(crash_weight_dict),
@@ -168,6 +178,12 @@ def main() -> None:
     parser.add_argument("--start", type=int, default=0)
     parser.add_argument("--limit", type=int, default=None)
     parser.add_argument(
+        "--repeats",
+        type=int,
+        default=1,
+        help="Independent rollouts per selected template; each receives a unique episode ID.",
+    )
+    parser.add_argument(
         "--epsilon",
         type=float,
         default=0.99,
@@ -189,6 +205,7 @@ def main() -> None:
         split=args.split,
         start=args.start,
         limit=args.limit,
+        repeats=args.repeats,
         epsilon=args.epsilon,
     )
     print("Manifest run finished.")

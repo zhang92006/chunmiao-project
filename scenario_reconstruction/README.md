@@ -99,7 +99,11 @@ python -m scenario_reconstruction.shrp2_multibv_sumo_bridge \
   --config configs/shrp2_multibv_sumo_bridge.json
 ```
 
-The bridge blocks unsupported topologies and writes a `bridge_summary.json`.
+The bridge blocks unsupported topologies, projected same-lane overlap, and
+initial speeds above `maximum_initial_speed_mps` (40 m/s on the current 2Lane
+map), then writes a `bridge_summary.json`. It blocks rather than silently clips
+speed, preserving a traceable boundary between SHRP2 observations and SUMO-
+executable initial states.
 Templates are only initialization candidates; run them through autonomous
 NADE/D2RL and require `joint`, `per_agent`, NDD, and weight fields before using
 the resulting episodes for learning.
@@ -126,3 +130,15 @@ NADE importance-sampling episodes. The default `0.99` is close to ordinary NDD
 sampling and is useful for safety smoke tests. Use a documented lower pilot
 value such as `0.1` when collecting candidate D2RL training records, then run
 an epsilon sensitivity study before treating the data as a final experiment.
+
+`--repeats N` runs each selected template `N` independent times. Each run has a
+unique episode ID and records its zero-based `repeat` number in
+`manifest_run_summary.json`; use this for importance-sampling data collection,
+not for a GUI run. For example, after rebuilding a fresh bridge directory:
+
+```bash
+python -m scenario_reconstruction.run_template_manifest \
+  data_analysis/raw_data/shrp2_multibv_sumo_templates_v3/bridge_summary.json \
+  --split train --start 0 --limit 50 --repeats 5 --epsilon 0.01 \
+  --experiment_path data_analysis/raw_data/shrp2_multibv_joint_rollout_train50_x5_epsilon001
+```

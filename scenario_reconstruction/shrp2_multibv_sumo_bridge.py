@@ -22,7 +22,14 @@ def validate_config(config):
         raise ValueError("Only MultiBV SUMO bridge schema_version 1 is supported")
     if config.get("map") != "2Lane":
         raise ValueError("The current MultiBV bridge supports map='2Lane' only")
-    for key in ("duration_s", "cav_position_m", "lane_offset_threshold_m", "minimum_gap_m", "maximum_gap_m"):
+    for key in (
+        "duration_s",
+        "cav_position_m",
+        "lane_offset_threshold_m",
+        "minimum_gap_m",
+        "maximum_gap_m",
+        "maximum_initial_speed_mps",
+    ):
         value = config.get(key)
         if isinstance(value, bool) or not isinstance(value, (int, float)) or value <= 0:
             raise ValueError(f"{key} must be positive")
@@ -69,10 +76,15 @@ def multibv_template_from_seed(seed, config):
     source_gap = float(primary[0]) - float(cav[0])
     if not config["minimum_gap_m"] <= source_gap <= config["maximum_gap_m"]:
         raise ValueError(f"primary_gap_out_of_range:{source_gap:.3f}")
-    for label, actor in (("primary", primary), ("context", context)):
+    for label, actor in (("cav", cav), ("primary", primary), ("context", context)):
         speed = float(actor[2])
         if speed < 0:
             raise ValueError(f"negative_{label}_speed")
+        if speed > float(config["maximum_initial_speed_mps"]):
+            raise ValueError(
+                f"{label}_speed_exceeds_sumo_limit:{speed:.3f}>"
+                f"{float(config['maximum_initial_speed_mps']):.3f}"
+            )
 
     event_id = int(source["event_id"])
     split = str(source.get("split", "unknown"))
@@ -141,6 +153,7 @@ def multibv_template_from_seed(seed, config):
             "source_state_time_s": seed.get("time_s", [])[-1] if seed.get("time_s") else None,
             "mapping_rule": "align CAV to configured lane/position; preserve source longitudinal gaps and map lateral offset to two lanes",
             "lane_mapping_threshold_m": float(config["lane_offset_threshold_m"]),
+            "maximum_initial_speed_mps": float(config["maximum_initial_speed_mps"]),
             "drl_training_ready": False,
             "drl_next_step": "run autonomous NADE/D2RL rollout and require joint episode fields",
         },
@@ -192,6 +205,7 @@ def bridge_seed_directory(seed_root, output, config):
         "limitations": [
             "Only two-lane same-direction initializations are mapped; unsupported conflict types are blocked.",
             "Source lateral offsets are collapsed to two lane IDs using a threshold and require SUMO validation.",
+            "Initial speeds above maximum_initial_speed_mps are blocked so SUMO departure validation cannot fail at rollout time.",
             "Templates contain no forced event; D2RL eligibility requires autonomous NADE joint logs after rollout.",
         ],
     }

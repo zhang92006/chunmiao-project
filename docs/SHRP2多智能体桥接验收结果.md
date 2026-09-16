@@ -62,3 +62,13 @@ SUMO 正常结束，collision_result=0
 这样仍保持每辆 BV 的 proposal 可分解、importance weight 可解释，并能够在两车的联合作用影响风险时同时采样两辆 BV；它不是把上下文车辆强行记为第二个动作标签。
 
 在 SHRP2 v2 模板单例 `151553145` 上，联合接口已经写出 119 个包含两辆 BV 的联合记录。默认 `epsilon=0.99` 基本等于自然驾驶采样，权重接近 1；数据采集 pilot 使用 `epsilon=0.1`，以获得足够的非单位 importance weight。该 epsilon 是采样超参数，后续论文实验必须报告并做敏感性分析。
+
+## 最新 50 模板联合 rollout（`epsilon=0.01`）
+
+`shrp2_multibv_joint_rollout_epsilon001_train50` 运行了 50 个 train 模板：49 个成功、1 个失败；其中 27 个 episode 含有 K=2 联合控制记录，共 2016 个联合决策步，21 个安全 episode 已通过联合字段校验。接口与日志链路因此可用。
+
+但碰撞训练池仍为 0。输出中有 5 个碰撞 episode，其累计 importance weight 介于 0.869 和 1.225，均未低于当前 `prepare_crash_weight_dict` 的默认阈值 0.1。它们表示自然或接近自然驾驶即可发生的碰撞，不能替代低权重反事实碰撞训练样本。
+
+唯一失败模板 `Crash-Crash_10858441` 的 `BV_primary` 初始速度为 43.507 m/s，超过当前 2Lane SUMO 路网的 40 m/s 上限。桥接器现已增加 `maximum_initial_speed_mps` 校验：这类记录会在模板生成阶段以 `*_speed_exceeds_sumo_limit` 被阻断，不再在长时间 rollout 中失败。
+
+下一轮应先重新生成 v3 桥接模板，再使用 runner 的 `--repeats` 对每个模板做多次独立 rollout；只降低 epsilon 而不增加重复次数，不能保证得到低权重碰撞。

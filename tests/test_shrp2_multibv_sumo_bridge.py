@@ -57,6 +57,12 @@ class MultiBVSumoBridgeTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "same_lane_gap_out_of_range"):
             multibv_template_from_seed(seed, self.config)
 
+    def test_blocks_speed_that_sumo_cannot_depart_with(self):
+        seed = json.loads(json.dumps(self.seed))
+        seed["states"][0][1][2] = 43.51
+        with self.assertRaisesRegex(ValueError, "primary_speed_exceeds_sumo_limit"):
+            multibv_template_from_seed(seed, self.config)
+
 
 if __name__ == "__main__":
     unittest.main()
