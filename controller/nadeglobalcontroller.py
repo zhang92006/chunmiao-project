@@ -238,6 +238,10 @@ class NADEBVGlobalController(NDDBVGlobalController):
                     and weight_list[index] is not None
                     and ndd_possi_list[index] is not None
                 ],
+                "sampled_action_ids": [
+                    None if action_id is None else int(action_id)
+                    for action_id in bv_action_idx_list
+                ],
                 "pair_criticality": self.control_log.get("joint_pair_criticality", []),
             }
         if len(bv_criticality_list):

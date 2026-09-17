@@ -25,7 +25,7 @@ class JointCriticalityTests(unittest.TestCase):
         second_pdf[2] = 0.5
         full_obs = {
             "CAV": _vehicle("CAV", 0.0, 1, 10.0),
-            "BV_primary": _vehicle("BV_primary", 12.0, 1, 5.0),
+            "BV_primary": _vehicle("BV_primary", 50.0, 1, 5.0),
             "BV_context": _vehicle("BV_context", 6.0, 0, 5.0),
         }
 
@@ -55,6 +55,28 @@ class JointCriticalityTests(unittest.TestCase):
         self.assertEqual(float(np.sum(first_array)), 0.0)
         self.assertEqual(float(np.sum(second_array)), 0.0)
         self.assertEqual(debug["max_challenge"], 0.0)
+
+    def test_leading_hard_brake_is_preferred_over_acceleration(self):
+        action_count = len(conf.BV_ACTIONS)
+        first_pdf = np.zeros(action_count)
+        second_pdf = np.zeros(action_count)
+        hard_brake, acceleration = 2, action_count - 1
+        first_pdf[hard_brake] = 0.5
+        first_pdf[acceleration] = 0.5
+        second_pdf[hard_brake] = 1.0
+        full_obs = {
+            "CAV": _vehicle("CAV", 0.0, 1, 30.0),
+            "BV_primary": _vehicle("BV_primary", 15.0, 1, 26.0),
+            "BV_context": _vehicle("BV_context", -100.0, 0, 25.0),
+        }
+
+        first_array, _, debug = pairwise_joint_criticality_arrays(
+            full_obs, "BV_primary", "BV_context", first_pdf, second_pdf
+        )
+
+        self.assertGreater(first_array[hard_brake], first_array[acceleration])
+        self.assertEqual(debug["first_best_action"], hard_brake)
+        self.assertGreater(debug["collision_action_pair_count"], 0)
 
 
 if __name__ == "__main__":
