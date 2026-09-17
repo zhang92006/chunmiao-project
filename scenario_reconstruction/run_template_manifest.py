@@ -18,6 +18,7 @@ def run_template_manifest(
     limit: int | None = None,
     repeats: int = 1,
     epsilon: float = 0.99,
+    max_initial_primary_ttc_s: float | None = None,
 ) -> dict:
     manifest_path = Path(manifest_path)
     experiment_path = Path(experiment_path)
@@ -39,6 +40,18 @@ def run_template_manifest(
         normalized_record = dict(record)
         normalized_record["path"] = template_path
         records.append(normalized_record)
+    records_after_split = len(records)
+    if max_initial_primary_ttc_s is not None:
+        if max_initial_primary_ttc_s <= 0:
+            raise ValueError("max_initial_primary_ttc_s must be positive")
+        records = [
+            record
+            for record in records
+            if (
+                (ttc := _initial_primary_ttc_s(record["path"])) is not None
+                and ttc <= max_initial_primary_ttc_s
+            )
+        ]
     if start < 0:
         raise ValueError("start must be non-negative")
     records = records[start:]
@@ -108,6 +121,9 @@ def run_template_manifest(
     summary = {
         "manifest": str(manifest_path),
         "experiment_path": str(experiment_path),
+        "records_after_split": records_after_split,
+        "records_after_initial_primary_ttc_filter": len(records),
+        "max_initial_primary_ttc_s": max_initial_primary_ttc_s,
         "attempted": len(results),
         "repeats": repeats,
         "successful_runs": sum(1 for item in results if item["status"] == "ok"),
@@ -122,6 +138,29 @@ def run_template_manifest(
     ) as stream:
         json.dump(summary, stream, indent=4)
     return summary
+
+
+def _initial_primary_ttc_s(template_path: str | Path) -> float | None:
+    """Return initial CAV-to-primary TTC for a closing, same-lane pair.
+
+    A missing value deliberately excludes the template from an explicit TTC-filtered
+    rollout.  It avoids treating adjacent-lane geometry or a receding primary BV as
+    a longitudinal collision opportunity.
+    """
+    try:
+        with Path(template_path).open("r", encoding="utf-8") as stream:
+            template = json.load(stream)
+        ego = template["ego"]
+        primary = next(actor for actor in template["actors"] if actor.get("id") == "BV_primary")
+        if int(ego["lane_index"]) != int(primary["lane_index"]):
+            return None
+        gap_m = float(primary["position"]) - float(ego["position"])
+        closing_speed_mps = float(ego["speed"]) - float(primary["speed"])
+        if gap_m <= 0 or closing_speed_mps <= 0:
+            return None
+        return gap_m / closing_speed_mps
+    except (KeyError, StopIteration, TypeError, ValueError, OSError, json.JSONDecodeError):
+        return None
 
 
 def _joint_rollout_stats(experiment_path: Path) -> dict[str, int]:
@@ -190,6 +229,15 @@ def main() -> None:
         help="Fixed NADE naturalistic-mixture probability used by every rollout.",
     )
     parser.add_argument(
+        "--max_initial_primary_ttc_s",
+        type=float,
+        default=None,
+        help=(
+            "Keep only templates whose primary BV is ahead in the CAV lane, "
+            "is being closed upon, and has initial TTC no greater than this value."
+        ),
+    )
+    parser.add_argument(
         "--gui_episode",
         type=int,
         default=None,
@@ -207,6 +255,7 @@ def main() -> None:
         limit=args.limit,
         repeats=args.repeats,
         epsilon=args.epsilon,
+        max_initial_primary_ttc_s=args.max_initial_primary_ttc_s,
     )
     print("Manifest run finished.")
     print(f"attempted={summary['attempted']}")
