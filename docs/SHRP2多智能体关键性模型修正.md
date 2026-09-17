@@ -37,3 +37,15 @@
 - crash episode 保留 `joint`、`per_agent`、`drl_epsilon` 和 importance-weight 字段。
 
 若仍然零碰撞，结论将是当前无故障 IDM CAV 在这四个真实初始化下可避免风险。后续应把 CAV 反应延迟作为显式、独立标注的实验条件，而不能把故障样本混入默认 D2RL 训练池。
+
+## V3 小批量验收结果
+
+使用 TTC 不大于 5 秒的 4 条训练模板、每条 10 次、`epsilon=0.001` 进行 40 次 rollout 后：
+
+- 40 次均成功；
+- 3 条为 `training_ready_crashes`，17 条为 `training_ready_safe`；
+- 三条碰撞均来自独立源事件 `NearCrash_151578944`，发生在 3.6 至 4.1 秒；
+- 碰撞对为 `CAV` 与 `BV_context`，不是初始重叠：主 BV 先在 CAV 当前车道形成纵向制约，context BV 保持相邻车道封堵，CAV 换道时发生接触；
+- 三条碰撞的 episode importance weight 分别约为 `6.73e-171`、`4.67e-143` 和 `1.46e-151`。
+
+该结果证明双 BV 风险模型、SUMO 模板和训练数据接口已端到端贯通，但尚不能启动正式训练：3 条 crash 只来自一个源场景。下一阶段应扩大到更多独立 SHRP2 种子，并按源事件而非 rollout 重复次数统计样本多样性。
