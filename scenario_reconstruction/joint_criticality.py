@@ -11,11 +11,13 @@ import numpy as np
 from conf import conf
 
 
-DEFAULT_HORIZON_S = 3.0
+DEFAULT_HORIZON_S = 4.0
 SIMULATION_STEP_S = 0.1
 EMERGENCY_BRAKE_MPS2 = -4.0
 REACTION_TTC_S = 5.0
 NEAR_COLLISION_CLEARANCE_M = 2.0
+LANE_CHANGE_RESPONSE_S = 1.0
+LANE_CHANGE_BLOCKING_CLEARANCE_M = 5.0
 
 
 def pairwise_joint_criticality_arrays(
@@ -43,7 +45,7 @@ def pairwise_joint_criticality_arrays(
 
     first_states = [_predict_bv_state(full_obs[first_id], action) for action in range(len(first_pdf))]
     second_states = [_predict_bv_state(full_obs[second_id], action) for action in range(len(second_pdf))]
-    challenge, clearance, collision = _joint_challenge_grid(
+    challenge, clearance, collision, escape_blocked = _joint_challenge_grid(
         full_obs["CAV"], first_states, second_states, horizon_s
     )
 
@@ -63,6 +65,7 @@ def pairwise_joint_criticality_arrays(
         "max_challenge_action_pair": [int(best_pair[0]), int(best_pair[1])],
         "max_challenge_minimum_clearance_m": float(clearance[best_pair]),
         "collision_action_pair_count": int(np.sum(collision)),
+        "escape_blocking_action_pair_count": int(np.sum(escape_blocked)),
     }
     return first_array, second_array, debug
 
@@ -99,7 +102,7 @@ def _joint_challenge_grid(
     first_states: list[dict],
     second_states: list[dict],
     horizon_s: float,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Evaluate every action pair in one vectorised forward simulation."""
     count = len(first_states)
     shape = (count, len(second_states))
@@ -108,10 +111,13 @@ def _joint_challenge_grid(
     cav_x = np.full(shape, float(cav["position"][0]), dtype=float)
     cav_speed = np.full(shape, max(0.0, float(cav["velocity"])), dtype=float)
     cav_lane = int(cav["lane_index"])
+    escape_lane = 1 - cav_lane if len(conf.lane_list) == 2 else None
     minimum_clearance = np.full(shape, np.inf, dtype=float)
+    collision = np.zeros(shape, dtype=bool)
+    escape_blocked_during_danger = np.zeros(shape, dtype=bool)
     steps = max(1, int(np.ceil(horizon_s / SIMULATION_STEP_S)))
 
-    for _ in range(steps):
+    for step_index in range(steps):
         first_is_lead = (first_lane == cav_lane) & (first_x > cav_x)
         second_is_lead = (second_lane == cav_lane) & (second_x > cav_x)
         first_lead_x = np.where(first_is_lead, first_x, np.inf)
@@ -139,22 +145,46 @@ def _joint_challenge_grid(
         first_x, first_speed = _integrate_grid(first_x, first_speed, first_acceleration)
         second_x, second_speed = _integrate_grid(second_x, second_speed, second_acceleration)
 
-        first_clearance = np.where(
+        first_current_lane_clearance = np.where(
             first_lane == cav_lane, np.abs(first_x - cav_x) - float(conf.LENGTH), np.inf
         )
-        second_clearance = np.where(
+        second_current_lane_clearance = np.where(
             second_lane == cav_lane, np.abs(second_x - cav_x) - float(conf.LENGTH), np.inf
         )
-        minimum_clearance = np.minimum(minimum_clearance, np.minimum(first_clearance, second_clearance))
+        current_lane_clearance = np.minimum(
+            first_current_lane_clearance, second_current_lane_clearance
+        )
+        if escape_lane is None:
+            escape_blocked = np.ones(shape, dtype=bool)
+        else:
+            first_escape_clearance = np.where(
+                first_lane == escape_lane,
+                np.abs(first_x - cav_x) - float(conf.LENGTH),
+                np.inf,
+            )
+            second_escape_clearance = np.where(
+                second_lane == escape_lane,
+                np.abs(second_x - cav_x) - float(conf.LENGTH),
+                np.inf,
+            )
+            escape_clearance = np.minimum(first_escape_clearance, second_escape_clearance)
+            escape_blocked = escape_clearance <= LANE_CHANGE_BLOCKING_CLEARANCE_M
 
-    collision = minimum_clearance <= 0.0
+        elapsed_s = (step_index + 1) * SIMULATION_STEP_S
+        danger = current_lane_clearance <= NEAR_COLLISION_CLEARANCE_M
+        escape_blocked_during_danger |= danger & escape_blocked
+        can_escape = (elapsed_s > LANE_CHANGE_RESPONSE_S) & ~escape_blocked
+        effective_clearance = np.where(can_escape, np.inf, current_lane_clearance)
+        minimum_clearance = np.minimum(minimum_clearance, effective_clearance)
+        collision |= (current_lane_clearance <= 0.0) & ~can_escape
+
     challenge = np.where(
         collision,
         1.0,
         np.maximum(0.0, 1.0 - minimum_clearance / NEAR_COLLISION_CLEARANCE_M),
     )
     challenge[~np.isfinite(minimum_clearance)] = 0.0
-    return challenge, minimum_clearance, collision
+    return challenge, minimum_clearance, collision, escape_blocked_during_danger
 
 
 def _state_grid(states: list[dict], axis: int, shape: tuple[int, int]):

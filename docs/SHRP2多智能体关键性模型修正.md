@@ -14,15 +14,16 @@
 
 ## 修正内容
 
-`scenario_reconstruction.joint_criticality` 现在对每个 BV 动作对进行 3 秒、0.1 秒分辨率的向量化前向预测：
+`scenario_reconstruction.joint_criticality` 现在对每个 BV 动作对进行 4 秒、0.1 秒分辨率的向量化前向预测：
 
 1. 采用有符号的纵向车辆顺序和车身净间距；
 2. 将 BV 动作映射为纵向加速度或进入相邻车道；
 3. 当同车道前车的 TTC 不大于 5 秒时，预测 CAV 以 `-4 m/s²` 紧急制动；
 4. 以预测期内最小净间距为 challenge：发生接触为 1；无接触且净距大于 2 m 为 0；
-5. 仍将联合 challenge 边缘化为每辆 BV 的 factorised proposal，保持既有 importance-weight 契约。
+5. 在碰撞威胁形成 1 秒后，同时预测 CAV 的相邻车道逃逸；只有第二辆 BV 保持在相邻车道 5 m 净距内时才计为封堵；
+6. 仍将联合 challenge 边缘化为每辆 BV 的 factorised proposal，保持既有 importance-weight 契约。
 
-输出日志新增每辆候选 BV 的 `sampled_action_ids`。pair debug 还包括最优动作、最大 challenge 动作对、其最小净距以及可导致接触的动作对数量。
+输出日志新增每辆候选 BV 的 `sampled_action_ids`。pair debug 还包括最优动作、最大 challenge 动作对、其最小净距、可导致接触的动作对数量和可封堵换道逃逸的动作对数量。
 
 ## 边界与验收
 

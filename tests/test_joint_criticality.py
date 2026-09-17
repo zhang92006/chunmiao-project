@@ -67,7 +67,7 @@ class JointCriticalityTests(unittest.TestCase):
         full_obs = {
             "CAV": _vehicle("CAV", 0.0, 1, 30.0),
             "BV_primary": _vehicle("BV_primary", 15.0, 1, 26.0),
-            "BV_context": _vehicle("BV_context", -100.0, 0, 25.0),
+            "BV_context": _vehicle("BV_context", 0.0, 0, 30.0),
         }
 
         first_array, _, debug = pairwise_joint_criticality_arrays(
@@ -77,6 +77,25 @@ class JointCriticalityTests(unittest.TestCase):
         self.assertGreater(first_array[hard_brake], first_array[acceleration])
         self.assertEqual(debug["first_best_action"], hard_brake)
         self.assertGreater(debug["collision_action_pair_count"], 0)
+        self.assertGreater(debug["escape_blocking_action_pair_count"], 0)
+
+    def test_late_longitudinal_conflict_is_discounted_when_escape_lane_is_free(self):
+        action_count = len(conf.BV_ACTIONS)
+        pdf = np.zeros(action_count)
+        pdf[2] = 1.0
+        full_obs = {
+            "CAV": _vehicle("CAV", 0.0, 1, 30.0),
+            "BV_primary": _vehicle("BV_primary", 15.0, 1, 26.0),
+            "BV_context": _vehicle("BV_context", -100.0, 0, 25.0),
+        }
+
+        first_array, second_array, debug = pairwise_joint_criticality_arrays(
+            full_obs, "BV_primary", "BV_context", pdf, pdf
+        )
+
+        self.assertEqual(float(np.sum(first_array)), 0.0)
+        self.assertEqual(float(np.sum(second_array)), 0.0)
+        self.assertEqual(debug["collision_action_pair_count"], 0)
 
 
 if __name__ == "__main__":
