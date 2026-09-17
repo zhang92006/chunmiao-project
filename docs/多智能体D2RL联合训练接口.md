@@ -62,3 +62,5 @@ RLlib/PPO 的模型输入输出层也必须随之设为 14 与 2；仅改 JSON �
 导出器有两个数据层：`context_mode=full` 要求上下文 BV 也有完整 4 秒历史，适合高保真验证；`context_mode=anchor_only` 只要求上下文 BV 在关键时刻有状态，输出是一帧关键时刻初始化种子，适合扩大 SUMO 场景池，但不得与完整历史样本合并统计。
 
 `shrp2_multibv_sumo_bridge` 将 `anchor_only` 种子投影到当前 `2Lane` 路网。它只支持 `leading`、`adjacent_lane`、`merging` 和 `none` 这类可近似为同向两车道初始状态的事件；横穿、行人、动物和对向转弯会进入 blocked 清单。生成模板的 `events` 为空，确保后续行为由 NADE/D2RL 自主采样，而不是把 SHRP2 观测动作写成标签。
+
+`anchor_only` 的历史默认版本以关键时刻初始化，适合场景清单统计，但不适合作为反事实碰撞 rollout 的起点。导出器现支持 `--initialization_offset_s 2.0`：从 `critical_time_s=4.0` 向前取 `initialization_time_s=2.0` 的 CAV、主风险 BV 和上下文 BV 状态。种子会记录 `initialization_offset_before_critical_s`，桥接模板会传递 `source_state_time_s`、`source_critical_time_s` 和该 offset，保证训练数据能审计“从碰撞前多长时间开始”。上下文 BV 若在前移时刻没有 `maximum_target_alignment_dt_s` 内的测量状态，会被排除，而不会用关键时刻状态冒充前移状态。

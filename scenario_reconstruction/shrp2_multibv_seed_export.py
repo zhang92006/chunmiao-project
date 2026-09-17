@@ -65,8 +65,15 @@ def _finite_track(rows, config, anchor_s, origin, rotation, reference_yaw):
     )
 
 
-def _anchor_state(rows, anchor_s, origin, rotation, reference_yaw):
-    """Return one finite context state at the critical timestamp."""
+def _anchor_state(
+    rows,
+    anchor_s,
+    origin,
+    rotation,
+    reference_yaw,
+    maximum_alignment_dt_s=None,
+):
+    """Return one finite context state at the requested initialization timestamp."""
     finite = rows.replace([np.inf, -np.inf], np.nan).dropna(
         subset=["time", "x_sur", "y_sur", "v_sur", "psi_sur"]
     )
@@ -74,6 +81,12 @@ def _anchor_state(rows, anchor_s, origin, rotation, reference_yaw):
         raise ValueError("missing_context_anchor")
     index = (finite["time"] - anchor_s).abs().idxmin()
     row = finite.loc[index]
+    if (
+        maximum_alignment_dt_s is not None
+        and abs(float(row["time"]) - float(anchor_s))
+        > float(maximum_alignment_dt_s) + 1e-8
+    ):
+        raise ValueError("context_initialization_alignment_exceeds_limit")
     if float(row["v_sur"]) < 0:
         raise ValueError("negative_context_speed")
     xy = np.array([float(row["x_sur"]), float(row["y_sur"])])
@@ -98,17 +111,49 @@ def _target_distance_at_anchor(rows, anchor_s):
     )
 
 
+def _window_frame_index(window, requested_time_s):
+    """Return an existing audited window frame at the requested relative time."""
+    times = np.asarray(window["time_s"], dtype=float)
+    if times.ndim != 1 or len(times) == 0:
+        raise ValueError("window lacks time_s")
+    index = int(np.argmin(np.abs(times - float(requested_time_s))))
+    if len(times) == 1:
+        tolerance = 1e-8
+    else:
+        tolerance = float(np.min(np.diff(times))) / 2.0 + 1e-8
+    if abs(float(times[index]) - float(requested_time_s)) > tolerance:
+        raise ValueError("initialization_time_not_on_window_grid")
+    return index
+
+
 def build_multibv_seed(
-    window, event_rows, metadata_row, config, bv_count=2, context_mode="full"
+    window,
+    event_rows,
+    metadata_row,
+    config,
+    bv_count=2,
+    context_mode="full",
+    initialization_offset_s=0.0,
 ):
     """Add nearest measured context BVs to one quality-passed pair window."""
     if bv_count < 2:
         raise ValueError("bv_count must be at least 2")
     if context_mode not in {"full", "anchor_only"}:
         raise ValueError("context_mode must be 'full' or 'anchor_only'")
+    initialization_offset_s = float(initialization_offset_s)
+    history_s = float(config["history_s"])
+    if not np.isfinite(initialization_offset_s) or not 0.0 <= initialization_offset_s <= history_s:
+        raise ValueError("initialization_offset_s must lie in [0, history_s]")
+    if context_mode == "full" and initialization_offset_s != 0.0:
+        raise ValueError(
+            "initialization_offset_s requires context_mode='anchor_only'; "
+            "full-history bridge selection is not changed implicitly"
+        )
     primary_id = int(window["source"]["target_id"])
     anchor_s = float(metadata_row["impact_timestamp"]) / 1000.0
-    start_s = anchor_s - float(config["history_s"])
+    start_s = anchor_s - history_s
+    initialization_s = anchor_s - initialization_offset_s
+    initialization_time_s = history_s - initialization_offset_s
     ego_rows = event_rows.replace([np.inf, -np.inf], np.nan).dropna(
         subset=["time", "x_ego", "y_ego", "psi_ego"]
     ).sort_values("time").drop_duplicates("time", keep="first")
@@ -125,6 +170,7 @@ def build_multibv_seed(
     )[0])
     rotation = _rotation(-yaw)
 
+    context_reference_s = initialization_s if context_mode == "anchor_only" else anchor_s
     distances = []
     grouped = event_rows.groupby("target_id", sort=True)
     for target_id, rows in grouped:
@@ -132,7 +178,7 @@ def build_multibv_seed(
         if target_id == primary_id:
             continue
         try:
-            distances.append((_target_distance_at_anchor(rows, anchor_s), target_id))
+            distances.append((_target_distance_at_anchor(rows, context_reference_s), target_id))
         except ValueError:
             continue
     distances.sort(key=lambda item: (item[0], item[1]))
@@ -150,11 +196,12 @@ def build_multibv_seed(
         tracks = [np.asarray(window["states"], dtype=float)[:, 1, :]]
         masks = [np.asarray(window["state_mask"], dtype=bool)[:, 1, :]]
     else:
-        times = [float(window["condition"]["critical_time_s"])]
-        cav_states = np.asarray(window["states"], dtype=float)[-1, 0, :][None, :]
-        cav_masks = np.asarray(window["state_mask"], dtype=bool)[-1, 0, :][None, :]
-        tracks = [np.asarray(window["states"], dtype=float)[-1, 1, :][None, :]]
-        masks = [np.asarray(window["state_mask"], dtype=bool)[-1, 1, :][None, :]]
+        frame_index = _window_frame_index(window, initialization_time_s)
+        times = [float(window["time_s"][frame_index])]
+        cav_states = np.asarray(window["states"], dtype=float)[frame_index, 0, :][None, :]
+        cav_masks = np.asarray(window["state_mask"], dtype=bool)[frame_index, 0, :][None, :]
+        tracks = [np.asarray(window["states"], dtype=float)[frame_index, 1, :][None, :]]
+        masks = [np.asarray(window["state_mask"], dtype=bool)[frame_index, 1, :][None, :]]
     actor_records = [{
         "id": "BV_primary",
         "role": "primary_risk_bv",
@@ -177,7 +224,12 @@ def build_multibv_seed(
             context_mask[:, 3] = quality["heading_usable"]
         else:
             context_state = np.asarray([_anchor_state(
-                grouped.get_group(target_id), anchor_s, origin, rotation, yaw
+                grouped.get_group(target_id),
+                initialization_s,
+                origin,
+                rotation,
+                yaw,
+                config["maximum_target_alignment_dt_s"],
             )], dtype=float)
             context_mask = np.ones_like(context_state, dtype=bool)
             quality = {"mode": "anchor_only", "position_speed_consistent": None,
@@ -222,6 +274,8 @@ def build_multibv_seed(
             "initial_state": states[0].tolist(),
             "initial_state_mask": state_mask[0].tolist(),
             "critical_time_s": float(window["condition"]["critical_time_s"]),
+            "initialization_time_s": float(times[0]),
+            "initialization_offset_before_critical_s": initialization_offset_s,
             "mapping_status": "source_frame_only; lane and route mapping pending",
             "context_mode": context_mode,
         },
@@ -251,7 +305,13 @@ def _read_windows(audit_root):
 
 
 def export_multibv_seeds(
-    source_root, audit_root, output, config, bv_count=2, context_mode="full"
+    source_root,
+    audit_root,
+    output,
+    config,
+    bv_count=2,
+    context_mode="full",
+    initialization_offset_s=0.0,
 ):
     """Export context-augmented seeds, loading one SHRP2 category at a time."""
     validate_config(config)
@@ -278,6 +338,7 @@ def export_multibv_seeds(
                 seed = build_multibv_seed(
                     window, rows, meta, config, bv_count=bv_count,
                     context_mode=context_mode,
+                    initialization_offset_s=initialization_offset_s,
                 )
                 split = window["source"]["split"]
                 destination = output / split / "seeds.jsonl"
@@ -302,6 +363,7 @@ def export_multibv_seeds(
         "audit_root": str(audit_root),
         "bv_count": bv_count,
         "context_mode": context_mode,
+        "initialization_offset_s": float(initialization_offset_s),
         "window_count": len(windows),
         "exported_count": len(records),
         "exported_by_split": dict(counts),
@@ -333,17 +395,33 @@ def main():
         "--context_mode",
         choices=("full", "anchor_only"),
         default="full",
-        help="Use full 4-second context history or only critical-time context states.",
+        help="Use full 4-second context history or one aligned anchor state per actor.",
+    )
+    parser.add_argument(
+        "--initialization_offset_s",
+        type=float,
+        default=0.0,
+        help=(
+            "For anchor_only seeds, initialize this many seconds before the "
+            "critical timestamp; must lie in [0, history_s]."
+        ),
     )
     args = parser.parse_args()
     config = json.loads(Path(args.config).read_text(encoding="utf-8"))
     result = export_multibv_seeds(
         args.source_root, args.audit_root, args.output, config,
         bv_count=args.bv_count, context_mode=args.context_mode,
+        initialization_offset_s=args.initialization_offset_s,
     )
     print(json.dumps({
         key: result[key]
-        for key in ("window_count", "exported_count", "exported_by_split", "excluded_count")
+        for key in (
+            "window_count",
+            "exported_count",
+            "exported_by_split",
+            "excluded_count",
+            "initialization_offset_s",
+        )
     }, ensure_ascii=False, indent=2))
 
 

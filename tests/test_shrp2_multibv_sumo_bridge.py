@@ -33,6 +33,10 @@ class MultiBVSumoBridgeTests(unittest.TestCase):
         }
 
     def test_maps_two_bvs_without_forced_actions(self):
+        self.seed["condition"] = {
+            "critical_time_s": 4.0,
+            "initialization_offset_before_critical_s": 2.0,
+        }
         template = multibv_template_from_seed(self.seed, self.config)
         ScenarioTemplate.from_dict(template)
         self.assertEqual(len(template["actors"]), 2)
@@ -40,6 +44,13 @@ class MultiBVSumoBridgeTests(unittest.TestCase):
         self.assertEqual(template["actors"][1]["lane_index"], 0)
         self.assertEqual(template["events"], [])
         self.assertFalse(template["bridge_metadata"]["drl_training_ready"])
+        self.assertEqual(template["bridge_metadata"]["source_critical_time_s"], 4.0)
+        self.assertEqual(
+            template["bridge_metadata"][
+                "source_initialization_offset_before_critical_s"
+            ],
+            2.0,
+        )
 
     def test_blocks_unsupported_topology(self):
         seed = json.loads(json.dumps(self.seed))

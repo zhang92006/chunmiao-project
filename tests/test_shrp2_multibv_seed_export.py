@@ -94,6 +94,45 @@ class MultiBVSeedExportTests(unittest.TestCase):
                 bv_count=2, context_mode="full",
             )
 
+    def test_anchor_only_can_initialize_two_seconds_before_critical_time(self):
+        seed = build_multibv_seed(
+            self.pair,
+            self.rows,
+            self.meta,
+            self.config,
+            bv_count=2,
+            context_mode="anchor_only",
+            initialization_offset_s=2.0,
+        )
+        self.assertEqual(seed["time_s"], [2.0])
+        self.assertEqual(seed["condition"]["critical_time_s"], 4.0)
+        self.assertEqual(seed["condition"]["initialization_time_s"], 2.0)
+        self.assertEqual(
+            seed["condition"]["initialization_offset_before_critical_s"], 2.0
+        )
+        np.testing.assert_allclose(
+            np.asarray(seed["states"])[0, :2, :],
+            np.asarray(self.pair["states"])[20, :2, :],
+        )
+
+    def test_precritical_anchor_requires_context_at_initialization_time(self):
+        short_context = self.rows[(self.rows.target_id == 3) & (self.rows.time >= 3.8)]
+        short_rows = pd.concat([
+            self.rows[self.rows.target_id == 2], short_context
+        ], ignore_index=True)
+        with self.assertRaisesRegex(
+            ValueError, "context_initialization_alignment_exceeds_limit"
+        ):
+            build_multibv_seed(
+                self.pair,
+                short_rows,
+                self.meta,
+                self.config,
+                bv_count=2,
+                context_mode="anchor_only",
+                initialization_offset_s=2.0,
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

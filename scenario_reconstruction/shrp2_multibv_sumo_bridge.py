@@ -161,6 +161,10 @@ def multibv_template_from_seed(seed, config):
             "source_conflict": conflict,
             "source_context_target_ids": source.get("context_target_ids", []),
             "source_state_time_s": seed.get("time_s", [])[-1] if seed.get("time_s") else None,
+            "source_critical_time_s": (seed.get("condition") or {}).get("critical_time_s"),
+            "source_initialization_offset_before_critical_s": (
+                (seed.get("condition") or {}).get("initialization_offset_before_critical_s")
+            ),
             "mapping_rule": "align CAV to configured lane/position; preserve source longitudinal gaps and map lateral offset to two lanes",
             "lane_mapping_threshold_m": float(config["lane_offset_threshold_m"]),
             "minimum_initial_speed_mps": float(config["minimum_initial_speed_mps"]),

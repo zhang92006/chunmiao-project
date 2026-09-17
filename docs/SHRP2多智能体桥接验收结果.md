@@ -82,3 +82,9 @@ v3 对前 50 个 train 模板各重复 5 次，250 次全部完成。共保存 2
 v3 的 1658 个模板中，只有 295 个模板的 CAV、主风险 BV 和上下文 BV 全部位于 20～40 m/s；train/validation/test 分别为 201/48/46。其余 1363 个低速或混合速度模板继续保留在 SHRP2 种子层，但不再送入当前高速 D2RL rollout。
 
 桥接配置现同时要求 `minimum_initial_speed_mps=20` 和 `maximum_initial_speed_mps=40`。v4 汇总中的阻断原因按稳定代码聚合，例如 `cav_speed_below_d2rl_domain`，详细原始速度仍保留在每条 record 的 `reason` 字段。下一步只对 v4 高速域模板做小批量重复采样，再决定是否需要调整联合临界度模型；不得用放宽碰撞权重阈值替代速度域校准。
+
+## 关键时刻前移初始化（v5）
+
+v4 高速域 rollout 的唯一碰撞模板在 0.3 s 内确定性接触，说明将 `anchor_only` 种子的关键时刻（4.0 s）直接作为 SUMO 初态没有留下策略干预空间。导出器现增加 `initialization_offset_s`：v5 使用 `2.0 s`，即用原始 4 秒风险窗口的第 2 秒帧启动 SUMO，同时仍保留 `critical_time_s=4.0` 作为事件参考。该修改只改变后续新目录中的种子和模板，不重写原始 SHRP2、anchor v1 或 v4 结果。
+
+v5 的首轮验收不以“立即得到低权重碰撞”为标准，而先检查碰撞是否在 1 s 后发生、同一模板的重复结果是否随采样动作改变，以及 `source_initialization_offset_before_critical_s=2.0` 是否贯穿种子、模板和 episode 元数据。只有通过这三项，才评估联合临界度对碰撞密度的贡献。
