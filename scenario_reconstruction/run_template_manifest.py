@@ -19,6 +19,7 @@ def run_template_manifest(
     repeats: int = 1,
     epsilon: float = 0.99,
     max_initial_primary_ttc_s: float | None = None,
+    require_context_blocking: bool = False,
 ) -> dict:
     manifest_path = Path(manifest_path)
     experiment_path = Path(experiment_path)
@@ -41,6 +42,12 @@ def run_template_manifest(
         normalized_record["path"] = template_path
         records.append(normalized_record)
     records_after_split = len(records)
+    if require_context_blocking:
+        records = [
+            record for record in records
+            if _context_blocking_potential(record["path"])
+        ]
+    records_after_context_blocking_filter = len(records)
     if max_initial_primary_ttc_s is not None:
         if max_initial_primary_ttc_s <= 0:
             raise ValueError("max_initial_primary_ttc_s must be positive")
@@ -122,6 +129,8 @@ def run_template_manifest(
         "manifest": str(manifest_path),
         "experiment_path": str(experiment_path),
         "records_after_split": records_after_split,
+        "records_after_context_blocking_filter": records_after_context_blocking_filter,
+        "require_context_blocking": require_context_blocking,
         "records_after_initial_primary_ttc_filter": len(records),
         "max_initial_primary_ttc_s": max_initial_primary_ttc_s,
         "attempted": len(results),
@@ -161,6 +170,20 @@ def _initial_primary_ttc_s(template_path: str | Path) -> float | None:
         return gap_m / closing_speed_mps
     except (KeyError, StopIteration, TypeError, ValueError, OSError, json.JSONDecodeError):
         return None
+
+
+def _context_blocking_potential(template_path: str | Path) -> bool:
+    """Read the source-side adjacent-lane blocking flag without inferring one."""
+    try:
+        with Path(template_path).open("r", encoding="utf-8") as stream:
+            template = json.load(stream)
+        return bool(
+            template["bridge_metadata"]["source_adaptive_critical_window"][
+                "context_blocking_potential"
+            ]
+        )
+    except (KeyError, TypeError, OSError, json.JSONDecodeError):
+        return False
 
 
 def _joint_rollout_stats(experiment_path: Path) -> dict[str, int]:
@@ -238,6 +261,14 @@ def main() -> None:
         ),
     )
     parser.add_argument(
+        "--require_context_blocking",
+        action="store_true",
+        help=(
+            "Keep only templates whose source-selected context BV is in an "
+            "adjacent lane and has declared escape-blocking potential."
+        ),
+    )
+    parser.add_argument(
         "--gui_episode",
         type=int,
         default=None,
@@ -256,6 +287,7 @@ def main() -> None:
         repeats=args.repeats,
         epsilon=args.epsilon,
         max_initial_primary_ttc_s=args.max_initial_primary_ttc_s,
+        require_context_blocking=args.require_context_blocking,
     )
     print("Manifest run finished.")
     print(f"attempted={summary['attempted']}")

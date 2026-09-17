@@ -80,6 +80,42 @@ class RunTemplateManifestTests(unittest.TestCase):
         self.assertEqual(summary["attempted"], 1)
         self.assertEqual(run.call_count, 1)
 
+    def test_context_blocking_filter_requires_a_declared_source_flag(self):
+        manifest = {
+            "records": [
+                {"status": "template_created", "split": "train", "template_path": "block.json"},
+                {"status": "template_created", "split": "train", "template_path": "free.json"},
+            ]
+        }
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            manifest_path = root / "manifest.json"
+            for name, blocking in (("block.json", True), ("free.json", False)):
+                (root / name).write_text(json.dumps({
+                    "bridge_metadata": {
+                        "source_adaptive_critical_window": {
+                            "context_blocking_potential": blocking
+                        }
+                    }
+                }), encoding="utf-8")
+            for record in manifest["records"]:
+                record["template_path"] = str(root / record["template_path"])
+            manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+            with patch(
+                "scenario_reconstruction.run_template_manifest.run_template",
+                return_value=1.0,
+            ) as run:
+                summary = run_template_manifest(
+                    manifest_path, root / "episodes", split="train",
+                    require_context_blocking=True,
+                )
+
+        self.assertEqual(summary["records_after_split"], 2)
+        self.assertEqual(summary["records_after_context_blocking_filter"], 1)
+        self.assertTrue(summary["require_context_blocking"])
+        self.assertEqual(summary["attempted"], 1)
+        self.assertEqual(run.call_count, 1)
+
 
 if __name__ == "__main__":
     unittest.main()
