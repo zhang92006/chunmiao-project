@@ -3,7 +3,12 @@ import unittest
 import numpy as np
 
 from conf import conf
-from scenario_reconstruction.joint_criticality import pairwise_joint_criticality_arrays
+from scenario_reconstruction.joint_criticality import (
+    joint_pair_proposal,
+    pairwise_joint_criticality_arrays,
+    pairwise_joint_criticality_details,
+    sample_joint_action_pair,
+)
 
 
 def _vehicle(vehicle_id, x, lane, speed):
@@ -96,6 +101,21 @@ class JointCriticalityTests(unittest.TestCase):
         self.assertEqual(float(np.sum(first_array)), 0.0)
         self.assertEqual(float(np.sum(second_array)), 0.0)
         self.assertEqual(debug["collision_action_pair_count"], 0)
+
+    def test_correlated_joint_proposal_preserves_pair_weight(self):
+        details = {
+            "naturalistic_pdf": np.full((2, 2), 0.25),
+            "challenge": np.asarray([[1.0, 0.0], [0.0, 0.0]]),
+        }
+        proposal = joint_pair_proposal(details, epsilon=0.001)
+        self.assertIsNotNone(proposal)
+        self.assertAlmostEqual(float(np.sum(proposal["proposal_pdf"])), 1.0)
+        self.assertGreater(proposal["proposal_pdf"][0, 0], proposal["naturalistic_pdf"][0, 0])
+        sampled = sample_joint_action_pair(proposal, rng=np.random.default_rng(5))
+        self.assertAlmostEqual(
+            sampled["importance_weight"],
+            sampled["naturalistic_probability"] / sampled["proposal_probability"],
+        )
 
 
 if __name__ == "__main__":

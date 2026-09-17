@@ -34,6 +34,21 @@ def pairwise_joint_criticality_arrays(
     CAV-to-BV gap despite CAV emergency braking. Thus a leading BV accelerating
     away is not treated as risky merely because it is geometrically nearby.
     """
+    first_array, second_array, debug, _ = pairwise_joint_criticality_details(
+        full_obs, first_id, second_id, first_ndd_pdf, second_ndd_pdf, horizon_s
+    )
+    return first_array, second_array, debug
+
+
+def pairwise_joint_criticality_details(
+    full_obs: dict,
+    first_id: str,
+    second_id: str,
+    first_ndd_pdf,
+    second_ndd_pdf,
+    horizon_s: float = DEFAULT_HORIZON_S,
+) -> tuple[np.ndarray, np.ndarray, dict, dict]:
+    """Return marginals plus the full action-pair grid for joint sampling."""
     if "CAV" not in full_obs or first_id not in full_obs or second_id not in full_obs:
         raise KeyError("full_obs must contain CAV and both requested BVs")
     if horizon_s <= 0:
@@ -48,12 +63,10 @@ def pairwise_joint_criticality_arrays(
     challenge, clearance, collision, escape_blocked = _joint_challenge_grid(
         full_obs["CAV"], first_states, second_states, horizon_s
     )
-
-    # Multi-agent analogue of ``NDD PDF * challenge``. The marginals remain
-    # factorised for the existing per-agent importance-sampling contract.
     first_array = first_pdf * np.dot(challenge, second_pdf)
     second_array = second_pdf * np.dot(first_pdf, challenge)
     best_pair = np.unravel_index(int(np.argmax(challenge)), challenge.shape)
+    naturalistic_pdf = np.outer(first_pdf, second_pdf)
     debug = {
         "pair": [first_id, second_id],
         "horizon_s": float(horizon_s),
@@ -66,8 +79,66 @@ def pairwise_joint_criticality_arrays(
         "max_challenge_minimum_clearance_m": float(clearance[best_pair]),
         "collision_action_pair_count": int(np.sum(collision)),
         "escape_blocking_action_pair_count": int(np.sum(escape_blocked)),
+        "joint_critical_mass": float(np.sum(naturalistic_pdf * challenge)),
     }
-    return first_array, second_array, debug
+    details = {
+        "first_ndd_pdf": first_pdf,
+        "second_ndd_pdf": second_pdf,
+        "naturalistic_pdf": naturalistic_pdf,
+        "challenge": challenge,
+    }
+    return first_array, second_array, debug, details
+
+
+def joint_pair_proposal(details: dict, epsilon: float) -> dict | None:
+    """Build a valid correlated IS proposal for one BV action pair.
+
+    ``epsilon`` retains the project's existing meaning: the naturalistic
+    mixture mass.  Thus ``epsilon=0.001`` samples almost entirely from the
+    challenge-conditioned joint proposal while retaining full NDD support.
+    """
+    epsilon = float(epsilon)
+    if not np.isfinite(epsilon) or not 0.0 < epsilon < 1.0:
+        raise ValueError("joint proposal epsilon must lie strictly between zero and one")
+    naturalistic = np.asarray(details["naturalistic_pdf"], dtype=float)
+    challenge = np.asarray(details["challenge"], dtype=float)
+    if naturalistic.shape != challenge.shape or naturalistic.ndim != 2:
+        raise ValueError("joint naturalistic and challenge grids must be equal 2-D arrays")
+    critical_unnormalized = naturalistic * np.clip(challenge, 0.0, None)
+    critical_mass = float(np.sum(critical_unnormalized))
+    if not np.isfinite(critical_mass) or critical_mass <= 0.0:
+        return None
+    critical = critical_unnormalized / critical_mass
+    proposal = (1.0 - epsilon) * critical + epsilon * naturalistic
+    proposal /= float(np.sum(proposal))
+    return {
+        "naturalistic_pdf": naturalistic,
+        "critical_pdf": critical,
+        "proposal_pdf": proposal,
+        "critical_mass": critical_mass,
+        "epsilon": epsilon,
+    }
+
+
+def sample_joint_action_pair(proposal: dict, rng=None) -> dict:
+    """Sample one ordered action pair and return its auditable IS terms."""
+    proposal_pdf = np.asarray(proposal["proposal_pdf"], dtype=float)
+    naturalistic_pdf = np.asarray(proposal["naturalistic_pdf"], dtype=float)
+    if proposal_pdf.shape != naturalistic_pdf.shape or proposal_pdf.ndim != 2:
+        raise ValueError("joint proposal and naturalistic PDFs must be equal 2-D arrays")
+    sampler = np.random if rng is None else rng
+    flat_index = int(sampler.choice(proposal_pdf.size, p=proposal_pdf.reshape(-1)))
+    first_action, second_action = np.unravel_index(flat_index, proposal_pdf.shape)
+    naturalistic_probability = float(naturalistic_pdf[first_action, second_action])
+    proposal_probability = float(proposal_pdf[first_action, second_action])
+    return {
+        "action_pair": [int(first_action), int(second_action)],
+        "naturalistic_probability": naturalistic_probability,
+        "proposal_probability": proposal_probability,
+        "importance_weight": naturalistic_probability / proposal_probability,
+        "critical_mass": float(proposal["critical_mass"]),
+        "epsilon": float(proposal["epsilon"]),
+    }
 
 
 def _normalised_pdf(pdf) -> np.ndarray:

@@ -54,6 +54,20 @@ class MultiBVCompatibilityTests(unittest.TestCase):
         )
         self.assertAlmostEqual(result, (0.1 / (1 - 0.5)) * (0.2 / (1 - 0.25)))
 
+    def test_joint_pair_importance_weight_uses_the_correlated_proposal(self):
+        result = D2RLTrainingEnv._joint_epsilon_weight(
+            {
+                "proposal_type": "joint_pair",
+                "joint": 0.25,
+                "per_agent": [0.5, 0.5],
+                "joint_naturalistic_probability": 0.02,
+                "joint_proposal_probability": 0.08,
+            },
+            [0.001, 0.001],
+            {"proposal_type": "joint_pair", "joint": 0.02, "per_agent": [0.1, 0.2]},
+        )
+        self.assertAlmostEqual(result, 0.25)
+
     def test_joint_training_env_reset_and_step_keep_two_actions(self):
         episode = {
             "collision_result": 1,

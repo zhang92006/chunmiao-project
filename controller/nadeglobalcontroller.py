@@ -9,7 +9,11 @@ import utils
 from conf import conf
 from controller.nddglobalcontroller import NDDBVGlobalController
 from scenario_reconstruction.multibv import build_multibv_joint_obs
-from scenario_reconstruction.joint_criticality import pairwise_joint_criticality_arrays
+from scenario_reconstruction.joint_criticality import (
+    joint_pair_proposal,
+    pairwise_joint_criticality_details,
+    sample_joint_action_pair,
+)
 
 class NADEBVGlobalController(NDDBVGlobalController):
     controlled_bv_num = 4
@@ -62,8 +66,14 @@ class NADEBVGlobalController(NDDBVGlobalController):
                         bv.update() # apply bv.controller.action
             else:
                 raise ValueError("conf experiment mode not recognized. should be NDE or D2RL")
-        self.control_log["weight_list_per_simulation"] = [
-            val for val in weight_list if val is not None]
+        joint_proposal = self.control_log.get("joint_proposal_record")
+        if joint_proposal is not None:
+            self.control_log["weight_list_per_simulation"] = [
+                float(joint_proposal["importance_weight"])
+            ]
+        else:
+            self.control_log["weight_list_per_simulation"] = [
+                val for val in weight_list if val is not None]
         if len(self.control_log["weight_list_per_simulation"]) == 0:
             self.control_log["weight_list_per_simulation"] = [1]
         if self.joint_control_num > 1:
@@ -92,6 +102,7 @@ class NADEBVGlobalController(NDDBVGlobalController):
         episode_weight = self.env.info_extractor.episode_log.get("weight_episode", 1.0)
         self.control_log["joint_training"] = True
         self.control_log["joint_controlled_bv_ids"] = selected_ids
+        joint_proposal = self.control_log.get("joint_proposal_record")
         self.control_log["weight_list_per_agent"] = [
             float(weight_list[index]) for index in selected_indices
         ]
@@ -109,14 +120,18 @@ class NADEBVGlobalController(NDDBVGlobalController):
             "joint": self.control_log["drl_obs_joint"],
             "per_agent": self.control_log["drl_obs_per_agent"],
         }
-        self.control_log["weight_record"] = {
-            "joint": float(np.prod(self.control_log["weight_list_per_agent"])),
-            "per_agent": self.control_log["weight_list_per_agent"],
-        }
-        self.control_log["ndd_record"] = {
-            "joint": float(np.prod(self.control_log["ndd_possi_list_per_agent"])),
-            "per_agent": self.control_log["ndd_possi_list_per_agent"],
-        }
+        if joint_proposal is not None:
+            self.control_log["weight_record"] = dict(joint_proposal["weight_record"])
+            self.control_log["ndd_record"] = dict(joint_proposal["ndd_record"])
+        else:
+            self.control_log["weight_record"] = {
+                "joint": float(np.prod(self.control_log["weight_list_per_agent"])),
+                "per_agent": self.control_log["weight_list_per_agent"],
+            }
+            self.control_log["ndd_record"] = {
+                "joint": float(np.prod(self.control_log["ndd_possi_list_per_agent"])),
+                "per_agent": self.control_log["ndd_possi_list_per_agent"],
+            }
         if self.drl_epsilon_value != -1:
             epsilon = self.drl_epsilon_value
             if isinstance(epsilon, (list, tuple, np.ndarray)):
@@ -129,6 +144,8 @@ class NADEBVGlobalController(NDDBVGlobalController):
                 )
             else:
                 epsilon_values = [float(epsilon) for _ in selected_bvs]
+            if joint_proposal is not None:
+                epsilon_values = [float(joint_proposal["epsilon"])] * len(selected_bvs)
             self.drl_epsilon_value = epsilon_values
             self.real_epsilon_value = list(epsilon_values)
 
@@ -208,6 +225,24 @@ class NADEBVGlobalController(NDDBVGlobalController):
                 whole_weight_list.append(min(single_weight_list))
             else:
                 whole_weight_list.append(None)
+
+        joint_proposal = self._sample_selected_joint_pair(
+            selected_bv_idx, epsilon_by_index
+        )
+        if joint_proposal is not None:
+            for index, action, marginal_weight, marginal_ndd, marginal_proposal in zip(
+                joint_proposal["indices"],
+                joint_proposal["action_pair"],
+                joint_proposal["per_agent_marginal_weight"],
+                joint_proposal["per_agent_ndd_probability"],
+                joint_proposal["per_agent_proposal_probability"],
+            ):
+                bv_action_idx_list[index] = int(action)
+                weight_list[index] = float(marginal_weight)
+                ndd_possi_list[index] = float(marginal_ndd)
+                IS_possi_list[index] = float(marginal_proposal)
+                whole_weight_list[index] = float(joint_proposal["importance_weight"])
+            self.control_log["joint_proposal_record"] = joint_proposal
                 
         vehicle_criticality_list = deepcopy(bv_criticality_list)
         raw_weight_list = list(weight_list)
@@ -243,6 +278,7 @@ class NADEBVGlobalController(NDDBVGlobalController):
                     for action_id in bv_action_idx_list
                 ],
                 "pair_criticality": self.control_log.get("joint_pair_criticality", []),
+                "joint_proposal": self.control_log.get("joint_proposal_record"),
             }
         if len(bv_criticality_list):
             max_vehicle_criticality = np.max(bv_criticality_list)
@@ -257,9 +293,10 @@ class NADEBVGlobalController(NDDBVGlobalController):
         """Add bounded BV-pair risk while preserving factorised NADE sampling."""
         enhanced_arrays = [np.asarray(values, dtype=float).copy() for values in criticality_array_list]
         pair_debug = []
+        self._joint_pair_details = {}
         for first_index, second_index in combinations(range(len(controlled_bvs_list)), 2):
             first_bv, second_bv = controlled_bvs_list[first_index], controlled_bvs_list[second_index]
-            first_array, second_array, debug = pairwise_joint_criticality_arrays(
+            first_array, second_array, debug, details = pairwise_joint_criticality_details(
                 full_obs,
                 first_bv.id,
                 second_bv.id,
@@ -269,9 +306,68 @@ class NADEBVGlobalController(NDDBVGlobalController):
             enhanced_arrays[first_index] += first_array
             enhanced_arrays[second_index] += second_array
             pair_debug.append(debug)
+            self._joint_pair_details[(first_index, second_index)] = {
+                "details": details,
+                "ids": [first_bv.id, second_bv.id],
+            }
         self.control_log["joint_pair_criticality"] = pair_debug
         enhanced_list = [float(np.sum(values)) for values in enhanced_arrays]
         return enhanced_list, enhanced_arrays
+
+    def _sample_selected_joint_pair(self, selected_bv_idx, epsilon_by_index):
+        """Sample an ordered BV action pair from a correlated IS proposal."""
+        if self.joint_control_num != 2 or len(selected_bv_idx) != 2:
+            return None
+        key = tuple(sorted(int(index) for index in selected_bv_idx))
+        pair = getattr(self, "_joint_pair_details", {}).get(key)
+        if pair is None:
+            return None
+        epsilon = float(np.mean([epsilon_by_index[index] for index in key]))
+        proposal = joint_pair_proposal(pair["details"], epsilon)
+        if proposal is None:
+            return None
+        sampled = sample_joint_action_pair(proposal)
+        first_action, second_action = sampled["action_pair"]
+        naturalistic = proposal["naturalistic_pdf"]
+        proposal_pdf = proposal["proposal_pdf"]
+        per_agent_ndd = [
+            float(np.sum(naturalistic[first_action, :])),
+            float(np.sum(naturalistic[:, second_action])),
+        ]
+        per_agent_proposal = [
+            float(np.sum(proposal_pdf[first_action, :])),
+            float(np.sum(proposal_pdf[:, second_action])),
+        ]
+        marginal_weights = [
+            natural / proposed
+            for natural, proposed in zip(per_agent_ndd, per_agent_proposal)
+        ]
+        return {
+            "proposal_type": "joint_pair",
+            "selected_bv_ids": pair["ids"],
+            "indices": list(key),
+            "action_pair": [first_action, second_action],
+            "epsilon": float(epsilon),
+            "critical_mass": float(sampled["critical_mass"]),
+            "naturalistic_probability": float(sampled["naturalistic_probability"]),
+            "proposal_probability": float(sampled["proposal_probability"]),
+            "importance_weight": float(sampled["importance_weight"]),
+            "per_agent_ndd_probability": per_agent_ndd,
+            "per_agent_proposal_probability": per_agent_proposal,
+            "per_agent_marginal_weight": marginal_weights,
+            "weight_record": {
+                "proposal_type": "joint_pair",
+                "joint": float(sampled["importance_weight"]),
+                "per_agent": marginal_weights,
+                "joint_naturalistic_probability": float(sampled["naturalistic_probability"]),
+                "joint_proposal_probability": float(sampled["proposal_probability"]),
+            },
+            "ndd_record": {
+                "proposal_type": "joint_pair",
+                "joint": float(sampled["naturalistic_probability"]),
+                "per_agent": per_agent_ndd,
+            },
+        }
 
     def _selected_epsilon_values(self, epsilon, selected_bv_idx):
         """Assign one epsilon to each selected BV in criticality rank order."""

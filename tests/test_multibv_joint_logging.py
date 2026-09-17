@@ -1,5 +1,6 @@
 from types import SimpleNamespace
 import unittest
+import numpy as np
 
 from controller.nadeglobalcontroller import NADEBVGlobalController
 
@@ -47,6 +48,32 @@ class MultiBVJointLoggingTests(unittest.TestCase):
         self.assertAlmostEqual(controller.control_log["weight_record"]["joint"], 0.06)
         self.assertAlmostEqual(controller.control_log["ndd_record"]["joint"], 0.0002)
         self.assertEqual(controller.drl_epsilon_value, [0.7, 0.7])
+
+    def test_joint_pair_sampler_keeps_a_single_correlated_weight(self):
+        controller = NADEBVGlobalController.__new__(NADEBVGlobalController)
+        controller.joint_control_num = 2
+        controller._joint_pair_details = {
+            (0, 1): {
+                "ids": ["BV_primary", "BV_context"],
+                "details": {
+                    "naturalistic_pdf": np.full((2, 2), 0.25),
+                    "challenge": np.asarray([[1.0, 0.0], [0.0, 0.0]]),
+                },
+            }
+        }
+
+        record = controller._sample_selected_joint_pair([0, 1], {0: 0.001, 1: 0.001})
+
+        self.assertIsNotNone(record)
+        self.assertEqual(record["proposal_type"], "joint_pair")
+        self.assertEqual(record["selected_bv_ids"], ["BV_primary", "BV_context"])
+        self.assertAlmostEqual(
+            record["importance_weight"],
+            record["naturalistic_probability"] / record["proposal_probability"],
+        )
+        self.assertAlmostEqual(
+            record["weight_record"]["joint"], record["importance_weight"]
+        )
 
 
 if __name__ == "__main__":

@@ -260,9 +260,18 @@ class D2RLTrainingEnv(core.Env):
 
 	@staticmethod
 	def _joint_epsilon_weight(weight_record, epsilon_record, ndd_record):
-		"""Multiply importance terms per controlled BV at one decision step."""
+		"""Return the correct IS term for factorised or correlated BV proposals."""
 		if not isinstance(weight_record, dict) or not isinstance(ndd_record, dict):
 			raise ValueError("MultiBV importance weighting requires joint step records")
+		if weight_record.get("proposal_type") == "joint_pair":
+			naturalistic = float(weight_record["joint_naturalistic_probability"])
+			proposal = float(weight_record["joint_proposal_probability"])
+			if naturalistic < 0 or proposal <= 0:
+				raise ValueError("Joint-pair proposal probabilities must be non-negative/positive")
+			result = naturalistic / proposal
+			if not np.isclose(result, float(weight_record["joint"])):
+				raise ValueError("Joint-pair weight must equal naturalistic/proposal")
+			return result
 		weights = weight_record.get("per_agent")
 		ndd_values = ndd_record.get("per_agent")
 		epsilons = np.asarray(epsilon_record, dtype=float).reshape(-1)
