@@ -1,5 +1,6 @@
 {
   "schema_version": 1,
+  "context_selection_mode": "all_time_aligned_contexts",
   "candidate_offsets_before_critical_s": [1.0, 1.5, 2.0, 2.5, 3.0],
   "same_lane_lateral_threshold_m": 1.6,
   "minimum_closing_speed_mps": 0.5,

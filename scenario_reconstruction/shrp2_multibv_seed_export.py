@@ -111,6 +111,36 @@ def _target_distance_at_anchor(rows, anchor_s):
     )
 
 
+def _context_anchor_time_delta(rows, anchor_s):
+    """Return the nearest usable context-observation offset from ``anchor_s``."""
+    finite = rows.replace([np.inf, -np.inf], np.nan).dropna(
+        subset=["time", "x_sur", "y_sur", "v_sur", "psi_sur"]
+    )
+    if finite.empty:
+        raise ValueError("missing_context_anchor")
+    index = (finite["time"] - float(anchor_s)).abs().idxmin()
+    return abs(float(finite.loc[index, "time"]) - float(anchor_s))
+
+
+def _time_aligned_context_target_ids(
+    grouped, primary_id, anchor_s, maximum_alignment_dt_s
+):
+    """List only context tracks that can support a measured anchor state."""
+    aligned = []
+    for target_id, rows in grouped:
+        target_id = int(target_id)
+        if target_id == int(primary_id):
+            continue
+        try:
+            if _context_anchor_time_delta(rows, anchor_s) <= float(
+                maximum_alignment_dt_s
+            ) + 1e-8:
+                aligned.append(target_id)
+        except ValueError:
+            continue
+    return aligned
+
+
 def _window_frame_index(window, requested_time_s):
     """Return an existing audited window frame at the requested relative time."""
     times = np.asarray(window["time_s"], dtype=float)
@@ -130,6 +160,10 @@ def validate_adaptive_selection_config(selection_config, history_s):
     """Validate the small, explicit policy used to choose an observed seed time."""
     if selection_config.get("schema_version") != 1:
         raise ValueError("Only adaptive critical-window schema_version 1 is supported")
+    if selection_config.get(
+        "context_selection_mode", "all_time_aligned_contexts"
+    ) != "all_time_aligned_contexts":
+        raise ValueError("Only context_selection_mode='all_time_aligned_contexts' is supported")
     offsets = selection_config.get("candidate_offsets_before_critical_s")
     if not isinstance(offsets, list) or not offsets:
         raise ValueError("candidate_offsets_before_critical_s must be a non-empty list")
@@ -233,34 +267,62 @@ def select_adaptive_multibv_seed(
     """Choose one observed pre-critical initialization per independent event."""
     validate_adaptive_selection_config(selection_config, config["history_s"])
     candidates, reasons = [], Counter()
+    primary_id = int(window["source"]["target_id"])
+    grouped = event_rows.groupby("target_id", sort=True)
+    anchor_s = float(metadata_row["impact_timestamp"]) / 1000.0
     # Prefer an earlier start only when physical scores are otherwise identical.
     for offset_s in sorted(
         (float(value) for value in selection_config["candidate_offsets_before_critical_s"]),
         reverse=True,
     ):
-        try:
-            seed = build_multibv_seed(
-                window, event_rows, metadata_row, config, bv_count=bv_count,
-                context_mode="anchor_only", initialization_offset_s=offset_s,
-            )
-        except ValueError as exc:
-            reasons[str(exc)] += 1
+        initialization_s = anchor_s - offset_s
+        aligned_context_ids = _time_aligned_context_target_ids(
+            grouped, primary_id, initialization_s,
+            config["maximum_target_alignment_dt_s"],
+        )
+        if not aligned_context_ids:
+            reasons["context_initialization_alignment_exceeds_limit"] += 1
             continue
-        metrics = _adaptive_candidate_metrics(seed, selection_config)
-        if not metrics["eligible"]:
-            reasons[metrics["reason"]] += 1
-            continue
-        candidates.append((metrics["score"], -offset_s, seed, metrics))
+        # Search every time-aligned vehicle, not merely the nearest vehicle
+        # whose observation might turn out to be stale at this timestamp.
+        for context_id in aligned_context_ids:
+            try:
+                seed = build_multibv_seed(
+                    window, event_rows, metadata_row, config, bv_count=bv_count,
+                    context_mode="anchor_only", initialization_offset_s=offset_s,
+                    context_target_ids=[context_id],
+                )
+            except ValueError as exc:
+                reasons[str(exc)] += 1
+                continue
+            metrics = _adaptive_candidate_metrics(seed, selection_config)
+            if not metrics["eligible"]:
+                reasons[metrics["reason"]] += 1
+                continue
+            candidates.append((
+                0 if metrics["context_blocking_potential"] else 1,
+                metrics["score"],
+                -offset_s,
+                context_id,
+                len(aligned_context_ids),
+                seed,
+                metrics,
+            ))
     if not candidates:
         detail = ",".join(sorted(reasons)) or "no_candidate"
         raise ValueError(f"adaptive_no_eligible_candidate:{detail}")
-    _, _, selected, metrics = min(candidates, key=lambda item: (item[0], item[1]))
+    _, _, _, selected_context_id, aligned_context_count, selected, metrics = min(
+        candidates, key=lambda item: item[:4]
+    )
     selected["condition"]["adaptive_critical_window"] = {
         "selection_schema_version": 1,
         "candidate_offsets_before_critical_s": selection_config[
             "candidate_offsets_before_critical_s"
         ],
         "selection_score": metrics.pop("score"),
+        "context_selection_mode": "all_time_aligned_contexts",
+        "selected_context_target_id": int(selected_context_id),
+        "time_aligned_context_target_count": int(aligned_context_count),
         **metrics,
     }
     return selected
@@ -274,6 +336,7 @@ def build_multibv_seed(
     bv_count=2,
     context_mode="full",
     initialization_offset_s=0.0,
+    context_target_ids=None,
 ):
     """Add nearest measured context BVs to one quality-passed pair window."""
     if bv_count < 2:
@@ -311,22 +374,40 @@ def build_multibv_seed(
     rotation = _rotation(-yaw)
 
     context_reference_s = initialization_s if context_mode == "anchor_only" else anchor_s
-    distances = []
     grouped = event_rows.groupby("target_id", sort=True)
-    for target_id, rows in grouped:
-        target_id = int(target_id)
-        if target_id == primary_id:
-            continue
-        try:
-            distances.append((_target_distance_at_anchor(rows, context_reference_s), target_id))
-        except ValueError:
-            continue
-    distances.sort(key=lambda item: (item[0], item[1]))
     selected = [(primary_id, "BV_primary")]
     context_needed = bv_count - 1
-    for _, target_id in distances[:context_needed]:
+    if context_target_ids is None:
+        distances, unaligned_count = [], 0
+        for target_id, rows in grouped:
+            target_id = int(target_id)
+            if target_id == primary_id:
+                continue
+            try:
+                if context_mode == "anchor_only" and _context_anchor_time_delta(
+                    rows, context_reference_s
+                ) > float(config["maximum_target_alignment_dt_s"]) + 1e-8:
+                    unaligned_count += 1
+                    continue
+                distances.append((
+                    _target_distance_at_anchor(rows, context_reference_s), target_id
+                ))
+            except ValueError:
+                continue
+        distances.sort(key=lambda item: (item[0], item[1]))
+        selected_ids = [target_id for _, target_id in distances[:context_needed]]
+    else:
+        selected_ids = [int(target_id) for target_id in context_target_ids]
+        if len(selected_ids) != context_needed or len(set(selected_ids)) != len(selected_ids):
+            raise ValueError("context_target_ids must contain one unique target per context BV")
+        if primary_id in selected_ids or any(target_id not in grouped.groups for target_id in selected_ids):
+            raise ValueError("context_target_ids contains an unavailable target")
+        unaligned_count = 0
+    for target_id in selected_ids:
         selected.append((target_id, f"BV_context_{len(selected)}"))
     if len(selected) != bv_count:
+        if context_mode == "anchor_only" and unaligned_count:
+            raise ValueError("context_initialization_alignment_exceeds_limit")
         raise ValueError("insufficient_context_targets")
 
     if context_mode == "full":
@@ -397,7 +478,11 @@ def build_multibv_seed(
     })
     source = dict(window["source"])
     source.update({
-        "target_role": "primary geometric target plus nearest measured context targets",
+        "target_role": (
+            "primary geometric target plus explicitly selected measured contexts"
+            if context_target_ids is not None
+            else "primary geometric target plus nearest time-aligned measured contexts"
+        ),
         "context_target_ids": [target_id for target_id, _ in selected[1:]],
         "observed_target_count": int(event_rows["target_id"].nunique()),
     })
@@ -475,6 +560,8 @@ def export_multibv_seeds(
         by_category[window["source"]["category"]].append(window)
     counts = Counter()
     selected_offsets = Counter()
+    selected_context_modes = Counter()
+    selected_blocking_contexts = Counter()
     exclusions = Counter()
     records = []
     for category, category_windows in sorted(by_category.items()):
@@ -515,6 +602,11 @@ def export_multibv_seeds(
                     selected_offsets[
                         str(seed["condition"]["initialization_offset_before_critical_s"])
                     ] += 1
+                    adaptive = seed["condition"].get("adaptive_critical_window", {})
+                    selected_context_modes[str(adaptive.get("context_selection_mode"))] += 1
+                    selected_blocking_contexts[str(bool(
+                        adaptive.get("context_blocking_potential", False)
+                    )).lower()] += 1
             except (KeyError, ValueError) as exc:
                 exclusions[str(exc)] += 1
         del metadata, data
@@ -529,6 +621,8 @@ def export_multibv_seeds(
         "initialization_offset_s": float(initialization_offset_s),
         "adaptive_selection": adaptive_selection_config,
         "adaptive_selected_by_offset_s": dict(selected_offsets),
+        "adaptive_selected_context_modes": dict(selected_context_modes),
+        "adaptive_selected_context_blocking_potential": dict(selected_blocking_contexts),
         "window_count": len(windows),
         "exported_count": len(records),
         "exported_by_split": dict(counts),
@@ -601,6 +695,8 @@ def main():
             "initialization_offset_s",
             "adaptive_selection",
             "adaptive_selected_by_offset_s",
+            "adaptive_selected_context_modes",
+            "adaptive_selected_context_blocking_potential",
         )
     }, ensure_ascii=False, indent=2))
 

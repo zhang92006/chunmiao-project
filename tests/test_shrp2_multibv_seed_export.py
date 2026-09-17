@@ -138,6 +138,23 @@ class MultiBVSeedExportTests(unittest.TestCase):
                 initialization_offset_s=2.0,
             )
 
+    def test_anchor_only_prefers_an_aligned_context_over_a_stale_nearer_one(self):
+        stale_nearer = self.rows[
+            (self.rows.target_id == 3) & (self.rows.time >= 3.8)
+        ].copy()
+        stale_nearer["x_sur"] = stale_nearer["time"] + 0.1
+        aligned_farther = self.rows[self.rows.target_id == 3].copy()
+        aligned_farther["target_id"] = 4
+        aligned_farther["x_sur"] = aligned_farther["time"] + 2.0
+        rows = pd.concat([
+            self.rows[self.rows.target_id == 2], stale_nearer, aligned_farther
+        ], ignore_index=True)
+        seed = build_multibv_seed(
+            self.pair, rows, self.meta, self.config, bv_count=2,
+            context_mode="anchor_only", initialization_offset_s=2.0,
+        )
+        self.assertEqual(seed["source"]["context_target_ids"], [4])
+
     def test_adaptive_metrics_require_a_closing_same_lane_primary(self):
         seed = {
             "condition": {"initial_state": [
@@ -187,6 +204,39 @@ class MultiBVSeedExportTests(unittest.TestCase):
         self.assertAlmostEqual(
             seed["condition"]["adaptive_critical_window"]["primary_ttc_s"], 3.0
         )
+
+    def test_adaptive_selection_searches_all_time_aligned_contexts(self):
+        policy = {
+            "schema_version": 1,
+            "candidate_offsets_before_critical_s": [2.0],
+            "same_lane_lateral_threshold_m": 1.6,
+            "minimum_closing_speed_mps": 0.5,
+            "minimum_ttc_s": 2.0,
+            "maximum_ttc_s": 5.0,
+            "target_ttc_s": 3.0,
+            "escape_blocking_longitudinal_distance_m": 5.0,
+        }
+        stale_nearer = self.rows[
+            (self.rows.target_id == 3) & (self.rows.time >= 3.8)
+        ].copy()
+        stale_nearer["x_sur"] = stale_nearer["time"] + 0.1
+        aligned_blocker = self.rows[self.rows.target_id == 3].copy()
+        aligned_blocker["target_id"] = 4
+        aligned_blocker["x_sur"] = aligned_blocker["time"] + 2.0
+        aligned_blocker["y_sur"] = 3.5
+        rows = pd.concat([
+            self.rows[self.rows.target_id == 2], stale_nearer, aligned_blocker
+        ], ignore_index=True)
+        window = deepcopy(self.pair)
+        window["states"][20][0] = [0.0, 0.0, 10.0, 0.0]
+        window["states"][20][1] = [30.0, 0.0, 0.0, 0.0]
+        seed = select_adaptive_multibv_seed(
+            window, rows, self.meta, self.config, policy, bv_count=2
+        )
+        self.assertEqual(seed["source"]["context_target_ids"], [4])
+        adaptive = seed["condition"]["adaptive_critical_window"]
+        self.assertEqual(adaptive["context_selection_mode"], "all_time_aligned_contexts")
+        self.assertEqual(adaptive["selected_context_target_id"], 4)
 
 
 if __name__ == "__main__":
