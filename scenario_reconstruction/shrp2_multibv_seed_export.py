@@ -126,6 +126,146 @@ def _window_frame_index(window, requested_time_s):
     return index
 
 
+def validate_adaptive_selection_config(selection_config, history_s):
+    """Validate the small, explicit policy used to choose an observed seed time."""
+    if selection_config.get("schema_version") != 1:
+        raise ValueError("Only adaptive critical-window schema_version 1 is supported")
+    offsets = selection_config.get("candidate_offsets_before_critical_s")
+    if not isinstance(offsets, list) or not offsets:
+        raise ValueError("candidate_offsets_before_critical_s must be a non-empty list")
+    parsed_offsets = [float(value) for value in offsets]
+    if (not np.isfinite(parsed_offsets).all() or any(
+        value < 0.0 or value > float(history_s) for value in parsed_offsets
+    )):
+        raise ValueError("candidate offsets must lie in [0, history_s]")
+    if len(set(parsed_offsets)) != len(parsed_offsets):
+        raise ValueError("candidate offsets must be unique")
+    for key in (
+        "same_lane_lateral_threshold_m",
+        "minimum_closing_speed_mps",
+        "minimum_ttc_s",
+        "maximum_ttc_s",
+        "target_ttc_s",
+        "escape_blocking_longitudinal_distance_m",
+    ):
+        value = selection_config.get(key)
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or value <= 0:
+            raise ValueError(f"{key} must be positive")
+    if selection_config["minimum_ttc_s"] >= selection_config["maximum_ttc_s"]:
+        raise ValueError("minimum_ttc_s must be smaller than maximum_ttc_s")
+    if not (
+        selection_config["minimum_ttc_s"]
+        <= selection_config["target_ttc_s"]
+        <= selection_config["maximum_ttc_s"]
+    ):
+        raise ValueError("target_ttc_s must lie within the TTC interval")
+
+
+def _adaptive_candidate_metrics(seed, selection_config):
+    """Measure a source-state candidate without claiming a counterfactual crash.
+
+    The primary BV must be in front of and closing on the CAV in its mapped
+    source lane.  The adjacent BV is deliberately a ranking feature rather
+    than a hard requirement: demanding a perfectly blocking vehicle at every
+    timestamp would discard most independent SHRP2 events before SUMO can test
+    their actual interaction.
+    """
+    cav, primary, context = np.asarray(seed["condition"]["initial_state"], dtype=float)[:3]
+    lane_threshold = float(selection_config["same_lane_lateral_threshold_m"])
+    gap_m = float(primary[0] - cav[0])
+    closing_speed_mps = float(cav[2] - primary[2])
+    primary_lateral_offset_m = float(primary[1] - cav[1])
+    context_lateral_offset_m = float(context[1] - cav[1])
+    same_lane = abs(primary_lateral_offset_m) <= lane_threshold
+    context_adjacent_lane = abs(context_lateral_offset_m) > lane_threshold
+    context_longitudinal_distance_m = abs(float(context[0] - cav[0]))
+    context_blocking_potential = bool(
+        context_adjacent_lane
+        and context_longitudinal_distance_m
+        <= float(selection_config["escape_blocking_longitudinal_distance_m"])
+    )
+    ttc_s = math.inf
+    if gap_m > 0.0 and closing_speed_mps > 0.0:
+        ttc_s = gap_m / closing_speed_mps
+
+    eligible = bool(
+        same_lane
+        and gap_m > 0.0
+        and closing_speed_mps >= float(selection_config["minimum_closing_speed_mps"])
+        and float(selection_config["minimum_ttc_s"]) <= ttc_s <= float(selection_config["maximum_ttc_s"])
+    )
+    if not same_lane:
+        reason = "primary_not_same_lane"
+    elif gap_m <= 0.0:
+        reason = "primary_not_ahead"
+    elif closing_speed_mps < float(selection_config["minimum_closing_speed_mps"]):
+        reason = "primary_not_closing"
+    elif ttc_s < float(selection_config["minimum_ttc_s"]):
+        reason = "primary_ttc_too_short"
+    elif ttc_s > float(selection_config["maximum_ttc_s"]):
+        reason = "primary_ttc_too_long"
+    else:
+        reason = "eligible"
+
+    # Lower is better.  A potentially blocking adjacent vehicle improves the
+    # rank but never fabricates one or rejects a valid primary conflict.
+    score = abs(ttc_s - float(selection_config["target_ttc_s"])) if eligible else math.inf
+    if eligible and not context_blocking_potential:
+        score += float(selection_config.get("nonblocking_context_penalty", 0.25))
+    return {
+        "eligible": eligible,
+        "reason": reason,
+        "score": float(score),
+        "primary_gap_m": gap_m,
+        "primary_closing_speed_mps": closing_speed_mps,
+        "primary_ttc_s": None if not math.isfinite(ttc_s) else float(ttc_s),
+        "primary_lateral_offset_m": primary_lateral_offset_m,
+        "context_lateral_offset_m": context_lateral_offset_m,
+        "context_longitudinal_distance_m": context_longitudinal_distance_m,
+        "context_adjacent_lane": context_adjacent_lane,
+        "context_blocking_potential": context_blocking_potential,
+    }
+
+
+def select_adaptive_multibv_seed(
+    window, event_rows, metadata_row, config, selection_config, bv_count=2
+):
+    """Choose one observed pre-critical initialization per independent event."""
+    validate_adaptive_selection_config(selection_config, config["history_s"])
+    candidates, reasons = [], Counter()
+    # Prefer an earlier start only when physical scores are otherwise identical.
+    for offset_s in sorted(
+        (float(value) for value in selection_config["candidate_offsets_before_critical_s"]),
+        reverse=True,
+    ):
+        try:
+            seed = build_multibv_seed(
+                window, event_rows, metadata_row, config, bv_count=bv_count,
+                context_mode="anchor_only", initialization_offset_s=offset_s,
+            )
+        except ValueError as exc:
+            reasons[str(exc)] += 1
+            continue
+        metrics = _adaptive_candidate_metrics(seed, selection_config)
+        if not metrics["eligible"]:
+            reasons[metrics["reason"]] += 1
+            continue
+        candidates.append((metrics["score"], -offset_s, seed, metrics))
+    if not candidates:
+        detail = ",".join(sorted(reasons)) or "no_candidate"
+        raise ValueError(f"adaptive_no_eligible_candidate:{detail}")
+    _, _, selected, metrics = min(candidates, key=lambda item: (item[0], item[1]))
+    selected["condition"]["adaptive_critical_window"] = {
+        "selection_schema_version": 1,
+        "candidate_offsets_before_critical_s": selection_config[
+            "candidate_offsets_before_critical_s"
+        ],
+        "selection_score": metrics.pop("score"),
+        **metrics,
+    }
+    return selected
+
+
 def build_multibv_seed(
     window,
     event_rows,
@@ -312,9 +452,18 @@ def export_multibv_seeds(
     bv_count=2,
     context_mode="full",
     initialization_offset_s=0.0,
+    adaptive_selection_config=None,
 ):
     """Export context-augmented seeds, loading one SHRP2 category at a time."""
     validate_config(config)
+    if adaptive_selection_config is not None:
+        if context_mode != "anchor_only":
+            raise ValueError("adaptive selection requires context_mode='anchor_only'")
+        if float(initialization_offset_s) != 0.0:
+            raise ValueError(
+                "adaptive selection chooses its own offset; omit initialization_offset_s"
+            )
+        validate_adaptive_selection_config(adaptive_selection_config, config["history_s"])
     output = Path(output)
     if output.exists() and any(output.iterdir()):
         raise FileExistsError("Use a new or empty multi-BV seed output directory")
@@ -325,6 +474,7 @@ def export_multibv_seeds(
     for window in windows:
         by_category[window["source"]["category"]].append(window)
     counts = Counter()
+    selected_offsets = Counter()
     exclusions = Counter()
     records = []
     for category, category_windows in sorted(by_category.items()):
@@ -335,11 +485,17 @@ def export_multibv_seeds(
             try:
                 rows = data[data["event_id"] == event_id]
                 meta = metadata_by_id.loc[event_id]
-                seed = build_multibv_seed(
-                    window, rows, meta, config, bv_count=bv_count,
-                    context_mode=context_mode,
-                    initialization_offset_s=initialization_offset_s,
-                )
+                if adaptive_selection_config is None:
+                    seed = build_multibv_seed(
+                        window, rows, meta, config, bv_count=bv_count,
+                        context_mode=context_mode,
+                        initialization_offset_s=initialization_offset_s,
+                    )
+                else:
+                    seed = select_adaptive_multibv_seed(
+                        window, rows, meta, config, adaptive_selection_config,
+                        bv_count=bv_count,
+                    )
                 split = window["source"]["split"]
                 destination = output / split / "seeds.jsonl"
                 destination.parent.mkdir(parents=True, exist_ok=True)
@@ -350,8 +506,15 @@ def export_multibv_seeds(
                     "category": category,
                     "split": split,
                     "context_target_ids": seed["source"]["context_target_ids"],
+                    "initialization_offset_before_critical_s": seed["condition"][
+                        "initialization_offset_before_critical_s"
+                    ],
                 })
                 counts[split] += 1
+                if adaptive_selection_config is not None:
+                    selected_offsets[
+                        str(seed["condition"]["initialization_offset_before_critical_s"])
+                    ] += 1
             except (KeyError, ValueError) as exc:
                 exclusions[str(exc)] += 1
         del metadata, data
@@ -364,6 +527,8 @@ def export_multibv_seeds(
         "bv_count": bv_count,
         "context_mode": context_mode,
         "initialization_offset_s": float(initialization_offset_s),
+        "adaptive_selection": adaptive_selection_config,
+        "adaptive_selected_by_offset_s": dict(selected_offsets),
         "window_count": len(windows),
         "exported_count": len(records),
         "exported_by_split": dict(counts),
@@ -398,6 +563,13 @@ def main():
         help="Use full 4-second context history or one aligned anchor state per actor.",
     )
     parser.add_argument(
+        "--adaptive_selection_config",
+        help=(
+            "JSON policy for selecting one observed 1--3 s pre-critical "
+            "anchor per event. Requires --context_mode anchor_only."
+        ),
+    )
+    parser.add_argument(
         "--initialization_offset_s",
         type=float,
         default=0.0,
@@ -408,10 +580,16 @@ def main():
     )
     args = parser.parse_args()
     config = json.loads(Path(args.config).read_text(encoding="utf-8"))
+    adaptive_selection_config = None
+    if args.adaptive_selection_config:
+        adaptive_selection_config = json.loads(
+            Path(args.adaptive_selection_config).read_text(encoding="utf-8")
+        )
     result = export_multibv_seeds(
         args.source_root, args.audit_root, args.output, config,
         bv_count=args.bv_count, context_mode=args.context_mode,
         initialization_offset_s=args.initialization_offset_s,
+        adaptive_selection_config=adaptive_selection_config,
     )
     print(json.dumps({
         key: result[key]
@@ -421,6 +599,8 @@ def main():
             "exported_by_split",
             "excluded_count",
             "initialization_offset_s",
+            "adaptive_selection",
+            "adaptive_selected_by_offset_s",
         )
     }, ensure_ascii=False, indent=2))
 

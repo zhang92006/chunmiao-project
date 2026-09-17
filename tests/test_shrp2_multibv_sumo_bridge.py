@@ -36,6 +36,7 @@ class MultiBVSumoBridgeTests(unittest.TestCase):
         self.seed["condition"] = {
             "critical_time_s": 4.0,
             "initialization_offset_before_critical_s": 2.0,
+            "adaptive_critical_window": {"primary_ttc_s": 3.0},
         }
         template = multibv_template_from_seed(self.seed, self.config)
         ScenarioTemplate.from_dict(template)
@@ -50,6 +51,10 @@ class MultiBVSumoBridgeTests(unittest.TestCase):
                 "source_initialization_offset_before_critical_s"
             ],
             2.0,
+        )
+        self.assertEqual(
+            template["bridge_metadata"]["source_adaptive_critical_window"],
+            {"primary_ttc_s": 3.0},
         )
 
     def test_blocks_unsupported_topology(self):

@@ -1,12 +1,17 @@
 import json
 from pathlib import Path
 import unittest
+from copy import deepcopy
 
 import numpy as np
 import pandas as pd
 
 from scenario_reconstruction.shrp2_diffusion_data_audit import build_pair_window
-from scenario_reconstruction.shrp2_multibv_seed_export import build_multibv_seed
+from scenario_reconstruction.shrp2_multibv_seed_export import (
+    _adaptive_candidate_metrics,
+    build_multibv_seed,
+    select_adaptive_multibv_seed,
+)
 
 
 class MultiBVSeedExportTests(unittest.TestCase):
@@ -132,6 +137,56 @@ class MultiBVSeedExportTests(unittest.TestCase):
                 context_mode="anchor_only",
                 initialization_offset_s=2.0,
             )
+
+    def test_adaptive_metrics_require_a_closing_same_lane_primary(self):
+        seed = {
+            "condition": {"initial_state": [
+                [0.0, 0.0, 10.0, 0.0],
+                [30.0, 0.2, 0.0, 0.0],
+                [2.0, 3.5, 8.0, 0.0],
+            ]}
+        }
+        policy = {
+            "schema_version": 1,
+            "candidate_offsets_before_critical_s": [1.0, 2.0, 3.0],
+            "same_lane_lateral_threshold_m": 1.6,
+            "minimum_closing_speed_mps": 0.5,
+            "minimum_ttc_s": 2.0,
+            "maximum_ttc_s": 5.0,
+            "target_ttc_s": 3.0,
+            "escape_blocking_longitudinal_distance_m": 5.0,
+        }
+        metrics = _adaptive_candidate_metrics(seed, policy)
+        self.assertTrue(metrics["eligible"])
+        self.assertTrue(metrics["context_blocking_potential"])
+        self.assertAlmostEqual(metrics["primary_ttc_s"], 3.0)
+
+    def test_adaptive_selection_chooses_best_ttc_and_records_provenance(self):
+        policy = {
+            "schema_version": 1,
+            "candidate_offsets_before_critical_s": [1.0, 2.0, 3.0],
+            "same_lane_lateral_threshold_m": 1.6,
+            "minimum_closing_speed_mps": 0.5,
+            "minimum_ttc_s": 2.0,
+            "maximum_ttc_s": 5.0,
+            "target_ttc_s": 3.0,
+            "escape_blocking_longitudinal_distance_m": 5.0,
+        }
+        window = deepcopy(self.pair)
+        # Candidate offset 2 s has TTC=3 s; the 1 s candidate is too late and
+        # the 3 s candidate has TTC=5 s, so the selector must pick 2 s.
+        for frame, gap in ((10, 10.0), (20, 30.0), (30, 50.0)):
+            window["states"][frame][0] = [0.0, 0.0, 10.0, 0.0]
+            window["states"][frame][1] = [gap, 0.0, 0.0, 0.0]
+        seed = select_adaptive_multibv_seed(
+            window, self.rows, self.meta, self.config, policy, bv_count=2
+        )
+        self.assertEqual(
+            seed["condition"]["initialization_offset_before_critical_s"], 2.0
+        )
+        self.assertAlmostEqual(
+            seed["condition"]["adaptive_critical_window"]["primary_ttc_s"], 3.0
+        )
 
 
 if __name__ == "__main__":
