@@ -50,10 +50,18 @@ $python = 'D:\Anaconda3\envs\D2RL\python.exe'
 
 ```powershell
 conda create -n D2RLTrain39 python=3.9 pip -y
+conda run -n D2RLTrain39 python -m pip install --force-reinstall `
+  "pip==23.2.1" "setuptools==65.5.0" "wheel==0.38.4"
+conda run -n D2RLTrain39 python -m pip install --no-build-isolation `
+  "gym==0.21.0"
 conda run -n D2RLTrain39 python -m pip install `
-  "PyYAML==6.0.1" "gym==0.21.0" "ray[rllib]==1.11.0" `
+  "PyYAML==6.0.1" "ray[rllib]==1.11.0" `
   "torch==1.11.0" "numpy==1.23.1"
 ```
+
+必须按以上三条安装命令的顺序执行。`gym==0.21.0` 的旧安装元数据与新版本
+`pip/setuptools/wheel` 不兼容；`--no-build-isolation` 保证它使用刚刚固定的构建
+工具，而不是在临时构建环境中重新安装最新版。
 
 安装完成后，运行两次 iteration 的 PPO 冒烟：
 
