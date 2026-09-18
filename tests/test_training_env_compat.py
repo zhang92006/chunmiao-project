@@ -118,6 +118,24 @@ class MultiBVCompatibilityTests(unittest.TestCase):
             )
         )
 
+    def test_log_weight_sidecar_preserves_relative_sampling_weights(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            first = (root / "first.json").as_posix()
+            second = (root / "second.json").as_posix()
+            sidecar = root / "crash_log_weight_dict.json"
+            sidecar.write_text(json.dumps({
+                "schema_version": 1,
+                "log_weights": {first: -1000.0, second: -1001.0},
+            }), encoding="utf-8")
+
+            weights = D2RLTrainingEnv._stable_sampling_weights(
+                [first, second], sidecar
+            )
+
+        self.assertAlmostEqual(weights[0], 1.0)
+        self.assertAlmostEqual(weights[1], np.exp(-1.0))
+
     def test_scenario_duration_boundary_is_inclusive(self):
         self.assertFalse(_duration_reached(5.99, 6.0))
         self.assertTrue(_duration_reached(6.0, 6.0))

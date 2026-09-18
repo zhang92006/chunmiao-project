@@ -1,0 +1,13 @@
+# Interface-only K=2 PPO smoke run. It is deliberately separate from the
+# legacy single-BV configuration and must not be reported as a final model.
+experiment_name: "SHRP2_MultiBV_K2_Factorized_Smoke"
+root_folder: "./data_analysis/raw_data/"
+data_folders: ["shrp2_multibv_ablation_factorized_train3_x50_epsilon0001"]
+data_folder_weights: [1]
+local_dir: "./ray_results/"
+num_workers: 1
+clip_reward_threshold: 100
+multi_bv_training: true
+multi_bv_num: 2
+training_iterations: 2
+seed: 7

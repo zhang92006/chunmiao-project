@@ -22,6 +22,11 @@ def prepare_crash_weight_dict(
         raise FileNotFoundError(f"Crash directory not found: {crash_dir}")
 
     crash_weight_dict: dict[str, list[float]] = {}
+    # Keep the legacy raw-weight index for existing consumers, but write a
+    # separate log-domain index for samplers. A long K-BV rollout can have a
+    # valid importance weight below floating-point resolution; using that raw
+    # value directly as random.choices weights makes sampling collapse.
+    crash_log_weight_dict: dict[str, float] = {}
     for crash_json_path in sorted(crash_dir.glob("*.json")):
         with crash_json_path.open("r", encoding="utf-8") as stream:
             episode = json.load(stream)
@@ -35,12 +40,35 @@ def prepare_crash_weight_dict(
         ):
             normalized_path = crash_json_path.as_posix()
             crash_weight_dict[normalized_path] = [weight_episode, weight_episode]
+            crash_log_weight_dict[normalized_path] = _episode_log_weight(episode)
 
     output_path = experiment_dir / "crash_weight_dict.json"
     with output_path.open("w", encoding="utf-8") as stream:
         json.dump(crash_weight_dict, stream, indent=4)
+    log_output_path = experiment_dir / "crash_log_weight_dict.json"
+    with log_output_path.open("w", encoding="utf-8") as stream:
+        json.dump(
+            {
+                "schema_version": 1,
+                "sampling_weight": "exp(log_importance_weight - max_log_weight)",
+                "log_weights": crash_log_weight_dict,
+            },
+            stream,
+            indent=4,
+        )
     write_importance_weight_diagnostics(experiment_dir, crash_weight_dict)
     return crash_weight_dict
+
+
+def _episode_log_weight(episode: dict) -> float:
+    """Return a finite episode log-weight, including legacy episode files."""
+    log_weight = episode.get("log_importance_weight")
+    if log_weight is not None and isfinite(float(log_weight)):
+        return float(log_weight)
+    raw_weight = float(episode.get("weight_episode", 0.0))
+    if not isfinite(raw_weight) or raw_weight <= 0.0:
+        raise ValueError("Training-ready crash episode has no finite importance weight")
+    return log(raw_weight)
 
 
 def write_importance_weight_diagnostics(
@@ -254,6 +282,7 @@ def main() -> None:
     )
     print(f"Prepared {len(crash_weight_dict)} crash episodes.")
     print(f"Wrote {Path(args.experiment_path) / 'crash_weight_dict.json'}")
+    print(f"Wrote {Path(args.experiment_path) / 'crash_log_weight_dict.json'}")
     if args.include_safe_weight_dict:
         safe_weight_dict = prepare_safe_weight_dict(
             args.experiment_path,

@@ -66,6 +66,12 @@ class D2RLTrainingEnv(core.Env):
 				self.crash_weight_dict = crash_weight_dict
 				crash_data_path_list = list(crash_weight_dict.keys())
 				crash_data_weight_list = [crash_weight_dict[path][0] for path in crash_data_path_list]
+				log_weight_path = os.path.join(data_folder, "crash_log_weight_dict.json")
+				if os.path.exists(log_weight_path):
+					crash_data_weight_list = self._stable_sampling_weights(
+						crash_data_path_list,
+						log_weight_path,
+					)
 		else:
 			raise ValueError("No weight information!")
 		tested_but_safe_path = os.path.join(data_folder, "tested_and_safe")
@@ -79,6 +85,25 @@ class D2RLTrainingEnv(core.Env):
 			safe_data_path_list = []
 		logging.info(f'{len(crash_data_path_list)} Crash Events, {len(safe_data_path_list)} Safe Events')
 		return crash_data_path_list, safe_data_path_list, crash_data_weight_list, crash_target_weight_list
+
+	@staticmethod
+	def _stable_sampling_weights(crash_paths, log_weight_path):
+		"""Normalize finite log weights without changing their relative ratios.
+
+		The scale is intentionally removed because ``random.choices`` only needs
+		relative non-negative weights. It lets the training sampler consume valid
+		rare-event episodes whose raw ``p/q`` underflowed to zero.
+		"""
+		with open(log_weight_path) as data_file:
+			payload = json.load(data_file)
+		log_weights = payload.get("log_weights", payload)
+		values = np.asarray([float(log_weights[path]) for path in crash_paths], dtype=float)
+		if not np.isfinite(values).all():
+			raise ValueError("crash_log_weight_dict.json contains a non-finite log weight")
+		stable = np.exp(values - np.max(values))
+		if not np.isfinite(stable).all() or not np.any(stable > 0):
+			raise ValueError("Could not derive positive stable crash sampling weights")
+		return stable.tolist()
 	
 	def reset(self, episode_data_path=None):
 		self.constant, self.weight_reward, self.exposure, self.positive_weight_reward=0,0,0,0
