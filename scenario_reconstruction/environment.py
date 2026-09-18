@@ -13,16 +13,30 @@ from .fault_aware_vehicle import FaultAwareVehicle
 from .templates import EventSpec, ScenarioTemplate, VehicleSpec, load_template
 
 
+VALID_MULTIBV_PROPOSAL_MODES = {"naturalistic", "factorized", "joint_pair"}
+
+
 class ScenarioNADE(NADE):
     """NADE environment initialized from a scenario reconstruction template."""
 
-    def __init__(self, template: ScenarioTemplate | str | Path):
+    def __init__(
+        self,
+        template: ScenarioTemplate | str | Path,
+        multibv_proposal_mode: str = "joint_pair",
+    ):
         self.scenario_template = (
             load_template(template)
             if isinstance(template, (str, Path))
             else template
         )
         self._logged_training_events: set[str] = set()
+        if multibv_proposal_mode not in VALID_MULTIBV_PROPOSAL_MODES:
+            valid = ", ".join(sorted(VALID_MULTIBV_PROPOSAL_MODES))
+            raise ValueError(
+                f"Unsupported multibv_proposal_mode={multibv_proposal_mode!r}; "
+                f"expected one of {valid}"
+            )
+        self.multibv_proposal_mode = multibv_proposal_mode
         self.multi_bv_control_num = (
             2 if "multibv" in self.scenario_template.tags else 1
         )
@@ -31,6 +45,24 @@ class ScenarioNADE(NADE):
             BVController=TreeSearchNADEBackgroundController,
             cav_model="FaultAwareIDM" if self.cav_fault_model.enabled else "IDM",
         )
+        self._record_scenario_metadata()
+
+    def _record_scenario_metadata(self) -> None:
+        """Keep the SHRP2 source identity through rollout and training export."""
+        bridge = self.scenario_template.bridge_metadata
+        source_keys = (
+            "source_event_id",
+            "source_category",
+            "source_split",
+            "source_conflict",
+            "source_record_type",
+        )
+        self.info_extractor.episode_log["scenario_metadata"] = {
+            "template_id": self.scenario_template.template_id,
+            "tags": list(self.scenario_template.tags),
+            "multibv_proposal_mode": self.multibv_proposal_mode,
+            **{key: bridge[key] for key in source_keys if key in bridge},
+        }
 
     def generate_traffic_flow(self, init_info=None):
         """Insert the CAV and key BVs from the template instead of NDD flow."""

@@ -56,6 +56,7 @@ class ScenarioTemplate:
     events: list[EventSpec]
     perturbations: list[PerturbationSpec]
     tags: list[str] = field(default_factory=list)
+    bridge_metadata: dict[str, Any] = field(default_factory=dict)
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "ScenarioTemplate":
@@ -90,6 +91,7 @@ class ScenarioTemplate:
                 for item in data.get("perturbations", [])
             ],
             tags=[str(tag) for tag in data.get("tags", [])],
+            bridge_metadata=dict(data.get("bridge_metadata", {})),
         )
         template.validate()
         return template

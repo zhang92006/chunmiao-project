@@ -39,7 +39,7 @@ class MultiBVSumoBridgeTests(unittest.TestCase):
             "adaptive_critical_window": {"primary_ttc_s": 3.0},
         }
         template = multibv_template_from_seed(self.seed, self.config)
-        ScenarioTemplate.from_dict(template)
+        loaded = ScenarioTemplate.from_dict(template)
         self.assertEqual(len(template["actors"]), 2)
         self.assertEqual(template["actors"][0]["lane_index"], 1)
         self.assertEqual(template["actors"][1]["lane_index"], 0)
@@ -56,6 +56,7 @@ class MultiBVSumoBridgeTests(unittest.TestCase):
             template["bridge_metadata"]["source_adaptive_critical_window"],
             {"primary_ttc_s": 3.0},
         )
+        self.assertEqual(loaded.bridge_metadata["source_event_id"], 1)
 
     def test_blocks_unsupported_topology(self):
         seed = json.loads(json.dumps(self.seed))

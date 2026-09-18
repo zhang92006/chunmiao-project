@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import argparse
 import json
+from math import isfinite, log
 from pathlib import Path
+
+from .importance import stable_weight_diagnostics
 
 
 def prepare_crash_weight_dict(
@@ -36,7 +39,66 @@ def prepare_crash_weight_dict(
     output_path = experiment_dir / "crash_weight_dict.json"
     with output_path.open("w", encoding="utf-8") as stream:
         json.dump(crash_weight_dict, stream, indent=4)
+    write_importance_weight_diagnostics(experiment_dir, crash_weight_dict)
     return crash_weight_dict
+
+
+def write_importance_weight_diagnostics(
+    experiment_dir: Path,
+    crash_weight_dict: dict[str, list[float]],
+) -> dict:
+    """Write stable ESS diagnostics for the exact crash pool passed to training."""
+    records = []
+    by_source: dict[str, list[dict]] = {}
+    missing_log_weight_count = 0
+    for raw_path in crash_weight_dict:
+        path = Path(raw_path)
+        with path.open("r", encoding="utf-8") as stream:
+            episode = json.load(stream)
+        log_weight = episode.get("log_importance_weight")
+        if log_weight is None:
+            raw_weight = float(episode.get("weight_episode", 0.0))
+            if not isfinite(raw_weight) or raw_weight <= 0.0:
+                missing_log_weight_count += 1
+                continue
+            log_weight = log(raw_weight)
+            missing_log_weight_count += 1
+        record = {
+            "episode_path": path.as_posix(),
+            "log_importance_weight": float(log_weight),
+            "proposal_modes": list(episode.get("proposal_modes", [])),
+        }
+        records.append(record)
+        source = str(episode.get("scenario_metadata", {}).get("source_event_id", "unknown"))
+        by_source.setdefault(source, []).append(record)
+
+    result = {
+        "schema_version": 1,
+        "pool": "training_ready_crashes",
+        "missing_log_weight_count": missing_log_weight_count,
+        "overall": stable_weight_diagnostics(records),
+        "by_source_event": {
+            source: stable_weight_diagnostics(source_records)
+            for source, source_records in sorted(by_source.items())
+        },
+        "proposal_mode_counts": _proposal_mode_counts(records),
+    }
+    output_path = experiment_dir / "importance_weight_diagnostics.json"
+    with output_path.open("w", encoding="utf-8") as stream:
+        json.dump(result, stream, indent=4)
+    return result
+
+
+def _proposal_mode_counts(records: list[dict]) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for record in records:
+        modes = record.get("proposal_modes", [])
+        if not modes:
+            counts["unknown"] = counts.get("unknown", 0) + 1
+            continue
+        for mode in modes:
+            counts[str(mode)] = counts.get(str(mode), 0) + 1
+    return counts
 
 
 def prepare_safe_weight_dict(

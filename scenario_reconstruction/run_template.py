@@ -15,8 +15,14 @@ def run_template(
     gui: bool = False,
     gui_delay: int = 100,
     epsilon: float = 0.99,
+    proposal_mode: str = "joint_pair",
 ) -> float:
-    if not 0.0 < epsilon < 1.0:
+    valid_modes = {"naturalistic", "factorized", "joint_pair"}
+    if proposal_mode not in valid_modes:
+        raise ValueError(f"proposal_mode must be one of {sorted(valid_modes)}")
+    if proposal_mode == "naturalistic":
+        epsilon = 1.0
+    elif not 0.0 < epsilon < 1.0:
         raise ValueError("epsilon must lie strictly between zero and one")
     conf.experiment_config["mode"] = "behavior_policy"
     conf.simulation_config["epsilon_setting"] = "fixed"
@@ -30,7 +36,7 @@ def run_template(
 
     from .environment import ScenarioNADE
 
-    env = ScenarioNADE(template_path)
+    env = ScenarioNADE(template_path, multibv_proposal_mode=proposal_mode)
     sim = Simulator(
         sumo_net_file_path="./maps/2LaneHighway/2LaneHighway.net.xml",
         sumo_config_file_path="./maps/2LaneHighway/2LaneHighwayHighSpeed.sumocfg",
@@ -103,6 +109,12 @@ def main() -> None:
         help="SUMO GUI delay in milliseconds per simulation step.",
     )
     parser.add_argument(
+        "--proposal_mode",
+        choices=("naturalistic", "factorized", "joint_pair"),
+        default="joint_pair",
+        help="Multi-BV action proposal family; naturalistic sets epsilon to 1 exactly.",
+    )
+    parser.add_argument(
         "--epsilon",
         type=float,
         default=0.99,
@@ -117,6 +129,7 @@ def main() -> None:
         gui=args.gui,
         gui_delay=args.gui_delay,
         epsilon=args.epsilon,
+        proposal_mode=args.proposal_mode,
     )
     print(f"Scenario finished. weight_result={weight}")
 

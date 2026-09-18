@@ -18,8 +18,10 @@ def run_template_manifest(
     limit: int | None = None,
     repeats: int = 1,
     epsilon: float = 0.99,
+    proposal_mode: str = "joint_pair",
     max_initial_primary_ttc_s: float | None = None,
     require_context_blocking: bool = False,
+    source_event_ids: set[int] | None = None,
 ) -> dict:
     manifest_path = Path(manifest_path)
     experiment_path = Path(experiment_path)
@@ -42,6 +44,13 @@ def run_template_manifest(
         normalized_record["path"] = template_path
         records.append(normalized_record)
     records_after_split = len(records)
+    if source_event_ids is not None:
+        records = [
+            record
+            for record in records
+            if _source_event_id(record["path"]) in source_event_ids
+        ]
+    records_after_source_event_filter = len(records)
     if require_context_blocking:
         records = [
             record for record in records
@@ -89,6 +98,7 @@ def run_template_manifest(
                 experiment_path=str(experiment_path),
                 gui=gui_episode is not None,
                 epsilon=epsilon,
+                proposal_mode=proposal_mode,
             )
             results.append(
                 {
@@ -112,6 +122,7 @@ def run_template_manifest(
 
     crash_weight_dict = {}
     safe_weight_dict = {}
+    importance_weight_diagnostics = None
     if gui_episode is None:
         crash_weight_dict = prepare_crash_weight_dict(
             experiment_path,
@@ -124,21 +135,30 @@ def run_template_manifest(
             multi_bv=True,
             agent_num=2,
         )
+        diagnostics_path = experiment_path / "importance_weight_diagnostics.json"
+        if diagnostics_path.is_file():
+            with diagnostics_path.open("r", encoding="utf-8") as stream:
+                importance_weight_diagnostics = json.load(stream)
     joint_stats = _joint_rollout_stats(experiment_path)
     summary = {
         "manifest": str(manifest_path),
         "experiment_path": str(experiment_path),
         "records_after_split": records_after_split,
+        "source_event_ids": sorted(source_event_ids) if source_event_ids is not None else None,
+        "records_after_source_event_filter": records_after_source_event_filter,
         "records_after_context_blocking_filter": records_after_context_blocking_filter,
         "require_context_blocking": require_context_blocking,
         "records_after_initial_primary_ttc_filter": len(records),
         "max_initial_primary_ttc_s": max_initial_primary_ttc_s,
         "attempted": len(results),
         "repeats": repeats,
+        "proposal_mode": proposal_mode,
+        "epsilon": 1.0 if proposal_mode == "naturalistic" else epsilon,
         "successful_runs": sum(1 for item in results if item["status"] == "ok"),
         "failed_runs": sum(1 for item in results if item["status"] != "ok"),
         "training_ready_crashes": len(crash_weight_dict),
         "training_ready_safe": len(safe_weight_dict),
+        "importance_weight_diagnostics": importance_weight_diagnostics,
         **joint_stats,
         "results": results,
     }
@@ -184,6 +204,16 @@ def _context_blocking_potential(template_path: str | Path) -> bool:
         )
     except (KeyError, TypeError, OSError, json.JSONDecodeError):
         return False
+
+
+def _source_event_id(template_path: str | Path) -> int | None:
+    """Return the declared SHRP2 event id, rather than inferring one from a filename."""
+    try:
+        with Path(template_path).open("r", encoding="utf-8") as stream:
+            template = json.load(stream)
+        return int(template["bridge_metadata"]["source_event_id"])
+    except (KeyError, TypeError, ValueError, OSError, json.JSONDecodeError):
+        return None
 
 
 def _joint_rollout_stats(experiment_path: Path) -> dict[str, int]:
@@ -252,12 +282,28 @@ def main() -> None:
         help="Fixed NADE naturalistic-mixture probability used by every rollout.",
     )
     parser.add_argument(
+        "--proposal_mode",
+        choices=("naturalistic", "factorized", "joint_pair"),
+        default="joint_pair",
+        help="Multi-BV action proposal family used in every rollout.",
+    )
+    parser.add_argument(
         "--max_initial_primary_ttc_s",
         type=float,
         default=None,
         help=(
             "Keep only templates whose primary BV is ahead in the CAV lane, "
             "is being closed upon, and has initial TTC no greater than this value."
+        ),
+    )
+    parser.add_argument(
+        "--source_event_id",
+        action="append",
+        type=int,
+        default=None,
+        help=(
+            "Keep only explicitly listed SHRP2 source event ids. Repeat this option "
+            "to perform a stratified empirical collision-rate evaluation."
         ),
     )
     parser.add_argument(
@@ -286,8 +332,10 @@ def main() -> None:
         limit=args.limit,
         repeats=args.repeats,
         epsilon=args.epsilon,
+        proposal_mode=args.proposal_mode,
         max_initial_primary_ttc_s=args.max_initial_primary_ttc_s,
         require_context_blocking=args.require_context_blocking,
+        source_event_ids=set(args.source_event_id) if args.source_event_id is not None else None,
     )
     print("Manifest run finished.")
     print(f"attempted={summary['attempted']}")

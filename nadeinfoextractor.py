@@ -1,4 +1,4 @@
-from math import exp, isclose
+from math import exp, isclose, isfinite
 from time import time
 from mtlsp.logger.infoextractor import InfoExtractor
 import copy
@@ -95,6 +95,9 @@ class NADEInfoExtractor(InfoExtractor):
 
     def _new_episode_log(self):
         return {"collision_result": None, "collision_id": None, "weight_episode": 1, "current_weight": 1,
+                "log_naturalistic_probability": 0.0, "log_proposal_probability": 0.0,
+                "log_importance_weight": 0.0, "log_probability_step_info": {},
+                "proposal_modes": [],
                 "episode_info": None, "crash_decision_info": None, "decision_time_info": {}, "weight_step_info":{},
                 "drl_epsilon_step_info": {}, "real_epsilon_step_info": {}, "criticality_this_timestep": 0,
                 "criticality_step_info": {}, "ndd_step_info": {}, "drl_obs_step_info":{},
@@ -146,6 +149,9 @@ class NADEInfoExtractor(InfoExtractor):
         self.episode_log["current_weight"] = reduce(lambda x, y: x * y, snapshot_weight_list)
         weight_record = control_log.get("weight_record", self.episode_log["current_weight"])
         ndd_record = control_log.get("ndd_record")
+        probability = control_log.get("probability_record")
+        if probability is not None:
+            self._record_log_probability(time_step, probability)
         self.episode_log["av_obs"][time_step] = self.env.get_av_obs()
         try:
             self.episode_log["criticality_step_info"][time_step] = self.get_criticality_this_step()
@@ -171,3 +177,30 @@ class NADEInfoExtractor(InfoExtractor):
                 )[time_step] = control_log["multibv_selection_debug"]
         except Exception as e:
             print("Log error:", e)
+
+    def _record_log_probability(self, time_step, probability):
+        """Accumulate p/q in log space for selected joint BV actions only."""
+        required = (
+            "proposal_type",
+            "naturalistic_probability",
+            "proposal_probability",
+            "log_naturalistic_probability",
+            "log_proposal_probability",
+            "log_importance_weight",
+        )
+        if not isinstance(probability, dict) or any(key not in probability for key in required):
+            raise ValueError("Incomplete probability record for importance logging")
+        log_naturalistic = float(probability["log_naturalistic_probability"])
+        log_proposal = float(probability["log_proposal_probability"])
+        log_weight = float(probability["log_importance_weight"])
+        if not all(isfinite(value) for value in (log_naturalistic, log_proposal, log_weight)):
+            raise ValueError("Importance log probabilities must be finite")
+        if not isclose(log_weight, log_naturalistic - log_proposal):
+            raise ValueError("Log importance weight must equal log(p) - log(q)")
+        self.episode_log["log_probability_step_info"][time_step] = dict(probability)
+        self.episode_log["log_naturalistic_probability"] += log_naturalistic
+        self.episode_log["log_proposal_probability"] += log_proposal
+        self.episode_log["log_importance_weight"] += log_weight
+        proposal_type = str(probability["proposal_type"])
+        if proposal_type not in self.episode_log["proposal_modes"]:
+            self.episode_log["proposal_modes"].append(proposal_type)

@@ -116,6 +116,63 @@ class RunTemplateManifestTests(unittest.TestCase):
         self.assertEqual(summary["attempted"], 1)
         self.assertEqual(run.call_count, 1)
 
+    def test_source_event_filter_uses_declared_bridge_metadata(self):
+        manifest = {
+            "records": [
+                {"status": "template_created", "split": "train", "template_path": "one.json"},
+                {"status": "template_created", "split": "train", "template_path": "two.json"},
+            ]
+        }
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            manifest_path = root / "manifest.json"
+            for name, event_id in (("one.json", 101), ("two.json", 202)):
+                (root / name).write_text(json.dumps({
+                    "bridge_metadata": {"source_event_id": event_id}
+                }), encoding="utf-8")
+            for record in manifest["records"]:
+                record["template_path"] = str(root / record["template_path"])
+            manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+            with patch(
+                "scenario_reconstruction.run_template_manifest.run_template",
+                return_value=1.0,
+            ) as run:
+                summary = run_template_manifest(
+                    manifest_path,
+                    root / "episodes",
+                    split="train",
+                    source_event_ids={202},
+                )
+
+        self.assertEqual(summary["records_after_split"], 2)
+        self.assertEqual(summary["source_event_ids"], [202])
+        self.assertEqual(summary["records_after_source_event_filter"], 1)
+        self.assertEqual(summary["attempted"], 1)
+        self.assertEqual(Path(run.call_args.args[0]).name, "two.json")
+
+    def test_manifest_forwards_the_selected_proposal_mode(self):
+        manifest = {
+            "records": [
+                {"status": "template_created", "split": "train", "template_path": "one.json"},
+            ]
+        }
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            manifest_path = root / "manifest.json"
+            manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+            with patch(
+                "scenario_reconstruction.run_template_manifest.run_template",
+                return_value=1.0,
+            ) as run:
+                summary = run_template_manifest(
+                    manifest_path,
+                    root / "episodes",
+                    proposal_mode="factorized",
+                )
+
+        self.assertEqual(summary["proposal_mode"], "factorized")
+        self.assertEqual(run.call_args.kwargs["proposal_mode"], "factorized")
+
 
 if __name__ == "__main__":
     unittest.main()

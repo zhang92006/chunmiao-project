@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from math import log10
+from math import isfinite, log, log10
 from typing import Iterable
 
 import numpy as np
@@ -44,12 +44,14 @@ def select_multibv_training_actors(env, primary_actor_id: str, agent_num: int = 
         full_obs=full_obs,
         selected_bv_ids=selected_ids,
         episode_weight=env.info_extractor.episode_log.get("weight_episode", 1.0),
+        log_episode_weight=env.info_extractor.episode_log.get("log_importance_weight"),
     )
     per_agent_obs = [
         build_multibv_joint_obs(
             full_obs=full_obs,
             selected_bv_ids=[vehicle_id],
             episode_weight=env.info_extractor.episode_log.get("weight_episode", 1.0),
+            log_episode_weight=env.info_extractor.episode_log.get("log_importance_weight"),
         )
         for vehicle_id in selected_ids
     ]
@@ -60,6 +62,7 @@ def build_multibv_joint_obs(
     full_obs: dict,
     selected_bv_ids: Iterable[str],
     episode_weight: float,
+    log_episode_weight: float | None = None,
 ) -> list[float]:
     selected_bv_ids = list(selected_bv_ids)
     cav = full_obs["CAV"]
@@ -86,7 +89,7 @@ def build_multibv_joint_obs(
     raw_obs = np.array(
         cav_position
         + [cav_speed]
-        + [_safe_log10(max(float(episode_weight), 1e-30))]
+        + [_episode_log10_weight(episode_weight, log_episode_weight)]
         + [criticality_flag]
         + [criticality_value]
         + bv_info,
@@ -135,10 +138,22 @@ def _common_obs_bounds() -> tuple[list[float], list[float]]:
     else:
         cav_position_lb, cav_position_ub = [400, 40], [800, 50]
     return (
-        cav_position_lb + [0, -30, 0, -16],
+        cav_position_lb + [0, -300, 0, -16],
         cav_position_ub + [20, 0, 1, 0],
     )
 
 
 def _safe_log10(value: float) -> float:
     return float(log10(max(value, 1e-30)))
+
+
+def _episode_log10_weight(
+    episode_weight: float,
+    log_episode_weight: float | None,
+) -> float:
+    """Use the authoritative log accumulator when raw p/q has underflowed."""
+    if log_episode_weight is not None:
+        value = float(log_episode_weight)
+        if isfinite(value):
+            return max(value / log(10.0), -300.0)
+    return _safe_log10(max(float(episode_weight), 1e-30))

@@ -14,6 +14,7 @@ from scenario_reconstruction.joint_criticality import (
     pairwise_joint_criticality_details,
     sample_joint_action_pair,
 )
+from scenario_reconstruction.importance import probability_record
 
 class NADEBVGlobalController(NDDBVGlobalController):
     controlled_bv_num = 4
@@ -32,7 +33,11 @@ class NADEBVGlobalController(NDDBVGlobalController):
         """
         self.real_epsilon_value = -1
         self.drl_epsilon_value = -1
-        self.control_log = {"criticality":0, "discriminator_input":0}
+        self.control_log = {
+            "criticality": 0,
+            "discriminator_input": 0,
+            "proposal_mode": self._proposal_mode(),
+        }
         bv_action_idx_list, weight_list, max_vehicle_criticality, ndd_possi_list, IS_possi_list, controlled_bvs_list = [], [], [], [], [], []
         vehicle_criticality_list = []
         self.reset_control_and_action_state()
@@ -99,7 +104,9 @@ class NADEBVGlobalController(NDDBVGlobalController):
         if not full_obs:
             return
         selected_ids = [bv.id for bv in selected_bvs]
-        episode_weight = self.env.info_extractor.episode_log.get("weight_episode", 1.0)
+        episode_log = self.env.info_extractor.episode_log
+        episode_weight = episode_log.get("weight_episode", 1.0)
+        log_episode_weight = episode_log.get("log_importance_weight")
         self.control_log["joint_training"] = True
         self.control_log["joint_controlled_bv_ids"] = selected_ids
         joint_proposal = self.control_log.get("joint_proposal_record")
@@ -110,10 +117,12 @@ class NADEBVGlobalController(NDDBVGlobalController):
             float(ndd_possi_list[index]) for index in selected_indices
         ]
         self.control_log["drl_obs_joint"] = build_multibv_joint_obs(
-            full_obs, selected_ids, episode_weight
+            full_obs, selected_ids, episode_weight, log_episode_weight
         )
         self.control_log["drl_obs_per_agent"] = [
-            build_multibv_joint_obs(full_obs, [bv_id], episode_weight)
+            build_multibv_joint_obs(
+                full_obs, [bv_id], episode_weight, log_episode_weight
+            )
             for bv_id in selected_ids
         ]
         self.control_log["discriminator_input"] = {
@@ -124,14 +133,31 @@ class NADEBVGlobalController(NDDBVGlobalController):
             self.control_log["weight_record"] = dict(joint_proposal["weight_record"])
             self.control_log["ndd_record"] = dict(joint_proposal["ndd_record"])
         else:
+            fallback_proposal_type = (
+                "naturalistic"
+                if self._proposal_mode() == "naturalistic"
+                else "factorized"
+            )
+            joint_weight = float(np.prod(self.control_log["weight_list_per_agent"]))
+            joint_naturalistic = float(
+                np.prod(self.control_log["ndd_possi_list_per_agent"])
+            )
+            joint_proposal_probability = (
+                joint_naturalistic / joint_weight if joint_weight > 0.0 else None
+            )
             self.control_log["weight_record"] = {
-                "joint": float(np.prod(self.control_log["weight_list_per_agent"])),
+                "proposal_type": fallback_proposal_type,
+                "joint": joint_weight,
                 "per_agent": self.control_log["weight_list_per_agent"],
+                "joint_naturalistic_probability": joint_naturalistic,
+                "joint_proposal_probability": joint_proposal_probability,
             }
             self.control_log["ndd_record"] = {
-                "joint": float(np.prod(self.control_log["ndd_possi_list_per_agent"])),
+                "proposal_type": fallback_proposal_type,
+                "joint": joint_naturalistic,
                 "per_agent": self.control_log["ndd_possi_list_per_agent"],
             }
+        self._record_probability_terms()
         if self.drl_epsilon_value != -1:
             epsilon = self.drl_epsilon_value
             if isinstance(epsilon, (list, tuple, np.ndarray)):
@@ -184,6 +210,7 @@ class NADEBVGlobalController(NDDBVGlobalController):
                     full_obs,
                     selected_ids,
                     self.env.info_extractor.episode_log["weight_episode"],
+                    self.env.info_extractor.episode_log.get("log_importance_weight"),
                 ),
                 dtype=np.float32,
             )
@@ -194,9 +221,13 @@ class NADEBVGlobalController(NDDBVGlobalController):
         self.control_log["discriminator_input"] = discriminator_input.tolist()
         self.epsilon_value = -1
         underline_drl_action = self.get_underline_drl_action(discriminator_input, bv_criticality_list)
+        proposal_mode = self._proposal_mode()
         epsilon_by_index, selected_epsilon_values = self._selected_epsilon_values(
             underline_drl_action, selected_bv_idx
         )
+        if proposal_mode == "naturalistic":
+            epsilon_by_index = {index: 1.0 for index in selected_bv_idx}
+            selected_epsilon_values = [1.0 for _ in selected_bv_idx]
         if sum(bv_criticality_list) > 0:
             self.drl_epsilon_value = selected_epsilon_values
             self.real_epsilon_value = list(selected_epsilon_values)
@@ -226,9 +257,11 @@ class NADEBVGlobalController(NDDBVGlobalController):
             else:
                 whole_weight_list.append(None)
 
-        joint_proposal = self._sample_selected_joint_pair(
-            selected_bv_idx, epsilon_by_index
-        )
+        joint_proposal = None
+        if proposal_mode == "joint_pair":
+            joint_proposal = self._sample_selected_joint_pair(
+                selected_bv_idx, epsilon_by_index
+            )
         if joint_proposal is not None:
             for index, action, marginal_weight, marginal_ndd, marginal_proposal in zip(
                 joint_proposal["indices"],
@@ -279,6 +312,7 @@ class NADEBVGlobalController(NDDBVGlobalController):
                 ],
                 "pair_criticality": self.control_log.get("joint_pair_criticality", []),
                 "joint_proposal": self.control_log.get("joint_proposal_record"),
+                "proposal_mode": proposal_mode,
             }
         if len(bv_criticality_list):
             max_vehicle_criticality = np.max(bv_criticality_list)
@@ -286,6 +320,37 @@ class NADEBVGlobalController(NDDBVGlobalController):
             max_vehicle_criticality = -np.inf
 
         return bv_action_idx_list, weight_list, max_vehicle_criticality, ndd_possi_list, IS_possi_list, controlled_bvs_list, vehicle_criticality_list, discriminator_input
+
+    def _proposal_mode(self):
+        """Read the rollout proposal family without changing legacy defaults."""
+        return getattr(self.env, "multibv_proposal_mode", "joint_pair")
+
+    def _record_probability_terms(self):
+        """Expose exact joint p/q terms to the episode information extractor."""
+        weight_record = self.control_log.get("weight_record")
+        ndd_record = self.control_log.get("ndd_record")
+        if not isinstance(weight_record, dict) or not isinstance(ndd_record, dict):
+            return
+        naturalistic = weight_record.get(
+            "joint_naturalistic_probability", ndd_record.get("joint")
+        )
+        proposal = weight_record.get("joint_proposal_probability")
+        if proposal is None:
+            joint_weight = float(weight_record.get("joint", 0.0))
+            proposal = float(naturalistic) / joint_weight if joint_weight > 0.0 else None
+        if naturalistic is None or proposal is None:
+            return
+        try:
+            record = probability_record(
+                str(weight_record.get("proposal_type", self._proposal_mode())),
+                float(naturalistic),
+                float(proposal),
+            )
+        except (TypeError, ValueError):
+            return
+        if not np.isclose(record["importance_weight"], float(weight_record["joint"])):
+            raise ValueError("Recorded joint p/q disagrees with the sampled weight")
+        self.control_log["probability_record"] = record
 
     def _augment_pairwise_criticality(
         self, controlled_bvs_list, full_obs, criticality_array_list
@@ -438,8 +503,12 @@ class NADEBVGlobalController(NDDBVGlobalController):
         """
         CAV_global_position = list(full_obs["CAV"]["position"])
         CAV_speed = full_obs["CAV"]["velocity"]
-        tmp_weight = self.env.info_extractor.episode_log["weight_episode"]
-        tmp_weight = np.log10(tmp_weight)
+        episode_log = self.env.info_extractor.episode_log
+        log_weight = episode_log.get("log_importance_weight")
+        if log_weight is not None and np.isfinite(float(log_weight)):
+            tmp_weight = max(float(log_weight) / np.log(10.0), -300.0)
+        else:
+            tmp_weight = np.log10(max(float(episode_log["weight_episode"]), 1e-30))
         vehicle_info_list = []
         controlled_bv_num = 1
         total_bv_info_length = controlled_bv_num * 4

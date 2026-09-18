@@ -47,6 +47,10 @@ class MultiBVJointLoggingTests(unittest.TestCase):
         self.assertEqual([len(obs) for obs in controller.control_log["drl_obs_per_agent"]], [10, 10])
         self.assertAlmostEqual(controller.control_log["weight_record"]["joint"], 0.06)
         self.assertAlmostEqual(controller.control_log["ndd_record"]["joint"], 0.0002)
+        self.assertEqual(controller.control_log["probability_record"]["proposal_type"], "factorized")
+        self.assertAlmostEqual(
+            controller.control_log["probability_record"]["importance_weight"], 0.06
+        )
         self.assertEqual(controller.drl_epsilon_value, [0.7, 0.7])
 
     def test_joint_pair_sampler_keeps_a_single_correlated_weight(self):
