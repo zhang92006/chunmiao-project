@@ -56,7 +56,10 @@ def main() -> None:
         return D2RLTrainingEnv(config)
 
     register_env("shrp2_multibv_smoke", env_creator)
-    ray.init(include_dashboard=False, ignore_reinit_error=True)
+    # Ray 1.11 probes ``nvidia-smi`` when GPU resources are unspecified.  The
+    # K=2 interface smoke test is intentionally CPU-only and must also run on
+    # Windows hosts without NVIDIA tooling installed.
+    ray.init(num_gpus=0, include_dashboard=False, ignore_reinit_error=True)
     try:
         tune.run(
             "PPO",

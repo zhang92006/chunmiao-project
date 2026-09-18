@@ -75,7 +75,8 @@ $trainPython = 'D:\Anaconda3\envs\D2RLTrain39\python.exe'
 ```
 
 日志应显示 K=2 环境；PPO 默认全连接网络会根据 Gym space 自动接收 14
-维输入并输出 2 维连续动作。
+维输入并输出 2 维连续动作。该启动器固定 CPU 模式（`num_gpus=0`），因此不要求
+安装 NVIDIA 驱动或提供 `nvidia-smi` 命令。
 
 ## joint-pair 的限制
 
