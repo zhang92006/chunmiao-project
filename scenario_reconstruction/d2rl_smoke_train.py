@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
+import sys
 
 
 def main() -> None:
@@ -17,6 +18,12 @@ def main() -> None:
     parser.add_argument("--yaml_conf", required=True, help="K-BV smoke YAML configuration.")
     parser.add_argument("--stop_iterations", type=int, default=None)
     args = parser.parse_args()
+
+    if sys.version_info >= (3, 10):
+        raise RuntimeError(
+            "This legacy PPO smoke path needs Python 3.9 on Windows: Ray 1.11 "
+            "does not publish a wheel for the current Python 3.10+ runtime."
+        )
 
     try:
         import yaml

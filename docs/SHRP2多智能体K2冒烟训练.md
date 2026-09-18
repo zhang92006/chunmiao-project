@@ -44,16 +44,27 @@ $python = 'D:\Anaconda3\envs\D2RL\python.exe'
   --multi_bv_training --multi_bv_num 2
 ```
 
-安装完整训练依赖后，运行两次 iteration 的 PPO 冒烟：
+原有 D2RL PPO 代码使用 `ray.rllib.agents` 和 `PPOTrainer`，对应 Ray 1.11。
+该版本在 Windows 上不支持当前的 Python 3.10 运行时，因此不要在用于 SUMO 的
+`D2RL` 环境中安装 Ray 2.x；应建立独立的 Python 3.9 训练环境：
 
 ```powershell
-& $python -m scenario_reconstruction.d2rl_smoke_train `
+conda create -n D2RLTrain39 python=3.9 pip -y
+conda run -n D2RLTrain39 python -m pip install `
+  "PyYAML==6.0.1" "gym==0.21.0" "ray[rllib]==1.11.0" `
+  "torch==1.11.0" "numpy==1.23.1"
+```
+
+安装完成后，运行两次 iteration 的 PPO 冒烟：
+
+```powershell
+$trainPython = 'D:\Anaconda3\envs\D2RLTrain39\python.exe'
+& $trainPython -m scenario_reconstruction.d2rl_smoke_train `
   --yaml_conf 'd2rl_training\d2rl_train_shrp2_multibv_factorized_smoke.yaml' `
   --stop_iterations 2
 ```
 
-当前 `D2RL` 环境尚未安装 `ray[rllib]`，因此最后一条命令由本机完整训练环境
-执行。日志应显示 K=2 环境；PPO 默认全连接网络会根据 Gym space 自动接收 14
+日志应显示 K=2 环境；PPO 默认全连接网络会根据 Gym space 自动接收 14
 维输入并输出 2 维连续动作。
 
 ## joint-pair 的限制
