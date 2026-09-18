@@ -56,12 +56,14 @@ conda run -n D2RLTrain39 python -m pip install --no-build-isolation `
   "gym==0.21.0"
 conda run -n D2RLTrain39 python -m pip install `
   "PyYAML==6.0.1" "ray[rllib]==1.11.0" `
-  "torch==1.11.0" "numpy==1.23.1"
+  "torch==1.11.0" "numpy==1.23.1" "protobuf==3.20.3"
 ```
 
 必须按以上三条安装命令的顺序执行。`gym==0.21.0` 的旧安装元数据与新版本
 `pip/setuptools/wheel` 不兼容；`--no-build-isolation` 保证它使用刚刚固定的构建
 工具，而不是在临时构建环境中重新安装最新版。
+Ray 1.11 的生成 protobuf 文件也只能与 `protobuf==3.20.3` 兼容；若已安装
+过新版 protobuf，重新执行第三条命令即可降级修复。
 
 安装完成后，运行两次 iteration 的 PPO 冒烟：
 
