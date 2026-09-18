@@ -185,6 +185,54 @@ class MultiBVCompatibilityTests(unittest.TestCase):
         env.episode_data = selected
         self.assertNotEqual(env._get_reward(), 0)
 
+    def test_trainable_critical_mode_excludes_reward_clipped_candidates(self):
+        def record(joint, per_agent):
+            return {"joint": joint, "per_agent": per_agent}
+
+        episode = {
+            "collision_result": 1,
+            "weight_step_info": {
+                # Highest criticality, but q=1 at epsilon=0.5 and thus clipped.
+                "0.0": record(0.5, [0.5, 0.5]),
+                "0.1": record(0.02, [0.1, 0.2]),
+                "0.2": record(0.01, [0.1, 0.1]),
+            },
+            "drl_obs_step_info": {
+                timestep: {"joint": list(range(14)), "per_agent": [list(range(10))] * 2}
+                for timestep in ("0.0", "0.1", "0.2")
+            },
+            "drl_epsilon_step_info": {
+                timestep: [0.5, 0.5] for timestep in ("0.0", "0.1", "0.2")
+            },
+            "real_epsilon_step_info": {
+                timestep: [0.5, 0.5] for timestep in ("0.0", "0.1", "0.2")
+            },
+            "criticality_step_info": {"0.0": 9.0, "0.1": 4.0, "0.2": 3.0},
+            "ndd_step_info": {
+                "0.0": record(0.25, [0.5, 0.5]),
+                "0.1": record(0.0002, [0.01, 0.02]),
+                "0.2": record(0.0001, [0.01, 0.01]),
+            },
+        }
+        env = D2RLTrainingEnv.__new__(D2RLTrainingEnv)
+        env.multi_bv_training = True
+        env.multi_bv_decision_mode = "single_trainable_critical"
+        env.multi_bv_reference_epsilon = 0.5
+        env.multi_bv_max_reference_q_amplifier = 0.004
+
+        selected = env.filter_episode_data(episode)
+
+        self.assertEqual(list(selected["weight_step_info"]), ["0.1"])
+        metadata = selected["d2rl_decision_selection"]
+        self.assertEqual(metadata["mode"], "single_trainable_critical")
+        self.assertEqual(metadata["complete_candidate_count"], 3)
+        self.assertEqual(metadata["candidate_count"], 2)
+        self.assertAlmostEqual(metadata["reference_q_amplifier"], 0.0008)
+        self.assertLess(
+            metadata["reference_q_amplifier"],
+            metadata["max_reference_q_amplifier"],
+        )
+
     def test_scenario_duration_boundary_is_inclusive(self):
         self.assertFalse(_duration_reached(5.99, 6.0))
         self.assertTrue(_duration_reached(6.0, 6.0))

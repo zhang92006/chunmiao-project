@@ -4,9 +4,10 @@
 
 本阶段先验证 **factorized proposal** 生成的 SHRP2 K=2 episode 能被当前
 `D2RLTrainingEnv` 和 PPO 读取：观测为 14 维、动作为 2 维、重放的 reward
-可计算。`single_critical` 基线在每个 episode 中选择联合关键性最高的一个
-时刻，继续使用原始 D2RL 的单决策 reward；源 episode 文件不会被改写。它不是
-论文中的正式训练，也不用于报告泛化性能。
+可计算。当前的 `single_trainable_critical` 基线在每个 episode 中，先筛除会使
+旧 D2RL reward 在参考 epsilon 下直接截断为 -100 的时刻，再选择剩余候选中联合
+关键性最高的时刻；reward 公式与源 episode 文件均不会被改写。它不是论文中的正式
+训练，也不用于报告泛化性能。
 
 本次消融中，factorized 池有 14 条碰撞、136 条安全 episode；相同预算下
 joint-pair 池有 10 条碰撞、140 条安全 episode。前者作为这次接口冒烟池，
@@ -72,7 +73,7 @@ Ray 1.11 的生成 protobuf 文件也只能与 `protobuf==3.20.3` 兼容；若�
 ```powershell
 $trainPython = 'D:\Anaconda3\envs\D2RLTrain39\python.exe'
 & $trainPython -m scenario_reconstruction.d2rl_smoke_train `
-  --yaml_conf 'd2rl_training\d2rl_train_shrp2_multibv_single_critical_smoke.yaml' `
+  --yaml_conf 'd2rl_training\d2rl_train_shrp2_multibv_trainable_critical_smoke.yaml' `
   --stop_iterations 2
 ```
 
@@ -81,9 +82,16 @@ $trainPython = 'D:\Anaconda3\envs\D2RLTrain39\python.exe'
 安装 NVIDIA 驱动或提供 `nvidia-smi` 命令。
 
 `legacy_all_steps` 仍是默认模式，用于复现旧行为；它会拒绝多次对抗动作并返回
-零 reward。`single_critical` 是新的 K=2 基线：在可训练时间步中按最大联合
-criticality 选择一个动作，同分时选更晚的仿真时刻。它避免直接删除旧保护而造成
-多步 importance weight 连乘下溢和 reward 饱和。
+零 reward。`single_critical` 是诊断基线：按最大联合 criticality 选择一个动作，
+同分时选更晚的仿真时刻。它可能选中 reward 已经饱和的样本，正如本轮冒烟中的
+所有回报均为 -100 所示。
+
+当前使用 `single_trainable_critical`。在 `clip_reward_threshold=100` 的旧公式
+`100 - 500 * 100 * q` 中，`q >= 0.004` 必然被下限截断为 -100。该模式先以
+`reference_epsilon=0.5` 计算每个候选时刻的联合 q，再只保留 `q < 0.004` 的候选，
+并在其中按最大联合 criticality 选择一个。这里的 0.5 仅是**初始化阶段的选择参考**，
+不是 PPO 动作约束；所选时刻、候选数量和参考 q 都写入 `info`，方便审计。这样既不
+伪造碰撞也不改奖励尺度，只避免训练在第一步完全落入零梯度的饱和区。
 
 ## joint-pair 的限制
 

@@ -40,12 +40,27 @@ class D2RLTrainingEnv(core.Env):
 		self.multi_bv_decision_mode = str(
 			yaml_conf.get("multi_bv_decision_mode", "legacy_all_steps")
 		)
+		self.multi_bv_reference_epsilon = float(
+			yaml_conf.get("multi_bv_reference_epsilon", 0.5)
+		)
+		self.multi_bv_max_reference_q_amplifier = float(
+			yaml_conf.get("multi_bv_max_reference_q_amplifier", 0.004)
+		)
 		if self.multi_bv_training and self.multi_bv_num < 1:
 			raise ValueError("multi_bv_num must be positive when multi_bv_training=true")
-		if self.multi_bv_decision_mode not in {"legacy_all_steps", "single_critical"}:
+		if self.multi_bv_decision_mode not in {
+			"legacy_all_steps",
+			"single_critical",
+			"single_trainable_critical",
+		}:
 			raise ValueError(
-				"multi_bv_decision_mode must be legacy_all_steps or single_critical"
+				"multi_bv_decision_mode must be legacy_all_steps, single_critical, "
+				"or single_trainable_critical"
 			)
+		if not 0 < self.multi_bv_reference_epsilon < 1:
+			raise ValueError("multi_bv_reference_epsilon must lie strictly between zero and one")
+		if self.multi_bv_max_reference_q_amplifier <= 0:
+			raise ValueError("multi_bv_max_reference_q_amplifier must be positive")
 		self.action_dim = self.multi_bv_num if self.multi_bv_training else 1
 		self.observation_dim = 6 + 4 * self.multi_bv_num if self.multi_bv_training else 10
 		self.action_space = spaces.Box(low=0.001, high=0.999, shape=(self.action_dim, ))
@@ -134,8 +149,16 @@ class D2RLTrainingEnv(core.Env):
 			episode_data["criticality_step_info"].pop(invalid_time_step, None)
 			episode_data["ndd_step_info"].pop(invalid_time_step, None)
 			episode_data["drl_obs_step_info"].pop(invalid_time_step, None)
-		if self.multi_bv_training and self.multi_bv_decision_mode == "single_critical":
-			self._select_single_critical_step(episode_data)
+		if self.multi_bv_training and self.multi_bv_decision_mode in {
+			"single_critical",
+			"single_trainable_critical",
+		}:
+			self._select_single_critical_step(
+				episode_data,
+				require_trainable=(
+					self.multi_bv_decision_mode == "single_trainable_critical"
+				),
+			)
 		# logging.debug(str(episode_data))
 		return episode_data
 
@@ -146,13 +169,15 @@ class D2RLTrainingEnv(core.Env):
 		except (TypeError, ValueError):
 			return float("-inf")
 
-	def _select_single_critical_step(self, episode_data):
+	def _select_single_critical_step(self, episode_data, require_trainable=False):
 		"""Keep one auditable K-BV decision without changing source episode files.
 
-		The legacy D2RL reward is a single-adversarial-decision objective.  For
+		The legacy D2RL reward is a single-adversarial-decision objective. For
 		multi-step SHRP2 rollouts, retain the largest logged joint criticality;
 		a later simulator time deterministically breaks ties as it is closer to
-		the observed conflict outcome.
+		the observed conflict outcome. ``require_trainable`` first excludes
+		candidates that hit the legacy reward's lower clipping bound at the
+		documented reference epsilon.
 		"""
 		weight_info = episode_data.get("weight_step_info", {})
 		required = (
@@ -168,6 +193,30 @@ class D2RLTrainingEnv(core.Env):
 		]
 		if not candidates:
 			raise ValueError("single_critical mode found no complete joint decision step")
+		complete_candidate_count = len(candidates)
+		candidate_q_amplifiers = {}
+		if require_trainable:
+			for timestep in candidates:
+				try:
+					per_agent = weight_info[timestep]["per_agent"]
+					q_amplifier = self._joint_epsilon_weight(
+						weight_info[timestep],
+						[self.multi_bv_reference_epsilon] * len(per_agent),
+						episode_data["ndd_step_info"][timestep],
+					)
+				except (KeyError, TypeError, ValueError):
+					continue
+				if (
+					np.isfinite(q_amplifier)
+					and q_amplifier < self.multi_bv_max_reference_q_amplifier
+				):
+					candidate_q_amplifiers[timestep] = float(q_amplifier)
+			candidates = list(candidate_q_amplifiers)
+			if not candidates:
+				raise ValueError(
+					"single_trainable_critical mode found no candidate below the "
+					"reference q-amplifier clipping bound"
+				)
 
 		selected = max(
 			candidates,
@@ -190,13 +239,20 @@ class D2RLTrainingEnv(core.Env):
 			if isinstance(values, dict) and selected in values:
 				episode_data[field] = {selected: values[selected]}
 		episode_data["d2rl_decision_selection"] = {
-			"mode": "single_critical",
+			"mode": self.multi_bv_decision_mode,
 			"selected_timestep": selected,
 			"selected_criticality": float(
 				episode_data["criticality_step_info"][selected]
 			),
 			"candidate_count": len(candidates),
 		}
+		if require_trainable:
+			episode_data["d2rl_decision_selection"].update({
+				"complete_candidate_count": complete_candidate_count,
+				"reference_epsilon": self.multi_bv_reference_epsilon,
+				"reference_q_amplifier": candidate_q_amplifiers[selected],
+				"max_reference_q_amplifier": self.multi_bv_max_reference_q_amplifier,
+			})
 
 	def sample_data_this_episode(self):
 		if self.crash_data_weight_list:
