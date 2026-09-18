@@ -2,9 +2,11 @@
 
 ## 目的与边界
 
-本阶段只验证 **factorized proposal** 生成的 SHRP2 K=2 episode 能被当前
+本阶段先验证 **factorized proposal** 生成的 SHRP2 K=2 episode 能被当前
 `D2RLTrainingEnv` 和 PPO 读取：观测为 14 维、动作为 2 维、重放的 reward
-可计算。它不是论文中的正式训练，也不用于报告泛化性能。
+可计算。`single_critical` 基线在每个 episode 中选择联合关键性最高的一个
+时刻，继续使用原始 D2RL 的单决策 reward；源 episode 文件不会被改写。它不是
+论文中的正式训练，也不用于报告泛化性能。
 
 本次消融中，factorized 池有 14 条碰撞、136 条安全 episode；相同预算下
 joint-pair 池有 10 条碰撞、140 条安全 episode。前者作为这次接口冒烟池，
@@ -70,13 +72,18 @@ Ray 1.11 的生成 protobuf 文件也只能与 `protobuf==3.20.3` 兼容；若�
 ```powershell
 $trainPython = 'D:\Anaconda3\envs\D2RLTrain39\python.exe'
 & $trainPython -m scenario_reconstruction.d2rl_smoke_train `
-  --yaml_conf 'd2rl_training\d2rl_train_shrp2_multibv_factorized_smoke.yaml' `
+  --yaml_conf 'd2rl_training\d2rl_train_shrp2_multibv_single_critical_smoke.yaml' `
   --stop_iterations 2
 ```
 
 日志应显示 K=2 环境；PPO 默认全连接网络会根据 Gym space 自动接收 14
 维输入并输出 2 维连续动作。该启动器固定 CPU 模式（`num_gpus=0`），因此不要求
 安装 NVIDIA 驱动或提供 `nvidia-smi` 命令。
+
+`legacy_all_steps` 仍是默认模式，用于复现旧行为；它会拒绝多次对抗动作并返回
+零 reward。`single_critical` 是新的 K=2 基线：在可训练时间步中按最大联合
+criticality 选择一个动作，同分时选更晚的仿真时刻。它避免直接删除旧保护而造成
+多步 importance weight 连乘下溢和 reward 饱和。
 
 ## joint-pair 的限制
 

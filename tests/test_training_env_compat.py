@@ -136,6 +136,55 @@ class MultiBVCompatibilityTests(unittest.TestCase):
         self.assertAlmostEqual(weights[0], 1.0)
         self.assertAlmostEqual(weights[1], np.exp(-1.0))
 
+    def test_single_critical_mode_keeps_one_latest_maximum_criticality_step(self):
+        def joint_record(value):
+            return {"joint": value, "per_agent": [value, value]}
+
+        episode = {
+            "collision_result": 1,
+            "weight_step_info": {
+                "0.0": joint_record(0.5),
+                "0.1": joint_record(0.4),
+                "0.2": joint_record(0.3),
+            },
+            "drl_obs_step_info": {
+                timestep: {"joint": list(range(14)), "per_agent": [list(range(10)), list(range(10))]}
+                for timestep in ("0.0", "0.1", "0.2")
+            },
+            "drl_epsilon_step_info": {
+                timestep: [0.5, 0.5] for timestep in ("0.0", "0.1", "0.2")
+            },
+            "real_epsilon_step_info": {
+                timestep: [0.5, 0.5] for timestep in ("0.0", "0.1", "0.2")
+            },
+            "criticality_step_info": {"0.0": 1.0, "0.1": 4.0, "0.2": 4.0},
+            "ndd_step_info": {
+                timestep: joint_record(0.2) for timestep in ("0.0", "0.1", "0.2")
+            },
+            "controlled_bv_ids_step_info": {
+                timestep: ["BV_primary", "BV_context"]
+                for timestep in ("0.0", "0.1", "0.2")
+            },
+        }
+        env = D2RLTrainingEnv.__new__(D2RLTrainingEnv)
+        env.multi_bv_training = True
+        env.multi_bv_decision_mode = "single_critical"
+        env.yaml_conf = {"clip_reward_threshold": 100}
+        env.total_steps = 0
+
+        selected = env.filter_episode_data(episode)
+
+        self.assertEqual(list(selected["weight_step_info"]), ["0.2"])
+        self.assertEqual(selected["d2rl_decision_selection"], {
+            "mode": "single_critical",
+            "selected_timestep": "0.2",
+            "selected_criticality": 4.0,
+            "candidate_count": 3,
+        })
+        self.assertEqual(env.get_multiple_adv_action_num(selected["weight_step_info"]), 1)
+        env.episode_data = selected
+        self.assertNotEqual(env._get_reward(), 0)
+
     def test_scenario_duration_boundary_is_inclusive(self):
         self.assertFalse(_duration_reached(5.99, 6.0))
         self.assertTrue(_duration_reached(6.0, 6.0))

@@ -37,8 +37,15 @@ class D2RLTrainingEnv(core.Env):
 		self.yaml_conf = yaml_conf
 		self.multi_bv_training = bool(yaml_conf.get("multi_bv_training", False))
 		self.multi_bv_num = int(yaml_conf.get("multi_bv_num", 2))
+		self.multi_bv_decision_mode = str(
+			yaml_conf.get("multi_bv_decision_mode", "legacy_all_steps")
+		)
 		if self.multi_bv_training and self.multi_bv_num < 1:
 			raise ValueError("multi_bv_num must be positive when multi_bv_training=true")
+		if self.multi_bv_decision_mode not in {"legacy_all_steps", "single_critical"}:
+			raise ValueError(
+				"multi_bv_decision_mode must be legacy_all_steps or single_critical"
+			)
 		self.action_dim = self.multi_bv_num if self.multi_bv_training else 1
 		self.observation_dim = 6 + 4 * self.multi_bv_num if self.multi_bv_training else 10
 		self.action_space = spaces.Box(low=0.001, high=0.999, shape=(self.action_dim, ))
@@ -127,8 +134,69 @@ class D2RLTrainingEnv(core.Env):
 			episode_data["criticality_step_info"].pop(invalid_time_step, None)
 			episode_data["ndd_step_info"].pop(invalid_time_step, None)
 			episode_data["drl_obs_step_info"].pop(invalid_time_step, None)
+		if self.multi_bv_training and self.multi_bv_decision_mode == "single_critical":
+			self._select_single_critical_step(episode_data)
 		# logging.debug(str(episode_data))
 		return episode_data
+
+	@staticmethod
+	def _timestep_value(timestep):
+		try:
+			return float(timestep)
+		except (TypeError, ValueError):
+			return float("-inf")
+
+	def _select_single_critical_step(self, episode_data):
+		"""Keep one auditable K-BV decision without changing source episode files.
+
+		The legacy D2RL reward is a single-adversarial-decision objective.  For
+		multi-step SHRP2 rollouts, retain the largest logged joint criticality;
+		a later simulator time deterministically breaks ties as it is closer to
+		the observed conflict outcome.
+		"""
+		weight_info = episode_data.get("weight_step_info", {})
+		required = (
+			"drl_obs_step_info",
+			"drl_epsilon_step_info",
+			"ndd_step_info",
+			"criticality_step_info",
+		)
+		candidates = [
+			timestep
+			for timestep in weight_info
+			if all(timestep in episode_data.get(field, {}) for field in required)
+		]
+		if not candidates:
+			raise ValueError("single_critical mode found no complete joint decision step")
+
+		selected = max(
+			candidates,
+			key=lambda timestep: (
+				float(episode_data["criticality_step_info"][timestep]),
+				self._timestep_value(timestep),
+			),
+		)
+		for field in (
+			"weight_step_info",
+			"drl_obs_step_info",
+			"drl_epsilon_step_info",
+			"real_epsilon_step_info",
+			"criticality_step_info",
+			"ndd_step_info",
+			"controlled_bv_ids_step_info",
+			"multibv_selection_debug_step_info",
+		):
+			values = episode_data.get(field)
+			if isinstance(values, dict) and selected in values:
+				episode_data[field] = {selected: values[selected]}
+		episode_data["d2rl_decision_selection"] = {
+			"mode": "single_critical",
+			"selected_timestep": selected,
+			"selected_criticality": float(
+				episode_data["criticality_step_info"][selected]
+			),
+			"candidate_count": len(candidates),
+		}
 
 	def sample_data_this_episode(self):
 		if self.crash_data_weight_list:
@@ -169,7 +237,11 @@ class D2RLTrainingEnv(core.Env):
 		return obs, reward, done, info
 
 	def _get_info(self):
-		return {}
+		return {
+			"multi_bv_decision_selection": self.episode_data.get(
+				"d2rl_decision_selection"
+			)
+		}
 	
 	def close(self):
 		return
