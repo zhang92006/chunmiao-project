@@ -24,6 +24,7 @@ except ModuleNotFoundError:
 	spaces = _Spaces()
 	core = _Core()
 import os, glob
+from collections import Counter
 import random
 import json
 import numpy as np
@@ -37,6 +38,9 @@ class D2RLTrainingEnv(core.Env):
 		self.yaml_conf = yaml_conf
 		self.multi_bv_training = bool(yaml_conf.get("multi_bv_training", False))
 		self.multi_bv_num = int(yaml_conf.get("multi_bv_num", 2))
+		self.crash_sampling_mode = str(
+			yaml_conf.get("crash_sampling_mode", "importance")
+		)
 		self.multi_bv_decision_mode = str(
 			yaml_conf.get("multi_bv_decision_mode", "legacy_all_steps")
 		)
@@ -48,6 +52,10 @@ class D2RLTrainingEnv(core.Env):
 		)
 		if self.multi_bv_training and self.multi_bv_num < 1:
 			raise ValueError("multi_bv_num must be positive when multi_bv_training=true")
+		if self.crash_sampling_mode not in {"importance", "uniform_episode", "uniform_source"}:
+			raise ValueError(
+				"crash_sampling_mode must be importance, uniform_episode, or uniform_source"
+			)
 		if self.multi_bv_decision_mode not in {
 			"legacy_all_steps",
 			"single_critical",
@@ -94,6 +102,12 @@ class D2RLTrainingEnv(core.Env):
 						crash_data_path_list,
 						log_weight_path,
 					)
+			if self.crash_sampling_mode == "uniform_episode":
+				crash_data_weight_list = [1.0] * len(crash_data_path_list)
+			elif self.crash_sampling_mode == "uniform_source":
+				crash_data_weight_list = self._source_balanced_sampling_weights(
+					crash_data_path_list
+				)
 		else:
 			raise ValueError("No weight information!")
 		tested_but_safe_path = os.path.join(data_folder, "tested_and_safe")
@@ -126,6 +140,25 @@ class D2RLTrainingEnv(core.Env):
 		if not np.isfinite(stable).all() or not np.any(stable > 0):
 			raise ValueError("Could not derive positive stable crash sampling weights")
 		return stable.tolist()
+
+	@staticmethod
+	def _source_balanced_sampling_weights(crash_paths):
+		"""Give every SHRP2 source event equal total replay probability.
+
+		This is an explicit diversity ablation, not a replacement for the legacy
+		importance-weighted estimator. Episodes remain uniformly sampled within
+		each source event.
+		"""
+		sources = []
+		for path in crash_paths:
+			with open(path, encoding="utf-8") as data_file:
+				episode = json.load(data_file)
+			source = episode.get("scenario_metadata", {}).get("source_event_id")
+			if source is None:
+				raise ValueError(f"Crash episode has no source_event_id: {path}")
+			sources.append(str(source))
+		counts = Counter(sources)
+		return [1.0 / counts[source] for source in sources]
 	
 	def reset(self, episode_data_path=None):
 		self.constant, self.weight_reward, self.exposure, self.positive_weight_reward=0,0,0,0

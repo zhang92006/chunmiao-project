@@ -13,10 +13,32 @@ from pathlib import Path
 import sys
 
 
+def build_rllib_config(config: dict, env_name: str = "shrp2_multibv_smoke") -> dict:
+    """Build the shared legacy RLlib configuration used by train and eval."""
+    return {
+        "env": env_name,
+        "num_gpus": 0,
+        "num_workers": int(config.get("num_workers", 1)),
+        "num_envs_per_worker": 1,
+        "gamma": 1.0,
+        "rollout_fragment_length": 600,
+        "vf_clip_param": config["clip_reward_threshold"],
+        "framework": "torch",
+        "ignore_worker_failures": False,
+        "seed": int(config.get("seed", 7)),
+    }
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Bounded PPO smoke training for K-BV D2RL data.")
     parser.add_argument("--yaml_conf", required=True, help="K-BV smoke YAML configuration.")
     parser.add_argument("--stop_iterations", type=int, default=None)
+    parser.add_argument("--seed", type=int, default=None, help="Override the YAML random seed.")
+    parser.add_argument(
+        "--experiment_name",
+        default=None,
+        help="Override the YAML Ray result directory name.",
+    )
     args = parser.parse_args()
 
     if sys.version_info >= (3, 10):
@@ -35,6 +57,10 @@ def main() -> None:
 
     with Path(args.yaml_conf).open("r", encoding="utf-8") as stream:
         config = yaml.safe_load(stream)
+    if args.seed is not None:
+        config["seed"] = args.seed
+    if args.experiment_name:
+        config["experiment_name"] = args.experiment_name
     iterations = args.stop_iterations or int(config.get("training_iterations", 2))
     if iterations < 1:
         raise ValueError("stop_iterations must be positive")
@@ -64,18 +90,7 @@ def main() -> None:
         tune.run(
             "PPO",
             stop={"training_iteration": iterations},
-            config={
-                "env": "shrp2_multibv_smoke",
-                "num_gpus": 0,
-                "num_workers": int(config.get("num_workers", 1)),
-                "num_envs_per_worker": 1,
-                "gamma": 1.0,
-                "rollout_fragment_length": 600,
-                "vf_clip_param": config["clip_reward_threshold"],
-                "framework": "torch",
-                "ignore_worker_failures": False,
-                "seed": int(config.get("seed", 7)),
-            },
+            config=build_rllib_config(config),
             checkpoint_freq=1,
             local_dir=config["local_dir"],
             name=config["experiment_name"],

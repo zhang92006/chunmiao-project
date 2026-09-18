@@ -136,6 +136,23 @@ class MultiBVCompatibilityTests(unittest.TestCase):
         self.assertAlmostEqual(weights[0], 1.0)
         self.assertAlmostEqual(weights[1], np.exp(-1.0))
 
+    def test_source_balanced_sampling_gives_each_event_equal_total_mass(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            paths = []
+            for index, source_event_id in enumerate((10, 20, 20, 20)):
+                path = root / f"{index}.json"
+                path.write_text(json.dumps({
+                    "scenario_metadata": {"source_event_id": source_event_id}
+                }), encoding="utf-8")
+                paths.append(str(path))
+
+            weights = D2RLTrainingEnv._source_balanced_sampling_weights(paths)
+
+        self.assertEqual(weights[0], 1.0)
+        self.assertEqual(weights[1:], [1 / 3, 1 / 3, 1 / 3])
+        self.assertAlmostEqual(weights[0], sum(weights[1:]))
+
     def test_single_critical_mode_keeps_one_latest_maximum_criticality_step(self):
         def joint_record(value):
             return {"joint": value, "per_agent": [value, value]}
