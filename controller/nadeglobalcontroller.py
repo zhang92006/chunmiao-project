@@ -194,7 +194,14 @@ class NADEBVGlobalController(NDDBVGlobalController):
         self._joint_full_obs = full_obs
         self.nade_candidates = controlled_bvs_list
         bv_criticality_list, criticality_array_list, bv_action_idx_list, weight_list, ndd_possi_list, IS_possi_list = self.calculate_criticality_list(controlled_bvs_list, CAV_obs, full_obs)
-        if self.joint_control_num > 1:
+        frozen_proposal = self._frozen_collision_proposal(
+            controlled_bvs_list, criticality_array_list
+        )
+        if frozen_proposal is not None:
+            bv_criticality_list = frozen_proposal["criticality"]
+            criticality_array_list = frozen_proposal["criticality_arrays"]
+            self.control_log["frozen_collision_proposal"] = frozen_proposal["debug"]
+        elif self.joint_control_num > 1:
             bv_criticality_list, criticality_array_list = self._augment_pairwise_criticality(
                 controlled_bvs_list, full_obs, criticality_array_list
             )
@@ -221,6 +228,8 @@ class NADEBVGlobalController(NDDBVGlobalController):
         self.control_log["discriminator_input"] = discriminator_input.tolist()
         self.epsilon_value = -1
         underline_drl_action = self.get_underline_drl_action(discriminator_input, bv_criticality_list)
+        if frozen_proposal is not None and frozen_proposal["active"]:
+            underline_drl_action = frozen_proposal["epsilon_by_bv_id"]
         proposal_mode = self._proposal_mode()
         epsilon_by_index, selected_epsilon_values = self._selected_epsilon_values(
             underline_drl_action, selected_bv_idx, controlled_bvs_list
@@ -314,6 +323,9 @@ class NADEBVGlobalController(NDDBVGlobalController):
                 "joint_proposal": self.control_log.get("joint_proposal_record"),
                 "proposal_mode": proposal_mode,
                 "epsilon_by_bv_id": self.control_log.get("epsilon_by_bv_id", {}),
+                "frozen_collision_proposal": self.control_log.get(
+                    "frozen_collision_proposal"
+                ),
             }
         if len(bv_criticality_list):
             max_vehicle_criticality = np.max(bv_criticality_list)
@@ -325,6 +337,71 @@ class NADEBVGlobalController(NDDBVGlobalController):
     def _proposal_mode(self):
         """Read the rollout proposal family without changing legacy defaults."""
         return getattr(self.env, "multibv_proposal_mode", "joint_pair")
+
+    def _frozen_collision_proposal(self, controlled_bvs_list, fallback_arrays):
+        """Return an auditable per-step categorical proposal for a frozen CEM result."""
+        config = self.env.scenario_template.bridge_metadata.get(
+            "frozen_collision_proposal"
+        )
+        if not isinstance(config, dict):
+            return None
+        if self._proposal_mode() != "factorized":
+            raise ValueError("frozen_collision_proposal requires proposal_mode='factorized'")
+        agents = config.get("agents", {})
+        current_time = float(self.env.simulator.get_time())
+        active_ids = []
+        arrays = []
+        epsilon_by_bv_id = {}
+        action_count = len(conf.BV_ACTIONS)
+        for index, bv in enumerate(controlled_bvs_list):
+            agent = agents.get(bv.id)
+            active = False
+            if isinstance(agent, dict):
+                start = float(agent["start_time_s"])
+                duration = float(agent["duration_s"])
+                active = start <= current_time < start + duration
+            if active:
+                values = np.asarray(agent["action_pdf"], dtype=float)
+                if values.shape != (action_count,) or np.any(values < 0):
+                    raise ValueError(f"Invalid frozen action_pdf for {bv.id}")
+                total = float(np.sum(values))
+                if not np.isfinite(total) or total <= 0:
+                    raise ValueError(f"Frozen action_pdf for {bv.id} has no mass")
+                arrays.append(values / total)
+                epsilon_by_bv_id[bv.id] = float(agent["epsilon"])
+                active_ids.append(bv.id)
+            else:
+                arrays.append(np.asarray(bv.controller.get_NDD_possi(), dtype=float))
+                epsilon_by_bv_id[bv.id] = 1.0
+        if not active_ids:
+            return {
+                "active": False,
+                "criticality": [0.0 for _ in controlled_bvs_list],
+                "criticality_arrays": [
+                    np.zeros_like(np.asarray(values, dtype=float))
+                    for values in fallback_arrays
+                ],
+                "epsilon_by_bv_id": epsilon_by_bv_id,
+                "debug": {
+                    "proposal_id": config.get("proposal_id"),
+                    "active": False,
+                    "active_bv_ids": [],
+                    "time_s": current_time,
+                },
+            }
+        return {
+            "active": True,
+            "criticality": [float(np.sum(values)) for values in arrays],
+            "criticality_arrays": arrays,
+            "epsilon_by_bv_id": epsilon_by_bv_id,
+            "debug": {
+                "proposal_id": config.get("proposal_id"),
+                "active": True,
+                "active_bv_ids": active_ids,
+                "time_s": current_time,
+                "epsilon_by_bv_id": epsilon_by_bv_id,
+            },
+        }
 
     def _record_probability_terms(self):
         """Expose exact joint p/q terms to the episode information extractor."""

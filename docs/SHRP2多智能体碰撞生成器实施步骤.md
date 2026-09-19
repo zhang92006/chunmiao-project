@@ -119,3 +119,37 @@ data_analysis/raw_data/shrp2_collision_action_cem_v1/cem_search_summary.json
 ```
 
 若至少一个新源事件被搜索到目标碰撞，下一步不是直接训练，而是把各源事件的 elite 分布拟合成显式 categorical proposal，并冻结后重新采样。若仍为零，则应扩大动作时序表达能力或加入有边界的 CAV 反应延迟实验，不应直接把故障轨迹混入默认训练池。
+
+## CEM v1 结果与冻结 proposal
+
+CEM 共执行 448 次，两个新源事件产生目标碰撞：
+
+- `61385336`：每代碰撞 `3, 10, 14, 15`，收敛到 primary 制动和 context 向左换道；
+- `151570590`：每代碰撞 `1, 1, 2, 4`，收敛到 primary/context 提前制动。
+
+已将两者最后一代 elite 动作分布冻结为逐步 factorized defensive mixture：
+
+```text
+q(a|s) = epsilon * p(a|s) + (1-epsilon) * r_elite(a)
+epsilon = 0.05
+```
+
+固定的开始时间和持续时间来自各源最佳 CEM 候选；在窗口内每一步从显式 `q` 采样，窗口外使用自然驾驶。它不再使用 `forced_bv_action`，每一步都记录实际动作的 `p`、`q` 和 `p/q`。
+
+2 条短冒烟重采样均形成碰撞并成为 training-ready，最大对数恒等式残差约 `1.8e-15`。下一步用新随机数各采样 50 次：
+
+```powershell
+Set-Location 'G:\chunmiao\d2rl\Dense-Deep-Reinforcement-Learning\scenario_reconstruction'
+$python = 'D:\Anaconda3\envs\D2RL\python.exe'
+
+& $python -m scenario_reconstruction.run_template_manifest `
+  'data_analysis\raw_data\shrp2_frozen_collision_proposals_v1\frozen_collision_proposal_manifest.json' `
+  --experiment_path 'data_analysis\raw_data\shrp2_frozen_collision_proposal_train_v1' `
+  --split train `
+  --repeats 50 `
+  --proposal_mode factorized `
+  --epsilon 0.99 `
+  2>&1 | Tee-Object -FilePath 'data_analysis\logs\shrp2_frozen_collision_proposal_train_v1.log'
+```
+
+命令中的全局 `--epsilon 0.99` 只作为窗口外兼容参数；窗口内使用模板中冻结的每车 `epsilon=0.05`。这 100 条是与 CEM 搜索不同的新随机 rollout，可以在通过权重和覆盖验收后加入训练池。
