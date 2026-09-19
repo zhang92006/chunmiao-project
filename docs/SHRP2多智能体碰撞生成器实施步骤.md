@@ -71,3 +71,51 @@ data_analysis/raw_data/shrp2_collision_generator_epsilon_search_v1/epsilon_searc
 5. **P5：接入多智能体 D2RL**：采用 source-balanced 采样，报告 source-macro、micro、碰撞覆盖数和 ESS。
 
 注意：CEM 搜索轨迹本身通常没有可直接用于无偏估计的解析 `q`，所以不能把“最优搜索轨迹”直接当正式 D2RL 数据。必须把搜索结果固化成可采样、可计算概率的 proposal 后重新生成。
+
+## epsilon pilot 结果与动作级 CEM
+
+9 组 epsilon 共 900 次 rollout 得到 32 次碰撞，但全部来自 3 个正对照源事件；7 个搜索场景共 630 次仍为零碰撞。因此停止扩大 epsilon 网格，转入动作与时刻搜索。
+
+动作级 CEM 对每个零碰撞源事件独立搜索以下离散变量：
+
+- 两车共同的基本干预开始时刻；
+- context BV 相对 primary BV 的动作延迟；
+- 两车各自的动作持续时间；
+- primary BV 的纵向动作 ID；
+- context BV 的纵向或换道动作 ID。
+
+搜索评分优先级为目标 CAV 碰撞，其次为最小 TTC 和最小距离。每代只用高分 elite 更新下一代分类分布。所有候选模板及 episode 都明确标记：
+
+```text
+collision_search_only=true
+not_for_d2rl_training=true
+```
+
+训练数据准备器会硬性排除这些记录，即使它们包含碰撞或看起来具有完整联合字段。
+
+全量第一轮共 `7 × 4 × 16 = 448` 次 SUMO rollout：
+
+```powershell
+Set-Location 'G:\chunmiao\d2rl\Dense-Deep-Reinforcement-Learning\scenario_reconstruction'
+$python = 'D:\Anaconda3\envs\D2RL\python.exe'
+New-Item -ItemType Directory -Force 'data_analysis\logs' | Out-Null
+
+& $python -m scenario_reconstruction.shrp2_collision_action_cem `
+  'data_analysis\raw_data\shrp2_collision_generator_pilot_v1\collision_generator_pilot_manifest.json' `
+  --output 'data_analysis\raw_data\shrp2_collision_action_cem_v1' `
+  --generations 4 `
+  --population 16 `
+  --elite_fraction 0.25 `
+  --smoothing 0.25 `
+  --rollouts_per_candidate 1 `
+  --seed 20260919 `
+  2>&1 | Tee-Object -FilePath 'data_analysis\logs\shrp2_collision_action_cem_v1.log'
+```
+
+程序默认跳过 3 个正对照，只搜索 7 个零碰撞场景，并在每个 generation 后增量保存结果。最终查看：
+
+```text
+data_analysis/raw_data/shrp2_collision_action_cem_v1/cem_search_summary.json
+```
+
+若至少一个新源事件被搜索到目标碰撞，下一步不是直接训练，而是把各源事件的 elite 分布拟合成显式 categorical proposal，并冻结后重新采样。若仍为零，则应扩大动作时序表达能力或加入有边界的 CAV 反应延迟实验，不应直接把故障轨迹混入默认训练池。

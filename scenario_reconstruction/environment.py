@@ -63,6 +63,18 @@ class ScenarioNADE(NADE):
             "multibv_proposal_mode": self.multibv_proposal_mode,
             **{key: bridge[key] for key in source_keys if key in bridge},
         }
+        search_events = [
+            event for event in self.scenario_template.events
+            if event.params.get("search_only") is True
+        ]
+        if search_events:
+            self.info_extractor.episode_log["scenario_metadata"].update({
+                "collision_search_only": True,
+                "not_for_d2rl_training": True,
+                "collision_search_candidate_id": bridge.get(
+                    "collision_search_candidate_id"
+                ),
+            })
 
     def generate_traffic_flow(self, init_info=None):
         """Insert the CAV and key BVs from the template instead of NDD flow."""
@@ -128,8 +140,13 @@ class ScenarioNADE(NADE):
                     event_key = self._event_key(event)
                     apply_once = bool(event.params.get("apply_once", True))
                     if not apply_once or event_key not in self._logged_training_events:
-                        self._apply_forced_bv_action(event)
-                    if event.params.get("calibration_only") is not True:
+                        applied = self._apply_forced_bv_action(event)
+                        if event.params.get("search_only") is True:
+                            self._record_search_event(event, applied)
+                    if (
+                        event.params.get("calibration_only") is not True
+                        and event.params.get("search_only") is not True
+                    ):
                         self._record_forced_training_step(event)
                 elif event.type == "calibration_cav_action":
                     self._apply_calibration_cav_action(event)
@@ -182,19 +199,35 @@ class ScenarioNADE(NADE):
 
     def _apply_forced_bv_action(self, event: EventSpec):
         if event.actor not in self.vehicle_list:
-            return
+            return False
         if event.params.get("calibration_only") is True:
             self._apply_calibration_longitudinal_action(event)
-            return
+            return True
         vehicle = self.vehicle_list[event.actor]
         action = {
             "lateral": str(event.params.get("lateral", "central")),
             "longitudinal": float(event.params.get("longitudinal", 0.0)),
         }
         if not vehicle.is_action_legal(action):
-            return
+            return False
         vehicle.controller.action = action
         vehicle.act(action)
+        return True
+
+    def _record_search_event(self, event: EventSpec, applied: bool) -> None:
+        """Audit forced search actions without creating training probability labels."""
+        time_step = f"{self.simulator.get_time():.6f}"
+        self.info_extractor.episode_log.setdefault(
+            "collision_search_event_step_info", {}
+        ).setdefault(time_step, []).append({
+            "actor": event.actor,
+            "action_id": event.params.get("action_id"),
+            "lateral": str(event.params.get("lateral", "central")),
+            "longitudinal": float(event.params.get("longitudinal", 0.0)),
+            "applied": bool(applied),
+            "search_only": True,
+            "not_for_d2rl_training": True,
+        })
 
     def _apply_calibration_cav_action(self, event: EventSpec):
         """Override the CAV response for an explicitly calibration-only window.

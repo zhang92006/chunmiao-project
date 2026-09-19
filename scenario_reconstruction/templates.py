@@ -144,6 +144,17 @@ class ScenarioTemplate:
                     raise ValueError(
                         "calibration_cav_action supports longitudinal calibration only."
                     )
+            if event.type == "forced_bv_action" and event.params.get("search_only") is True:
+                if event.params.get("not_for_d2rl_training") is not True:
+                    raise ValueError(
+                        "search-only forced_bv_action requires not_for_d2rl_training=true."
+                    )
+                if event.params.get("calibration_only") is True:
+                    raise ValueError(
+                        "forced_bv_action cannot be both search_only and calibration_only."
+                    )
+                if event.actor == self.ego.id:
+                    raise ValueError("search-only forced_bv_action may target only a BV.")
             if event.type in {"perception_delay", "perception_dropout", "perception_position_bias", "control_delay"} and event.actor != self.ego.id:
                 raise ValueError(f"{event.type} may target only the ego CAV.")
             if event.type in {"perception_delay", "control_delay"}:

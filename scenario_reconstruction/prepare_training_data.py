@@ -142,9 +142,15 @@ def prepare_safe_weight_dict(
 
     safe_weight_dict: dict[str, list[float]] = {}
     for safe_json_path in sorted(safe_dir.glob("*.json")):
+        with safe_json_path.open("r", encoding="utf-8") as stream:
+            episode = json.load(stream)
+        metadata = episode.get("scenario_metadata", {})
+        if (
+            metadata.get("collision_search_only") is True
+            or metadata.get("not_for_d2rl_training") is True
+        ):
+            continue
         if multi_bv:
-            with safe_json_path.open("r", encoding="utf-8") as stream:
-                episode = json.load(stream)
             if not _is_training_ready_episode(episode, multi_bv=True, agent_num=agent_num):
                 continue
         normalized_path = safe_json_path.as_posix()
@@ -163,6 +169,12 @@ def _is_training_ready_episode(
     multi_bv: bool = False,
     agent_num: int = 2,
 ) -> bool:
+    metadata = episode.get("scenario_metadata", {})
+    if (
+        metadata.get("collision_search_only") is True
+        or metadata.get("not_for_d2rl_training") is True
+    ):
+        return False
     weight_step_info = episode.get("weight_step_info", {})
     drl_obs_step_info = episode.get("drl_obs_step_info", {})
     criticality_step_info = episode.get("criticality_step_info", {})

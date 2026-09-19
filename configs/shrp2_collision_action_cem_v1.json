@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "purpose": "search_only_not_training_data",
+  "source_scope": "seven_zero_collision_train_pilot_events",
+  "generations": 4,
+  "population": 16,
+  "elite_fraction": 0.25,
+  "smoothing": 0.25,
+  "rollouts_per_candidate": 1,
+  "seed": 20260919,
+  "expected_rollouts": 448,
+  "search_variables": {
+    "start_time_s": [0.5, 1.0, 1.5, 2.0, 2.5, 3.0],
+    "context_delay_s": [-0.5, 0.0, 0.5, 1.0],
+    "primary_duration_s": [0.5, 1.0, 1.5, 2.0],
+    "context_duration_s": [0.5, 1.0, 1.5, 2.0],
+    "primary_action_id": [2, 7, 12, 17, 22],
+    "context_action_id": [0, 1, 2, 12, 22, 27, 32]
+  },
+  "formal_training_rule": "CEM output is discovery-only; fit and freeze an explicit q(a|s), then resample with fresh RNG"
+}
