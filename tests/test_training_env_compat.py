@@ -1,4 +1,9 @@
+import json
+from pathlib import Path
+import tempfile
 import unittest
+
+import numpy as np
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
@@ -22,6 +27,228 @@ class MultiBVCompatibilityTests(unittest.TestCase):
             "per_agent": [primary, list(range(10, 20))],
         }
         self.assertEqual(D2RLTrainingEnv._primary_observation(record), primary)
+
+    def test_joint_training_uses_joint_observation_and_vector_action(self):
+        env = D2RLTrainingEnv.__new__(D2RLTrainingEnv)
+        env.multi_bv_training = True
+        env.multi_bv_num = 2
+        env.observation_dim = 14
+        env.action_dim = 2
+        record = {
+            "joint": list(range(14)),
+            "per_agent": [list(range(10)), list(range(10, 20))],
+        }
+
+        self.assertEqual(env._training_observation(record), list(range(14)))
+        self.assertTrue(
+            np.allclose(env._normalize_action([0.2, 0.8]), [0.2, 0.8])
+        )
+        with self.assertRaisesRegex(ValueError, "Expected 2-D action"):
+            env._normalize_action([0.2])
+
+    def test_joint_importance_weight_multiplies_per_agent_terms(self):
+        result = D2RLTrainingEnv._joint_epsilon_weight(
+            {"joint": 0.125, "per_agent": [0.5, 0.25]},
+            [0.5, 0.25],
+            {"joint": 0.02, "per_agent": [0.1, 0.2]},
+        )
+        self.assertAlmostEqual(result, (0.1 / (1 - 0.5)) * (0.2 / (1 - 0.25)))
+
+    def test_joint_pair_importance_weight_uses_the_correlated_proposal(self):
+        result = D2RLTrainingEnv._joint_epsilon_weight(
+            {
+                "proposal_type": "joint_pair",
+                "joint": 0.25,
+                "per_agent": [0.5, 0.5],
+                "joint_naturalistic_probability": 0.02,
+                "joint_proposal_probability": 0.08,
+            },
+            [0.001, 0.001],
+            {"proposal_type": "joint_pair", "joint": 0.02, "per_agent": [0.1, 0.2]},
+        )
+        self.assertAlmostEqual(result, 0.25)
+
+    def test_joint_training_env_reset_and_step_keep_two_actions(self):
+        episode = {
+            "collision_result": 1,
+            "weight_step_info": {
+                "forced_0.100000": {"joint": 0.125, "per_agent": [0.5, 0.25]}
+            },
+            "drl_obs_step_info": {
+                "forced_0.100000": {
+                    "joint": list(range(14)),
+                    "per_agent": [list(range(10)), list(range(10, 20))],
+                }
+            },
+            "drl_epsilon_step_info": {"forced_0.100000": [0.5, 0.5]},
+            "real_epsilon_step_info": {"forced_0.100000": [0.5, 0.5]},
+            "criticality_step_info": {"forced_0.100000": 1.0},
+            "ndd_step_info": {
+                "forced_0.100000": {"joint": 0.02, "per_agent": [0.1, 0.2]}
+            },
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            episode_path = root / "episode.json"
+            episode_path.write_text(json.dumps(episode), encoding="utf-8")
+            (root / "crash_weight_dict.json").write_text(
+                json.dumps({str(episode_path): [0.125, 0.125]}), encoding="utf-8"
+            )
+            env = D2RLTrainingEnv(
+                {
+                    "root_folder": "",
+                    "data_folders": [str(root)],
+                    "data_folder_weights": [1],
+                    "clip_reward_threshold": 100,
+                    "multi_bv_training": True,
+                    "multi_bv_num": 2,
+                }
+            )
+            observation = env.reset()
+            _, _, done, _ = env.step(np.array([0.2, 0.8], dtype=np.float32))
+
+        self.assertEqual(env.observation_space.shape, (14,))
+        self.assertEqual(env.action_space.shape, (2,))
+        self.assertEqual(len(observation), 14)
+        self.assertTrue(done)
+        self.assertTrue(
+            np.allclose(
+                env.episode_data["drl_epsilon_step_info"]["forced_0.100000"],
+                [0.2, 0.8],
+            )
+        )
+
+    def test_log_weight_sidecar_preserves_relative_sampling_weights(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            first = (root / "first.json").as_posix()
+            second = (root / "second.json").as_posix()
+            sidecar = root / "crash_log_weight_dict.json"
+            sidecar.write_text(json.dumps({
+                "schema_version": 1,
+                "log_weights": {first: -1000.0, second: -1001.0},
+            }), encoding="utf-8")
+
+            weights = D2RLTrainingEnv._stable_sampling_weights(
+                [first, second], sidecar
+            )
+
+        self.assertAlmostEqual(weights[0], 1.0)
+        self.assertAlmostEqual(weights[1], np.exp(-1.0))
+
+    def test_source_balanced_sampling_gives_each_event_equal_total_mass(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            paths = []
+            for index, source_event_id in enumerate((10, 20, 20, 20)):
+                path = root / f"{index}.json"
+                path.write_text(json.dumps({
+                    "scenario_metadata": {"source_event_id": source_event_id}
+                }), encoding="utf-8")
+                paths.append(str(path))
+
+            weights = D2RLTrainingEnv._source_balanced_sampling_weights(paths)
+
+        self.assertEqual(weights[0], 1.0)
+        self.assertEqual(weights[1:], [1 / 3, 1 / 3, 1 / 3])
+        self.assertAlmostEqual(weights[0], sum(weights[1:]))
+
+    def test_single_critical_mode_keeps_one_latest_maximum_criticality_step(self):
+        def joint_record(value):
+            return {"joint": value, "per_agent": [value, value]}
+
+        episode = {
+            "collision_result": 1,
+            "weight_step_info": {
+                "0.0": joint_record(0.5),
+                "0.1": joint_record(0.4),
+                "0.2": joint_record(0.3),
+            },
+            "drl_obs_step_info": {
+                timestep: {"joint": list(range(14)), "per_agent": [list(range(10)), list(range(10))]}
+                for timestep in ("0.0", "0.1", "0.2")
+            },
+            "drl_epsilon_step_info": {
+                timestep: [0.5, 0.5] for timestep in ("0.0", "0.1", "0.2")
+            },
+            "real_epsilon_step_info": {
+                timestep: [0.5, 0.5] for timestep in ("0.0", "0.1", "0.2")
+            },
+            "criticality_step_info": {"0.0": 1.0, "0.1": 4.0, "0.2": 4.0},
+            "ndd_step_info": {
+                timestep: joint_record(0.2) for timestep in ("0.0", "0.1", "0.2")
+            },
+            "controlled_bv_ids_step_info": {
+                timestep: ["BV_primary", "BV_context"]
+                for timestep in ("0.0", "0.1", "0.2")
+            },
+        }
+        env = D2RLTrainingEnv.__new__(D2RLTrainingEnv)
+        env.multi_bv_training = True
+        env.multi_bv_decision_mode = "single_critical"
+        env.yaml_conf = {"clip_reward_threshold": 100}
+        env.total_steps = 0
+
+        selected = env.filter_episode_data(episode)
+
+        self.assertEqual(list(selected["weight_step_info"]), ["0.2"])
+        self.assertEqual(selected["d2rl_decision_selection"], {
+            "mode": "single_critical",
+            "selected_timestep": "0.2",
+            "selected_criticality": 4.0,
+            "candidate_count": 3,
+        })
+        self.assertEqual(env.get_multiple_adv_action_num(selected["weight_step_info"]), 1)
+        env.episode_data = selected
+        self.assertNotEqual(env._get_reward(), 0)
+
+    def test_trainable_critical_mode_excludes_reward_clipped_candidates(self):
+        def record(joint, per_agent):
+            return {"joint": joint, "per_agent": per_agent}
+
+        episode = {
+            "collision_result": 1,
+            "weight_step_info": {
+                # Highest criticality, but q=1 at epsilon=0.5 and thus clipped.
+                "0.0": record(0.5, [0.5, 0.5]),
+                "0.1": record(0.02, [0.1, 0.2]),
+                "0.2": record(0.01, [0.1, 0.1]),
+            },
+            "drl_obs_step_info": {
+                timestep: {"joint": list(range(14)), "per_agent": [list(range(10))] * 2}
+                for timestep in ("0.0", "0.1", "0.2")
+            },
+            "drl_epsilon_step_info": {
+                timestep: [0.5, 0.5] for timestep in ("0.0", "0.1", "0.2")
+            },
+            "real_epsilon_step_info": {
+                timestep: [0.5, 0.5] for timestep in ("0.0", "0.1", "0.2")
+            },
+            "criticality_step_info": {"0.0": 9.0, "0.1": 4.0, "0.2": 3.0},
+            "ndd_step_info": {
+                "0.0": record(0.25, [0.5, 0.5]),
+                "0.1": record(0.0002, [0.01, 0.02]),
+                "0.2": record(0.0001, [0.01, 0.01]),
+            },
+        }
+        env = D2RLTrainingEnv.__new__(D2RLTrainingEnv)
+        env.multi_bv_training = True
+        env.multi_bv_decision_mode = "single_trainable_critical"
+        env.multi_bv_reference_epsilon = 0.5
+        env.multi_bv_max_reference_q_amplifier = 0.004
+
+        selected = env.filter_episode_data(episode)
+
+        self.assertEqual(list(selected["weight_step_info"]), ["0.1"])
+        metadata = selected["d2rl_decision_selection"]
+        self.assertEqual(metadata["mode"], "single_trainable_critical")
+        self.assertEqual(metadata["complete_candidate_count"], 3)
+        self.assertEqual(metadata["candidate_count"], 2)
+        self.assertAlmostEqual(metadata["reference_q_amplifier"], 0.0008)
+        self.assertLess(
+            metadata["reference_q_amplifier"],
+            metadata["max_reference_q_amplifier"],
+        )
 
     def test_scenario_duration_boundary_is_inclusive(self):
         self.assertFalse(_duration_reached(5.99, 6.0))

@@ -1,4 +1,4 @@
-from math import exp, isclose
+from math import exp, isclose, isfinite
 from time import time
 from mtlsp.logger.infoextractor import InfoExtractor
 import copy
@@ -38,6 +38,8 @@ class NADEInfoExtractor(InfoExtractor):
         if conf.experiment_config["mode"] == "DRL_train":
             return None
         if stop:
+            if not hasattr(self, "save_dir"):
+                self.save_dir = self.env.simulator.experiment_path
             self.episode_log["episode_info"] = self.env.episode_info
             if 1 in reason:  # have crash
                 self.episode_log["collision_result"] = 1
@@ -45,8 +47,10 @@ class NADEInfoExtractor(InfoExtractor):
                 crash_decision_info = {}
                 all_vehicle_list = self.env.vehicle_list
                 for id in self.episode_log["collision_id"]:
-                    crash_decision_info[id] = all_vehicle_list[id].controller.ego_info
-                    crash_decision_info[id]["action"] = all_vehicle_list[id].controller.action
+                    controller = all_vehicle_list[id].controller
+                    decision = copy.deepcopy(controller.ego_info) or {}
+                    decision["action"] = controller.action
+                    crash_decision_info[id] = decision
                 self.episode_log["crash_decision_info"] = crash_decision_info
             else:
                 self.episode_log["collision_result"] = 0
@@ -91,10 +95,14 @@ class NADEInfoExtractor(InfoExtractor):
 
     def _new_episode_log(self):
         return {"collision_result": None, "collision_id": None, "weight_episode": 1, "current_weight": 1,
+                "log_naturalistic_probability": 0.0, "log_proposal_probability": 0.0,
+                "log_importance_weight": 0.0, "log_probability_step_info": {},
+                "proposal_modes": [],
                 "episode_info": None, "crash_decision_info": None, "decision_time_info": {}, "weight_step_info":{},
                 "drl_epsilon_step_info": {}, "real_epsilon_step_info": {}, "criticality_this_timestep": 0,
                 "criticality_step_info": {}, "ndd_step_info": {}, "drl_obs_step_info":{},
-                "controlled_bv_ids_step_info": {}, "ttc_step_info":{}, "distance_step_info":{}, "av_obs":{}}
+                "controlled_bv_ids_step_info": {}, "multibv_selection_debug_step_info": {},
+                "ttc_step_info":{}, "distance_step_info":{}, "av_obs":{}}
     
     def meet_log_criteria(self, ttc_dict, distance_dict):
         min_distance, min_ttc = self.calculate_min_distance_ttc(ttc_dict, distance_dict)
@@ -130,6 +138,8 @@ class NADEInfoExtractor(InfoExtractor):
         time_step = self.env.simulator.get_time()-self.env.simulator.step_size
         snapshot_weight_list = self.env.global_controller_instance_list[
             0].control_log["weight_list_per_simulation"]
+        control_log = self.env.global_controller_instance_list[0].control_log
+        joint_training = bool(control_log.get("joint_training", False))
         self.episode_log["weight_episode"] = self.episode_log["weight_episode"] * \
             reduce(lambda x, y: x * y, snapshot_weight_list)
         try:
@@ -137,18 +147,60 @@ class NADEInfoExtractor(InfoExtractor):
         except:
             pass
         self.episode_log["current_weight"] = reduce(lambda x, y: x * y, snapshot_weight_list)
+        weight_record = control_log.get("weight_record", self.episode_log["current_weight"])
+        ndd_record = control_log.get("ndd_record")
+        probability = control_log.get("probability_record")
+        if probability is not None:
+            self._record_log_probability(time_step, probability)
         self.episode_log["av_obs"][time_step] = self.env.get_av_obs()
         try:
             self.episode_log["criticality_step_info"][time_step] = self.get_criticality_this_step()
             if not isclose(self.episode_log["current_weight"], 1):
-                self.episode_log["weight_step_info"][time_step] = self.episode_log["current_weight"]
+                self.episode_log["weight_step_info"][time_step] = weight_record
                 self.episode_log["drl_obs_step_info"][time_step] = self.get_current_drl_obs()
             if self.env.global_controller_instance_list[0].drl_epsilon_value != -1:
                 self.episode_log["drl_epsilon_step_info"][time_step] = self.env.global_controller_instance_list[0].drl_epsilon_value
             if self.env.global_controller_instance_list[0].real_epsilon_value != -1:
                 self.episode_log["real_epsilon_step_info"][time_step] = self.env.global_controller_instance_list[0].real_epsilon_value
             
-            if "ndd_possi" in self.env.global_controller_instance_list[0].control_log:
-                self.episode_log["ndd_step_info"][time_step] = self.env.global_controller_instance_list[0].control_log["ndd_possi"]
+            if ndd_record is not None:
+                self.episode_log["ndd_step_info"][time_step] = ndd_record
+            elif "ndd_possi" in control_log:
+                self.episode_log["ndd_step_info"][time_step] = control_log["ndd_possi"]
+            if joint_training:
+                self.episode_log["controlled_bv_ids_step_info"][time_step] = control_log.get(
+                    "joint_controlled_bv_ids", []
+                )
+            if "multibv_selection_debug" in control_log:
+                self.episode_log.setdefault(
+                    "multibv_selection_debug_step_info", {}
+                )[time_step] = control_log["multibv_selection_debug"]
         except Exception as e:
             print("Log error:", e)
+
+    def _record_log_probability(self, time_step, probability):
+        """Accumulate p/q in log space for selected joint BV actions only."""
+        required = (
+            "proposal_type",
+            "naturalistic_probability",
+            "proposal_probability",
+            "log_naturalistic_probability",
+            "log_proposal_probability",
+            "log_importance_weight",
+        )
+        if not isinstance(probability, dict) or any(key not in probability for key in required):
+            raise ValueError("Incomplete probability record for importance logging")
+        log_naturalistic = float(probability["log_naturalistic_probability"])
+        log_proposal = float(probability["log_proposal_probability"])
+        log_weight = float(probability["log_importance_weight"])
+        if not all(isfinite(value) for value in (log_naturalistic, log_proposal, log_weight)):
+            raise ValueError("Importance log probabilities must be finite")
+        if not isclose(log_weight, log_naturalistic - log_proposal):
+            raise ValueError("Log importance weight must equal log(p) - log(q)")
+        self.episode_log["log_probability_step_info"][time_step] = dict(probability)
+        self.episode_log["log_naturalistic_probability"] += log_naturalistic
+        self.episode_log["log_proposal_probability"] += log_proposal
+        self.episode_log["log_importance_weight"] += log_weight
+        proposal_type = str(probability["proposal_type"])
+        if proposal_type not in self.episode_log["proposal_modes"]:
+            self.episode_log["proposal_modes"].append(proposal_type)
