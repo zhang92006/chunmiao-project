@@ -153,3 +153,39 @@ $python = 'D:\Anaconda3\envs\D2RL\python.exe'
 ```
 
 命令中的全局 `--epsilon 0.99` 只作为窗口外兼容参数；窗口内使用模板中冻结的每车 `epsilon=0.05`。这 100 条是与 CEM 搜索不同的新随机 rollout，可以在通过权重和覆盖验收后加入训练池。
+
+## 五源联合训练池
+
+`epsilon=0.9` 的独立确认批次产生 27 条碰撞，其中 `61385336` 的源内 ESS 为 7.32；对 `151570590` 再补采 200 次得到 44 条 training-ready 碰撞，但源内 ESS 仍只有 1.73。这说明继续重复采样不能根治该源的无偏估计方差。
+
+当前 D2RL 的 `uniform_source` 是明确的多样性训练消融：每个源事件获得相同总回放概率，并在源内均匀抽取 episode。它不使用 episode importance weight 决定回放频率。因此这些样本可以用于策略训练，但不能用于宣称无偏自然事故率估计；后者必须单独报告 importance-weighted 结果与 ESS。
+
+联合索引不复制 episode 文件，共包含 86 条训练碰撞和 5 个独立 SHRP2 源：
+
+```text
+151569125: 2
+151570590: 55
+151578944: 12
+151586341: 1
+61385336: 16
+```
+
+索引目录：
+
+```text
+data_analysis/raw_data/shrp2_multibv_frozen5_source_balanced_train_v1
+```
+
+100 次 reset 预检中五个源均被抽到，说明 source-balanced 接口可用。下一步先执行 2 iteration 冒烟训练：
+
+```powershell
+Set-Location 'G:\chunmiao\d2rl\Dense-Deep-Reinforcement-Learning\scenario_reconstruction'
+$trainPython = 'D:\Anaconda3\envs\D2RLTrain39\python.exe'
+
+& $trainPython -m scenario_reconstruction.d2rl_smoke_train `
+  --yaml_conf 'd2rl_training\d2rl_train_shrp2_multibv_frozen5_source_balanced_smoke.yaml' `
+  --stop_iterations 2 `
+  2>&1 | Tee-Object -FilePath 'data_analysis\logs\shrp2_multibv_frozen5_source_balanced_smoke.log'
+```
+
+冒烟训练通过后再运行 20 iterations。训练结论必须表述为“源均衡碰撞策略训练”，不能将该回放分布描述为 SHRP2 的自然碰撞频率。
