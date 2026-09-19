@@ -223,7 +223,7 @@ class NADEBVGlobalController(NDDBVGlobalController):
         underline_drl_action = self.get_underline_drl_action(discriminator_input, bv_criticality_list)
         proposal_mode = self._proposal_mode()
         epsilon_by_index, selected_epsilon_values = self._selected_epsilon_values(
-            underline_drl_action, selected_bv_idx
+            underline_drl_action, selected_bv_idx, controlled_bvs_list
         )
         if proposal_mode == "naturalistic":
             epsilon_by_index = {index: 1.0 for index in selected_bv_idx}
@@ -313,6 +313,7 @@ class NADEBVGlobalController(NDDBVGlobalController):
                 "pair_criticality": self.control_log.get("joint_pair_criticality", []),
                 "joint_proposal": self.control_log.get("joint_proposal_record"),
                 "proposal_mode": proposal_mode,
+                "epsilon_by_bv_id": self.control_log.get("epsilon_by_bv_id", {}),
             }
         if len(bv_criticality_list):
             max_vehicle_criticality = np.max(bv_criticality_list)
@@ -434,18 +435,36 @@ class NADEBVGlobalController(NDDBVGlobalController):
             },
         }
 
-    def _selected_epsilon_values(self, epsilon, selected_bv_idx):
-        """Assign one epsilon to each selected BV in criticality rank order."""
-        if isinstance(epsilon, (list, tuple, np.ndarray)):
+    def _selected_epsilon_values(self, epsilon, selected_bv_idx, controlled_bvs_list=None):
+        """Assign epsilon values to selected BVs, preferring explicit vehicle IDs."""
+        if epsilon is None:
+            epsilon = conf.epsilon_value
+        if isinstance(epsilon, dict):
+            if controlled_bvs_list is None:
+                raise ValueError("per-BV epsilon requires the controlled BV list")
+            values = []
+            for index in selected_bv_idx:
+                bv_id = controlled_bvs_list[index].id
+                if bv_id not in epsilon:
+                    raise ValueError(f"No epsilon configured for selected BV {bv_id!r}")
+                values.append(float(epsilon[bv_id]))
+        elif isinstance(epsilon, (list, tuple, np.ndarray)):
             values = [float(value) for value in list(epsilon)]
-        elif epsilon is None:
-            values = [float(conf.epsilon_value)]
         else:
             values = [float(epsilon)]
         if not values:
-            values = [float(conf.epsilon_value)]
+            fallback = conf.epsilon_value
+            if isinstance(fallback, dict):
+                raise ValueError("empty epsilon sequence cannot use a per-BV fallback")
+            values = [float(fallback)]
         values = values[: len(selected_bv_idx)]
         values.extend([values[-1]] * (len(selected_bv_idx) - len(values)))
+        if not all(0.0 <= value <= 1.0 for value in values):
+            raise ValueError("epsilon values must lie between zero and one")
+        self.control_log["epsilon_by_bv_id"] = {
+            controlled_bvs_list[index].id: value
+            for index, value in zip(selected_bv_idx, values)
+        } if controlled_bvs_list is not None else {}
         return dict(zip(selected_bv_idx, values)), values
 
     def apply_control_permission(self):

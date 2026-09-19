@@ -15,6 +15,27 @@ def _ego(vehicle_id, x, y, speed):
 
 
 class MultiBVJointLoggingTests(unittest.TestCase):
+    def test_per_bv_epsilon_is_assigned_by_vehicle_id_not_candidate_order(self):
+        controller = NADEBVGlobalController.__new__(NADEBVGlobalController)
+        controller.control_log = {}
+        candidates = [
+            SimpleNamespace(id="BV_context"),
+            SimpleNamespace(id="BV_primary"),
+        ]
+
+        by_index, values = controller._selected_epsilon_values(
+            {"BV_primary": 0.001, "BV_context": 0.2},
+            [0, 1],
+            candidates,
+        )
+
+        self.assertEqual(by_index, {0: 0.2, 1: 0.001})
+        self.assertEqual(values, [0.2, 0.001])
+        self.assertEqual(
+            controller.control_log["epsilon_by_bv_id"],
+            {"BV_context": 0.2, "BV_primary": 0.001},
+        )
+
     def test_joint_context_contains_k_agents_and_probability_products(self):
         controller = NADEBVGlobalController.__new__(NADEBVGlobalController)
         controller.joint_control_num = 2

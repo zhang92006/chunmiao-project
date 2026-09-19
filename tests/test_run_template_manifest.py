@@ -173,6 +173,31 @@ class RunTemplateManifestTests(unittest.TestCase):
         self.assertEqual(summary["proposal_mode"], "factorized")
         self.assertEqual(run.call_args.kwargs["proposal_mode"], "factorized")
 
+    def test_manifest_forwards_named_per_bv_epsilon(self):
+        manifest = {
+            "records": [
+                {"status": "template_created", "split": "train", "template_path": "one.json"},
+            ]
+        }
+        epsilon = {"BV_primary": 0.001, "BV_context": 0.1}
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            manifest_path = root / "manifest.json"
+            manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+            with patch(
+                "scenario_reconstruction.run_template_manifest.run_template",
+                return_value=1.0,
+            ) as run:
+                summary = run_template_manifest(
+                    manifest_path,
+                    root / "episodes",
+                    epsilon=epsilon,
+                    proposal_mode="factorized",
+                )
+
+        self.assertEqual(summary["epsilon"], epsilon)
+        self.assertEqual(run.call_args.kwargs["epsilon"], epsilon)
+
 
 if __name__ == "__main__":
     unittest.main()

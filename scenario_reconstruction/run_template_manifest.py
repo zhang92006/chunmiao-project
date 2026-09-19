@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+from typing import Mapping
 
 from .prepare_training_data import prepare_crash_weight_dict, prepare_safe_weight_dict
 from .run_template import run_template
@@ -17,7 +18,7 @@ def run_template_manifest(
     start: int = 0,
     limit: int | None = None,
     repeats: int = 1,
-    epsilon: float = 0.99,
+    epsilon: float | Mapping[str, float] = 0.99,
     proposal_mode: str = "joint_pair",
     max_initial_primary_ttc_s: float | None = None,
     require_context_blocking: bool = False,
@@ -282,6 +283,18 @@ def main() -> None:
         help="Fixed NADE naturalistic-mixture probability used by every rollout.",
     )
     parser.add_argument(
+        "--epsilon_primary",
+        type=float,
+        default=None,
+        help="Optional epsilon for BV_primary; requires --epsilon_context.",
+    )
+    parser.add_argument(
+        "--epsilon_context",
+        type=float,
+        default=None,
+        help="Optional epsilon for BV_context; requires --epsilon_primary.",
+    )
+    parser.add_argument(
         "--proposal_mode",
         choices=("naturalistic", "factorized", "joint_pair"),
         default="joint_pair",
@@ -322,6 +335,15 @@ def main() -> None:
     )
     args = parser.parse_args()
 
+    if (args.epsilon_primary is None) != (args.epsilon_context is None):
+        parser.error("--epsilon_primary and --epsilon_context must be provided together")
+    epsilon = args.epsilon
+    if args.epsilon_primary is not None:
+        epsilon = {
+            "BV_primary": args.epsilon_primary,
+            "BV_context": args.epsilon_context,
+        }
+
     summary = run_template_manifest(
         args.manifest,
         experiment_path=args.experiment_path,
@@ -331,7 +353,7 @@ def main() -> None:
         start=args.start,
         limit=args.limit,
         repeats=args.repeats,
-        epsilon=args.epsilon,
+        epsilon=epsilon,
         proposal_mode=args.proposal_mode,
         max_initial_primary_ttc_s=args.max_initial_primary_ttc_s,
         require_context_blocking=args.require_context_blocking,
