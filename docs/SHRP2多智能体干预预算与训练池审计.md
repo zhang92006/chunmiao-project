@@ -63,16 +63,9 @@
 `61385336` 占 10 条。因此现有 checkpoint 可保留为工程回归基线，但不应作为最终论文
 模型；正式模型必须在清洗或重新生成后的训练池上重训。
 
-该检查已经固化为可重复命令。每次组装或扩充训练池后运行：
-
-```powershell
-& $python -m scenario_reconstruction.training_pool_ledger_audit `
-  'data_analysis\raw_data\shrp2_multibv_frozen5_source_balanced_train_v1\crash_log_weight_dict.json' `
-  --output 'data_analysis\raw_data\shrp2_multibv_frozen5_source_balanced_train_v1\training_pool_ledger_audit.json'
-```
-
-命令在任一路径不一致、动作没有自然分布支持或 episode 缺失时返回非零状态，适合放到
-后续训练数据生成流程中。
+该检查已经固化为可重复的训练池账本审计工具。每次组装或扩充训练池后均须执行；任一
+路径不一致、动作没有自然分布支持或 episode 缺失时，审计均不通过。具体运行命令仅在
+实际执行时通过对话提供，不写入项目文档。
 
 已生成不复制 episode 的清洗索引
 `shrp2_multibv_probability_audited_train_v2`：保留 66 条、4 个来源，剔除 20 条；事件
@@ -106,27 +99,26 @@ log 权重为有限值。短测试只验证接口和概率支持，不用于判�
 真实 SUMO 冒烟通过：一个候选 20/20 次请求均有支持，另一个只有 5/25 次有支持；两者
 均未碰撞，审计计数符合预期。
 
-下一步对事件 `61385336` 运行 4 代 × 16 个候选，共 64 次支持约束 CEM：
-
-```powershell
-Set-Location 'G:\chunmiao\d2rl\Dense-Deep-Reinforcement-Learning\scenario_reconstruction'
-$python = 'D:\Anaconda3\envs\D2RL\python.exe'
-New-Item -ItemType Directory -Force 'data_analysis\logs' | Out-Null
-
-& $python -m scenario_reconstruction.shrp2_collision_action_cem `
-  'data_analysis\raw_data\shrp2_collision_generator_pilot_v1\collision_generator_pilot_manifest.json' `
-  --output 'data_analysis\raw_data\shrp2_collision_action_cem_support_61385336_v2' `
-  --source_event_id 61385336 `
-  --generations 4 `
-  --population 16 `
-  --elite_fraction 0.25 `
-  --smoothing 0.25 `
-  --rollouts_per_candidate 1 `
-  --seed 20260921 `
-  2>&1 | Tee-Object -FilePath 'data_analysis\logs\shrp2_collision_action_cem_support_61385336_v2.log'
-```
+下一步对事件 `61385336` 运行 4 代 × 16 个候选，共 64 次支持约束 CEM。运行命令在
+对话中单独提供，不写入本文档。
 
 验收首先看 `sources_with_target_collision`，然后核对最佳候选的
 `unsupported_search_action_count=0`。若仍为 0，应停止在该事件上增加重复次数，转向
 其他 1484 个候选事件扩大来源覆盖；若找到碰撞，才将新的 elite 分布冻结并用新随机数
 重采样，CEM 搜索轨迹本身仍禁止进入训练池。
+
+## 支持约束 CEM 与五来源恢复结果
+
+事件 `61385336` 的支持约束 CEM 共执行 64 次。前三代没有碰撞，第 4 代产生 4 个有效
+目标碰撞；所有命中候选的 `unsupported_search_action_count` 均为 0。最佳候选的 25 次
+动作请求全部执行，说明碰撞在当前自然驾驶动作支持集内可达。
+
+新 proposal 使用独立标识 `support_v2`，不会与旧的无效 `v1` 混淆。100 次新随机数
+重采样全部成功，得到 11 个 training-ready 碰撞和 89 个安全 episode。11/11 条碰撞的
+索引权重、episode log 权重、逐步 log 账本和逐步实际权重一致，最大数值误差为
+`5.68e-14`；全部 100 个 episode 均无零权重步。
+
+清洗后的五来源训练索引为 `shrp2_multibv_probability_audited5_train_v3`，包含 77 条合法
+碰撞，来源分布为 `2、51、12、1、11`，本次合并没有排除任何新样本。事件 `61385336`
+的来源内 ESS 为 1.0002，11 个碰撞仍高度权重集中；它恢复了训练来源多样性，但不构成
+风险估计效率提高的证据。

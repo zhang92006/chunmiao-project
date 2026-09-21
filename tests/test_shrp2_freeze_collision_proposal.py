@@ -61,7 +61,12 @@ class FrozenCollisionProposalTests(unittest.TestCase):
                 },
             ]}), encoding="utf-8")
 
-            result = freeze_collision_proposals(summary, root / "frozen", epsilon=0.05)
+            result = freeze_collision_proposals(
+                summary,
+                root / "frozen",
+                epsilon=0.05,
+                proposal_version="support_v2",
+            )
 
             self.assertEqual(result["frozen_proposal_count"], 1)
             self.assertEqual(result["excluded_count"], 1)
@@ -69,6 +74,11 @@ class FrozenCollisionProposalTests(unittest.TestCase):
                 Path(result["records"][0]["template_path"]).read_text(encoding="utf-8")
             )
             proposal = template["bridge_metadata"]["frozen_collision_proposal"]
+            self.assertEqual(
+                proposal["naturalistic_support_constraint"],
+                "runtime_mask_requires_p_gt_zero",
+            )
+            self.assertEqual(result["proposal_version"], "support_v2")
             self.assertEqual(len(proposal["agents"]["BV_primary"]["action_pdf"]), 33)
             self.assertAlmostEqual(
                 sum(proposal["agents"]["BV_primary"]["action_pdf"]), 1.0

@@ -15,10 +15,13 @@ def freeze_collision_proposals(
     cem_summary_path: str | Path,
     output_dir: str | Path,
     epsilon: float = 0.05,
+    proposal_version: str = "v1",
 ) -> dict:
     """Create train-eligible templates with fixed schedules and explicit q action PDFs."""
     if not 0.0 < epsilon < 1.0:
         raise ValueError("epsilon must lie strictly between zero and one")
+    if not proposal_version or not proposal_version.replace("_", "").isalnum():
+        raise ValueError("proposal_version must contain only letters, numbers, or underscores")
     cem_summary_path = Path(cem_summary_path)
     output_dir = Path(output_dir)
     template_dir = output_dir / "templates" / "train"
@@ -44,7 +47,7 @@ def freeze_collision_proposals(
         with source_template_path.open("r", encoding="utf-8") as stream:
             template = json.load(stream)
         candidate = copy.deepcopy(template)
-        proposal_id = f"shrp2_frozen_cem_{event_id}_v1"
+        proposal_id = f"shrp2_frozen_cem_{event_id}_{proposal_version}"
         candidate["template_id"] = proposal_id
         candidate["description"] = (
             "SHRP2 initialization with a frozen, explicit factorized categorical "
@@ -71,6 +74,7 @@ def freeze_collision_proposals(
             "source_cem_summary": str(cem_summary_path),
             "action_sampling": "per_step_factorized_defensive_mixture",
             "importance_semantics": "q=epsilon*p+(1-epsilon)*categorical_elite_pdf",
+            "naturalistic_support_constraint": "runtime_mask_requires_p_gt_zero",
             "agents": {
                 "BV_primary": {
                     "start_time_s": float(parameters["start_time_s"]),
@@ -114,6 +118,7 @@ def freeze_collision_proposals(
         "schema_version": 1,
         "cem_summary": str(cem_summary_path),
         "epsilon": epsilon,
+        "proposal_version": proposal_version,
         "frozen_proposal_count": len(records),
         "excluded_count": len(excluded),
         "records": records,
@@ -151,9 +156,13 @@ def main() -> None:
     parser.add_argument("cem_summary")
     parser.add_argument("--output", required=True)
     parser.add_argument("--epsilon", type=float, default=0.05)
+    parser.add_argument("--proposal_version", default="v1")
     args = parser.parse_args()
     result = freeze_collision_proposals(
-        args.cem_summary, args.output, epsilon=args.epsilon
+        args.cem_summary,
+        args.output,
+        epsilon=args.epsilon,
+        proposal_version=args.proposal_version,
     )
     print(json.dumps(result, ensure_ascii=False, indent=2))
 
