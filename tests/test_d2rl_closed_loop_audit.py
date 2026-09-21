@@ -7,6 +7,51 @@ from scenario_reconstruction.d2rl_closed_loop_audit import summarize
 
 
 class ClosedLoopAuditTests(unittest.TestCase):
+    def test_likelihood_ratio_guard_is_reconstructed_and_counted(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            episode = self.make_pool(root)
+            run_path = root / 'manifest_run_summary.json'
+            run = json.loads(run_path.read_text())
+            run.update(
+                online_policy={'model': 'test'},
+                online_max_proposal_likelihood_ratio=5.0,
+            )
+            run_path.write_text(json.dumps(run))
+            (root / 'tested_and_safe').mkdir()
+            safe = dict(episode, collision_result=0, collision_id=None)
+            (root / 'tested_and_safe' / '1.json').write_text(json.dumps(safe))
+            log_weight = math.log(.2)
+            episode.update(
+                weight_episode=.2,
+                log_importance_weight=log_weight,
+                log_probability_step_info={'0': {'log_importance_weight': log_weight}},
+                online_policy_step_info={'0': {
+                    'status': 'inferred', 'actor_ids': ['a', 'b'],
+                    'requested_epsilon_by_bv_id': {'a': .1, 'b': .8},
+                    'epsilon_by_bv_id': {'a': .5, 'b': .8},
+                    'likelihood_ratio_guard': {
+                        'maximum_proposal_ratio': 5.0,
+                        'adjusted_actor_ids': ['a'],
+                        'by_actor': {
+                            'a': {'applied_maximum_proposal_ratio': 5.0},
+                            'b': {'applied_maximum_proposal_ratio': 2.0},
+                        },
+                    },
+                    'sampled_terms': {
+                        'a': {'epsilon': .5, 'p': .1, 'q': .5, 'c': .9, 'weight': .2},
+                    },
+                }},
+            )
+            (root / 'crash' / '0.json').write_text(json.dumps(episode))
+            result = summarize(root)
+            self.assertTrue(result['audit_passed'])
+            self.assertEqual(result['likelihood_ratio_adjusted_steps'], 1)
+            self.assertEqual(result['likelihood_ratio_adjusted_actor_counts'], {'a': 1})
+            episode['online_policy_step_info']['0']['sampled_terms']['a']['q'] = .6
+            (root / 'crash' / '0.json').write_text(json.dumps(episode))
+            self.assertFalse(summarize(root)['audit_passed'])
+
     def test_budgeted_policy_records_one_inference_then_naturalistic_fallback(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

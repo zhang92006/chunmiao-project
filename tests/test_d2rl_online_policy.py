@@ -62,6 +62,31 @@ class OnlinePolicyTests(unittest.TestCase):
         self.assertEqual(ctrl.control_log['online_policy']['status'], 'budget_exhausted_naturalistic')
         self.assertEqual(ctrl.env.online_epsilon_policy.compute_action.call_count, 1)
 
+    def test_likelihood_ratio_guard_adjusts_only_the_unbounded_actor(self):
+        ctrl = self.controller()
+        ctrl.env.online_max_proposal_likelihood_ratio = 5.0
+        candidates = [
+            SimpleNamespace(
+                id='BV_primary',
+                controller=SimpleNamespace(get_NDD_possi=lambda: np.array([.9, .1])),
+            ),
+            SimpleNamespace(
+                id='BV_context',
+                controller=SimpleNamespace(get_NDD_possi=lambda: np.array([.5, .5])),
+            ),
+        ]
+        applied, diagnostics = ctrl._apply_likelihood_ratio_guard(
+            {0: .1, 1: .8}, [0, 1], candidates,
+            [np.array([0., 1.]), np.array([.5, .5])],
+        )
+        self.assertAlmostEqual(applied[0], 5 / 9)
+        self.assertEqual(applied[1], .8)
+        self.assertEqual(diagnostics['adjusted_actor_ids'], ['BV_primary'])
+        self.assertLessEqual(
+            diagnostics['by_actor']['BV_primary']['applied_maximum_proposal_ratio'],
+            5.0,
+        )
+
 
 if __name__ == '__main__':
     unittest.main()

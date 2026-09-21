@@ -17,6 +17,18 @@ class RunTemplateManifestTests(unittest.TestCase):
                 online_intervention_budget=1.5,
             )
 
+    def test_likelihood_ratio_guard_requires_online_policy_and_valid_limit(self):
+        with self.assertRaisesRegex(ValueError, 'requires --online_policy'):
+            run_template_manifest(
+                'missing.json', 'unused',
+                online_max_proposal_likelihood_ratio=50,
+            )
+        with self.assertRaisesRegex(ValueError, 'greater than one'):
+            run_template_manifest(
+                'missing.json', 'unused', online_policy_path='missing.pt',
+                online_max_proposal_likelihood_ratio=1,
+            )
+
     def test_repeats_assign_unique_episode_ids_and_preserve_repeat_number(self):
         manifest = {
             "records": [

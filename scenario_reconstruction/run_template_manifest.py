@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 from pathlib import Path
 from typing import Mapping
 
@@ -27,6 +28,7 @@ def run_template_manifest(
     frozen_epsilon_source: str = "template",
     simulation_seed: int | None = None,
     online_intervention_budget: int | None = None,
+    online_max_proposal_likelihood_ratio: float | None = None,
 ) -> dict:
     if online_intervention_budget is not None:
         if online_policy_path is None:
@@ -36,6 +38,19 @@ def run_template_manifest(
                 or int(online_intervention_budget) < 1):
             raise ValueError("online_intervention_budget must be a positive integer")
         online_intervention_budget = int(online_intervention_budget)
+    if online_max_proposal_likelihood_ratio is not None:
+        if online_policy_path is None:
+            raise ValueError(
+                "online_max_proposal_likelihood_ratio requires --online_policy"
+            )
+        online_max_proposal_likelihood_ratio = float(
+            online_max_proposal_likelihood_ratio
+        )
+        if (not math.isfinite(online_max_proposal_likelihood_ratio)
+                or online_max_proposal_likelihood_ratio <= 1.0):
+            raise ValueError(
+                "online_max_proposal_likelihood_ratio must be finite and greater than one"
+            )
     online_policy = None
     if online_policy_path is not None:
         if split not in {"train", "validation"}:
@@ -125,12 +140,16 @@ def run_template_manifest(
         template_path = record["path"]
         runtime_options = {}
         if (online_policy is not None or frozen_epsilon_source != "template"
-                or simulation_seed is not None or online_intervention_budget is not None):
+                or simulation_seed is not None or online_intervention_budget is not None
+                or online_max_proposal_likelihood_ratio is not None):
             runtime_options = {
                 "online_policy": online_policy,
                 "frozen_epsilon_source": frozen_epsilon_source,
                 "simulation_seed": None if simulation_seed is None else simulation_seed + episode_id,
                 "online_intervention_budget": online_intervention_budget,
+                "online_max_proposal_likelihood_ratio": (
+                    online_max_proposal_likelihood_ratio
+                ),
             }
             if any((experiment_path / folder / f"{episode_id}.json").exists()
                    for folder in ("crash", "tested_and_safe", "rejected")):
@@ -201,6 +220,7 @@ def run_template_manifest(
         "frozen_epsilon_source": frozen_epsilon_source,
         "simulation_seed_base": simulation_seed,
         "online_intervention_budget": online_intervention_budget,
+        "online_max_proposal_likelihood_ratio": online_max_proposal_likelihood_ratio,
         "proposal_mode": proposal_mode,
         "epsilon": 1.0 if proposal_mode == "naturalistic" else epsilon,
         "successful_runs": sum(1 for item in results if item["status"] == "ok"),
@@ -390,6 +410,12 @@ def main() -> None:
         default=None,
         help="Maximum online-policy critical decisions per episode; then use naturalistic actions.",
     )
+    parser.add_argument(
+        "--online_max_proposal_likelihood_ratio",
+        type=float,
+        default=None,
+        help="Per-BV upper bound on q(a|s)/p(a|s), enforced before sampling.",
+    )
     args = parser.parse_args()
 
     if (args.epsilon_primary is None) != (args.epsilon_context is None):
@@ -419,6 +445,9 @@ def main() -> None:
         frozen_epsilon_source=args.frozen_epsilon_source,
         simulation_seed=args.simulation_seed,
         online_intervention_budget=args.online_intervention_budget,
+        online_max_proposal_likelihood_ratio=(
+            args.online_max_proposal_likelihood_ratio
+        ),
     )
     print("Manifest run finished.")
     print(f"attempted={summary['attempted']}")

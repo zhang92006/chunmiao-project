@@ -18,6 +18,9 @@ def summarize(root):
     raw_weight_status_counts = Counter()
     max_q_error = max_weight_error = max_obs_error = 0.0
     intervention_budget = run.get('online_intervention_budget')
+    likelihood_ratio_limit = run.get('online_max_proposal_likelihood_ratio')
+    likelihood_ratio_adjusted_steps = 0
+    likelihood_ratio_adjusted_actors = Counter()
     for result in run['results']:
         episode_id = result['episode']
         if result['status'] != 'ok':
@@ -71,6 +74,43 @@ def summarize(root):
                     obs = data.get('drl_obs_step_info', {}).get(time, {}).get('joint')
                     if obs is not None:
                         max_obs_error = max(max_obs_error, max(abs(a-b) for a,b in zip(obs, step['observation'])))
+                if likelihood_ratio_limit is not None:
+                    requested = step.get('requested_epsilon_by_bv_id')
+                    applied = step.get('epsilon_by_bv_id')
+                    guard = step.get('likelihood_ratio_guard')
+                    if (not isinstance(requested, dict) or not isinstance(applied, dict)
+                            or set(requested) != set(step['actor_ids'])
+                            or set(applied) != set(step['actor_ids'])
+                            or not isinstance(guard, dict)
+                            or abs(float(guard.get('maximum_proposal_ratio', math.nan))
+                                   - float(likelihood_ratio_limit)) > 1e-7):
+                        failures.append(
+                            f'episode {episode_id} time {time}: invalid likelihood-ratio guard metadata'
+                        )
+                    else:
+                        adjusted_ids = set(guard.get('adjusted_actor_ids', []))
+                        if any(float(applied[actor]) + 1e-12 < float(requested[actor])
+                               for actor in step['actor_ids']):
+                            failures.append(
+                                f'episode {episode_id} time {time}: likelihood guard reduced epsilon'
+                            )
+                        if adjusted_ids:
+                            likelihood_ratio_adjusted_steps += 1
+                            likelihood_ratio_adjusted_actors.update(adjusted_ids)
+                        by_actor = guard.get('by_actor', {})
+                        if not isinstance(by_actor, dict) or not adjusted_ids.issubset(by_actor):
+                            failures.append(
+                                f'episode {episode_id} time {time}: invalid guarded actor set'
+                            )
+                            by_actor = {}
+                        for diagnostics in by_actor.values():
+                            if (
+                                float(diagnostics['applied_maximum_proposal_ratio'])
+                                > float(likelihood_ratio_limit) * (1.0 + 1e-7)
+                            ):
+                                failures.append(
+                                    f'episode {episode_id} time {time}: likelihood-ratio bound exceeded'
+                                )
             elif step['status'] == 'budget_exhausted_naturalistic':
                 epsilon_by_actor = step.get('epsilon_by_bv_id', {})
                 if (intervention_budget is None
@@ -90,6 +130,12 @@ def summarize(root):
                 if terms['q'] <= 0 or terms['p'] <= 0:
                     failures.append(f'episode {episode_id}: sampled zero-probability action')
                     continue
+                if (likelihood_ratio_limit is not None
+                        and float(terms['q']) / float(terms['p'])
+                        > float(likelihood_ratio_limit) * (1.0 + 1e-7)):
+                    failures.append(
+                        f'episode {episode_id} time {time}: sampled proposal ratio exceeded bound'
+                    )
                 max_weight_error = max(max_weight_error, abs(terms['weight']-terms['p']/terms['q']))
                 sampled_log_weight += math.log(terms['p']) - math.log(terms['q'])
                 if actor not in step.get('epsilon_by_bv_id', {}) or abs(
@@ -129,6 +175,9 @@ def summarize(root):
         'crash_contribution_ess': ess if not failures else None,
         'online_step_status_counts': dict(status_counts), 'checked_sampled_bv_actions': checked_terms,
         'online_intervention_budget': intervention_budget,
+        'online_max_proposal_likelihood_ratio': likelihood_ratio_limit,
+        'likelihood_ratio_adjusted_steps': likelihood_ratio_adjusted_steps,
+        'likelihood_ratio_adjusted_actor_counts': dict(likelihood_ratio_adjusted_actors),
         'raw_weight_status_counts': dict(raw_weight_status_counts),
         'max_q_reconstruction_error': max_q_error, 'max_weight_reconstruction_error': max_weight_error,
         'max_online_vs_logged_observation_error': max_obs_error,

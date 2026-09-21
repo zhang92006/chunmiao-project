@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import math
 import os
 from pathlib import Path
 import sys
@@ -21,9 +22,13 @@ def run_template(
     frozen_epsilon_source: str = "template",
     simulation_seed: int | None = None,
     online_intervention_budget: int | None = None,
+    online_max_proposal_likelihood_ratio: float | None = None,
 ) -> float:
     online_intervention_budget = _validated_online_intervention_budget(
         online_policy, online_intervention_budget
+    )
+    online_max_proposal_likelihood_ratio = _validated_online_likelihood_ratio(
+        online_policy, online_max_proposal_likelihood_ratio
     )
     if online_policy is not None and (proposal_mode != "factorized" or frozen_epsilon_source != "runtime"):
         raise ValueError("Online epsilon requires factorized proposals and runtime epsilon")
@@ -55,6 +60,7 @@ def run_template(
     env = ScenarioNADE(template_path, multibv_proposal_mode=proposal_mode)
     env.online_epsilon_policy = online_policy
     env.online_intervention_budget = online_intervention_budget
+    env.online_max_proposal_likelihood_ratio = online_max_proposal_likelihood_ratio
     env.closed_loop_evaluation = online_policy is not None or simulation_seed is not None
     env.frozen_epsilon_source = frozen_epsilon_source
     if online_policy is not None and env.multi_bv_control_num != 2:
@@ -65,6 +71,7 @@ def run_template(
         "simulation_seed": simulation_seed,
         "online_policy": online_policy.metadata if online_policy is not None else None,
         "online_intervention_budget": online_intervention_budget,
+        "online_max_proposal_likelihood_ratio": online_max_proposal_likelihood_ratio,
     })
     sim = Simulator(
         sumo_net_file_path="./maps/2LaneHighway/2LaneHighway.net.xml",
@@ -117,6 +124,19 @@ def _validated_online_intervention_budget(online_policy, budget):
     if isinstance(budget, bool) or int(budget) != budget or int(budget) < 1:
         raise ValueError("online_intervention_budget must be a positive integer")
     return int(budget)
+
+
+def _validated_online_likelihood_ratio(online_policy, maximum):
+    if maximum is None:
+        return None
+    if online_policy is None:
+        raise ValueError("online_max_proposal_likelihood_ratio requires an online policy")
+    maximum = float(maximum)
+    if not math.isfinite(maximum) or maximum <= 1.0:
+        raise ValueError(
+            "online_max_proposal_likelihood_ratio must be finite and greater than one"
+        )
+    return maximum
 
 
 def _ensure_sumo_home() -> None:

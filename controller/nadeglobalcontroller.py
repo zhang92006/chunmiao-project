@@ -15,6 +15,7 @@ from scenario_reconstruction.joint_criticality import (
     sample_joint_action_pair,
 )
 from scenario_reconstruction.importance import probability_record
+from scenario_reconstruction.likelihood_ratio_guard import constrain_epsilon
 
 class NADEBVGlobalController(NDDBVGlobalController):
     controlled_bv_num = 4
@@ -194,6 +195,9 @@ class NADEBVGlobalController(NDDBVGlobalController):
         self._record_probability_terms()
         if self.drl_epsilon_value != -1:
             epsilon_by_vehicle = self.control_log.get("epsilon_by_bv_id", {})
+            requested_by_vehicle = self.control_log.get(
+                "requested_epsilon_by_bv_id", epsilon_by_vehicle
+            )
             if isinstance(epsilon_by_vehicle, dict) and all(
                 bv_id in epsilon_by_vehicle for bv_id in selected_ids
             ):
@@ -210,9 +214,18 @@ class NADEBVGlobalController(NDDBVGlobalController):
                 )
             else:
                 epsilon_values = [float(epsilon) for _ in selected_bvs]
+            if isinstance(requested_by_vehicle, dict) and all(
+                bv_id in requested_by_vehicle for bv_id in selected_ids
+            ):
+                requested_values = [
+                    float(requested_by_vehicle[bv_id]) for bv_id in selected_ids
+                ]
+            else:
+                requested_values = list(epsilon_values)
             if joint_proposal is not None:
                 epsilon_values = [float(joint_proposal["epsilon"])] * len(selected_bvs)
-            self.drl_epsilon_value = epsilon_values
+                requested_values = list(epsilon_values)
+            self.drl_epsilon_value = requested_values
             self.real_epsilon_value = list(epsilon_values)
 
     # @profile
@@ -280,11 +293,41 @@ class NADEBVGlobalController(NDDBVGlobalController):
         epsilon_by_index, selected_epsilon_values = self._selected_epsilon_values(
             underline_drl_action, selected_bv_idx, controlled_bvs_list
         )
+        requested_epsilon_by_index = dict(epsilon_by_index)
+        requested_epsilon_values = list(selected_epsilon_values)
         if proposal_mode == "naturalistic":
             epsilon_by_index = {index: 1.0 for index in selected_bv_idx}
             selected_epsilon_values = [1.0 for _ in selected_bv_idx]
+            requested_epsilon_by_index = dict(epsilon_by_index)
+            requested_epsilon_values = list(selected_epsilon_values)
+        elif getattr(self.env, "online_epsilon_policy", None) is not None:
+            epsilon_by_index, guard_diagnostics = self._apply_likelihood_ratio_guard(
+                epsilon_by_index,
+                selected_bv_idx,
+                controlled_bvs_list,
+                criticality_array_list,
+            )
+            selected_epsilon_values = [
+                epsilon_by_index[index] for index in selected_bv_idx
+            ]
+            requested_epsilon_by_vehicle = {
+                controlled_bvs_list[index].id: requested_epsilon_by_index[index]
+                for index in selected_bv_idx
+            }
+            applied_epsilon_by_vehicle = {
+                controlled_bvs_list[index].id: epsilon_by_index[index]
+                for index in selected_bv_idx
+            }
+            self.control_log["requested_epsilon_by_bv_id"] = requested_epsilon_by_vehicle
+            self.control_log["epsilon_by_bv_id"] = applied_epsilon_by_vehicle
+            online_audit = self.control_log.get("online_policy")
+            if isinstance(online_audit, dict):
+                online_audit["requested_epsilon_by_bv_id"] = requested_epsilon_by_vehicle
+                online_audit["epsilon_by_bv_id"] = applied_epsilon_by_vehicle
+                if guard_diagnostics is not None:
+                    online_audit["likelihood_ratio_guard"] = guard_diagnostics
         if sum(bv_criticality_list) > 0:
-            self.drl_epsilon_value = selected_epsilon_values
+            self.drl_epsilon_value = requested_epsilon_values
             self.real_epsilon_value = list(selected_epsilon_values)
 
         for i in range(len(controlled_bvs_list)):
@@ -395,6 +438,42 @@ class NADEBVGlobalController(NDDBVGlobalController):
             max_vehicle_criticality = -np.inf
 
         return bv_action_idx_list, weight_list, max_vehicle_criticality, ndd_possi_list, IS_possi_list, controlled_bvs_list, vehicle_criticality_list, discriminator_input
+
+    def _apply_likelihood_ratio_guard(
+        self,
+        epsilon_by_index,
+        selected_indices,
+        candidates,
+        criticality_arrays,
+    ):
+        limit = getattr(self.env, "online_max_proposal_likelihood_ratio", None)
+        if limit is None:
+            return dict(epsilon_by_index), None
+        applied = dict(epsilon_by_index)
+        by_actor = {}
+        for index in selected_indices:
+            criticality = np.asarray(criticality_arrays[index], dtype=float)
+            total = float(np.sum(criticality))
+            if total <= conf.criticality_threshold:
+                continue
+            actor_id = candidates[index].id
+            actual, diagnostics = constrain_epsilon(
+                applied[index],
+                candidates[index].controller.get_NDD_possi(),
+                criticality / total,
+                limit,
+            )
+            applied[index] = actual
+            by_actor[actor_id] = diagnostics
+        return applied, {
+            "maximum_proposal_ratio": float(limit),
+            "by_actor": by_actor,
+            "adjusted_actor_ids": [
+                actor_id
+                for actor_id, diagnostics in by_actor.items()
+                if diagnostics["adjusted"]
+            ],
+        }
 
     def _proposal_mode(self):
         """Read the rollout proposal family without changing legacy defaults."""
