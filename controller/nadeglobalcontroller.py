@@ -85,7 +85,33 @@ class NADEBVGlobalController(NDDBVGlobalController):
             self._record_joint_training_context(
                 controlled_bvs_list, weight_list, ndd_possi_list, vehicle_criticality_list
             )
+        # Likelihood accounting covers every executed proposal, independently of
+        # whether this step has enough active agents for a K-agent training row.
+        self._record_executed_probability(
+            controlled_bvs_list, weight_list, ndd_possi_list, IS_possi_list
+        )
         return vehicle_criticality_list
+
+    def _record_executed_probability(self, bvs, weights, naturalistic, proposal):
+        active = [index for index, weight in enumerate(weights) if weight is not None]
+        if not active:
+            return  # All actions are naturalistic: likelihood ratio is one.
+        joint = self.control_log.get("joint_proposal_record")
+        if joint is not None:
+            # Correlated proposals must use their joint probability, not a
+            # product of marginal ratios.
+            p, q = joint["naturalistic_probability"], joint["proposal_probability"]
+            mode = joint["proposal_type"]
+        else:
+            p = float(np.prod([naturalistic[index] for index in active]))
+            q = float(np.prod([proposal[index] for index in active]))
+            mode = "naturalistic" if self._proposal_mode() == "naturalistic" else "factorized"
+        record = probability_record(mode, p, q)
+        actual_weight = float(np.prod(self.control_log["weight_list_per_simulation"]))
+        if not np.isclose(record["importance_weight"], actual_weight, rtol=1e-7, atol=0.0):
+            raise ValueError("Executed probability disagrees with simulation weight")
+        record["executed_bv_ids"] = [bvs[index].id for index in active]
+        self.control_log["probability_record"] = record
 
     def _record_joint_training_context(
         self, controlled_bvs_list, weight_list, ndd_possi_list, vehicle_criticality_list

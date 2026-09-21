@@ -13,12 +13,12 @@ $pilotArms = @(
     @{ Name = 'fixed0001'; Epsilon = '0.0001'; Online = $false }
 )
 foreach ($pilotArm in $pilotArms) {
-    $pilotOutput = 'data_analysis\raw_data\shrp2_closed_loop_validation14_x10_' + $pilotArm.Name + '_v1'
+    $pilotOutput = 'data_analysis\raw_data\shrp2_closed_loop_validation14_x10_' + $pilotArm.Name + '_v2'
     if (Test-Path -LiteralPath $pilotOutput) { throw "Output already exists: $pilotOutput. Review prior results before rerunning." }
 }
 foreach ($pilotArm in $pilotArms) {
-    $pilotOutput = 'data_analysis\raw_data\shrp2_closed_loop_validation14_x10_' + $pilotArm.Name + '_v1'
-    $pilotLog = 'data_analysis\logs\shrp2_closed_loop_' + $pilotArm.Name + '_v1.log'
+    $pilotOutput = 'data_analysis\raw_data\shrp2_closed_loop_validation14_x10_' + $pilotArm.Name + '_v2'
+    $pilotLog = 'data_analysis\logs\shrp2_closed_loop_' + $pilotArm.Name + '_v2.log'
     $pilotArgs = @('-m', 'scenario_reconstruction.run_template_manifest', $pilotManifest,
         '--split', 'validation', '--repeats', '10', '--proposal_mode', 'factorized',
         '--epsilon', $pilotArm.Epsilon, '--frozen_epsilon_source', 'runtime',

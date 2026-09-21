@@ -15,6 +15,42 @@ def _ego(vehicle_id, x, y, speed):
 
 
 class MultiBVJointLoggingTests(unittest.TestCase):
+    def test_one_active_bv_has_probability_without_fabricating_joint_training(self):
+        controller = NADEBVGlobalController.__new__(NADEBVGlobalController)
+        controller.joint_control_num = 2
+        controller.env = SimpleNamespace(multibv_proposal_mode="factorized")
+        controller.control_log = {"weight_list_per_simulation": [0.2]}
+        bvs = [SimpleNamespace(id="BV_primary"), SimpleNamespace(id="BV_context")]
+        controller._record_joint_training_context(bvs, [0.2, None], [0.01, None], [1, 0])
+        controller._record_executed_probability(bvs, [0.2, None], [0.01, None], [0.05, None])
+        record = controller.control_log["probability_record"]
+        self.assertAlmostEqual(record["importance_weight"], .2)
+        self.assertEqual(record["executed_bv_ids"], ["BV_primary"])
+        self.assertNotIn("joint_training", controller.control_log)
+
+    def test_executed_ledger_rejects_mismatched_actual_probability(self):
+        controller = NADEBVGlobalController.__new__(NADEBVGlobalController)
+        controller.env = SimpleNamespace(multibv_proposal_mode="factorized")
+        controller.control_log = {"weight_list_per_simulation": [.2]}
+        with self.assertRaisesRegex(ValueError, "Executed probability"):
+            controller._record_executed_probability(
+                [SimpleNamespace(id="BV_primary")], [.2], [.01], [.1]
+            )
+
+    def test_correlated_ledger_uses_joint_not_marginal_product(self):
+        controller = NADEBVGlobalController.__new__(NADEBVGlobalController)
+        controller.control_log = {
+            "weight_list_per_simulation": [.5],
+            "joint_proposal_record": {
+                "naturalistic_probability": .1, "proposal_probability": .2,
+                "proposal_type": "joint_pair",
+            },
+        }
+        controller._record_executed_probability(
+            [SimpleNamespace(id="a"), SimpleNamespace(id="b")], [.3, .4], [.03, .08], [.1, .2]
+        )
+        self.assertEqual(controller.control_log["probability_record"]["importance_weight"], .5)
+
     def test_per_bv_epsilon_is_assigned_by_vehicle_id_not_candidate_order(self):
         controller = NADEBVGlobalController.__new__(NADEBVGlobalController)
         controller.control_log = {}

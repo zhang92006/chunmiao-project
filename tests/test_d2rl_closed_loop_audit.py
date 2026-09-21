@@ -1,4 +1,5 @@
 import json
+import math
 from pathlib import Path
 import tempfile
 import unittest
@@ -6,6 +7,29 @@ from scenario_reconstruction.d2rl_closed_loop_audit import summarize
 
 
 class ClosedLoopAuditTests(unittest.TestCase):
+    def test_single_actor_sample_cannot_be_missing_even_if_raw_weight_underflows(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            episode = self.make_pool(root)
+            (root / 'tested_and_safe').mkdir()
+            (root / 'tested_and_safe' / '1.json').write_text(json.dumps(dict(
+                episode, collision_result=0, collision_id=None)))
+            episode.update(weight_episode=0.0, log_importance_weight=-1000.0)
+            episode['log_probability_step_info'] = {'1': {'log_importance_weight': -1000.0}}
+            episode['online_policy_step_info'] = {'0': {
+                'status': 'inferred', 'actor_ids': ['a', 'b'],
+                'epsilon_by_bv_id': {'a': .5, 'b': .5},
+                'sampled_terms': {'a': {'epsilon': .5, 'p': .1, 'q': .2, 'c': .3, 'weight': .5}},
+            }}
+            (root / 'crash' / '0.json').write_text(json.dumps(episode))
+            result = summarize(root)
+            self.assertFalse(result['audit_passed'])
+            self.assertTrue(any('missing from probability ledger' in x for x in result['failures']))
+            episode['log_probability_step_info']['0'] = {'log_importance_weight': math.log(.5)}
+            episode['log_importance_weight'] += math.log(.5)
+            (root / 'crash' / '0.json').write_text(json.dumps(episode))
+            self.assertTrue(summarize(root)['audit_passed'])
+
     def make_pool(self, root):
         (root / 'crash').mkdir()
         (root / 'manifest_run_summary.json').write_text(json.dumps({

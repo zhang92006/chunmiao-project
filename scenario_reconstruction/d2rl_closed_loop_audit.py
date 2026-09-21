@@ -52,17 +52,26 @@ def summarize(root):
                 obs = data.get('drl_obs_step_info', {}).get(time, {}).get('joint')
                 if obs is not None:
                     max_obs_error = max(max_obs_error, max(abs(a-b) for a,b in zip(obs, step['observation'])))
-            for actor, terms in step.get('sampled_terms', {}).items():
+            sampled = step.get('sampled_terms', {})
+            sampled_log_weight = 0.0
+            for actor, terms in sampled.items():
                 checked_terms += 1
                 epsilon = terms['epsilon']
                 q = epsilon * terms['p'] + (1-epsilon) * terms['c']
                 max_q_error = max(max_q_error, abs(q-terms['q']))
-                if terms['q'] <= 0:
+                if terms['q'] <= 0 or terms['p'] <= 0:
                     failures.append(f'episode {episode_id}: sampled zero-probability action')
                     continue
                 max_weight_error = max(max_weight_error, abs(terms['weight']-terms['p']/terms['q']))
+                sampled_log_weight += math.log(terms['p']) - math.log(terms['q'])
                 if abs(epsilon-step['epsilon_by_bv_id'][actor]) > 1e-7:
                     failures.append(f'episode {episode_id}: proposal overwrote policy epsilon')
+            if sampled:
+                recorded = log_terms.get(time)
+                if recorded is None:
+                    failures.append(f'episode {episode_id} time {time}: sampled actions missing from probability ledger')
+                elif abs(sampled_log_weight-float(recorded['log_importance_weight'])) > 1e-7:
+                    failures.append(f'episode {episode_id} time {time}: sampled actions disagree with probability ledger')
     if max_q_error > 1e-7 or max_weight_error > 1e-7 or max_obs_error > 1e-7:
         failures.append('Probability or observation contract exceeded tolerance')
     if run.get('online_policy') is not None and inferred == 0:
