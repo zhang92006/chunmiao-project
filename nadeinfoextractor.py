@@ -76,7 +76,7 @@ class NADEInfoExtractor(InfoExtractor):
             #     # print("CRASH WEIGHT RESULT:", self.weight_result)
             else:
                 save_dir = os.path.join(self.save_dir, "tested_and_safe")
-                if self.meet_log_criteria(self.episode_log["ttc_step_info"], self.episode_log["distance_step_info"]):
+                if getattr(self.env, "closed_loop_evaluation", False) or self.meet_log_criteria(self.episode_log["ttc_step_info"], self.episode_log["distance_step_info"]):
                     with open(save_dir + "/"+str(self.episode_log["episode_info"]["id"]) + ".json", 'w') as json_file:
                         json_file.write(json_str)
                 else:
@@ -139,6 +139,8 @@ class NADEInfoExtractor(InfoExtractor):
         snapshot_weight_list = self.env.global_controller_instance_list[
             0].control_log["weight_list_per_simulation"]
         control_log = self.env.global_controller_instance_list[0].control_log
+        if "online_policy" in control_log:
+            self.episode_log.setdefault("online_policy_step_info", {})[time_step] = control_log["online_policy"]
         joint_training = bool(control_log.get("joint_training", False))
         self.episode_log["weight_episode"] = self.episode_log["weight_episode"] * \
             reduce(lambda x, y: x * y, snapshot_weight_list)

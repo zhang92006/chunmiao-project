@@ -240,8 +240,14 @@ class NADEBVGlobalController(NDDBVGlobalController):
             )
         self.control_log["discriminator_input"] = discriminator_input.tolist()
         self.epsilon_value = -1
-        underline_drl_action = self.get_underline_drl_action(discriminator_input, bv_criticality_list)
-        if frozen_proposal is not None and frozen_proposal["active"]:
+        if getattr(self.env, "online_epsilon_policy", None) is not None:
+            underline_drl_action = self._online_epsilon_action(
+                full_obs, controlled_bvs_list, selected_bv_idx, bv_criticality_list
+            )
+        else:
+            underline_drl_action = self.get_underline_drl_action(discriminator_input, bv_criticality_list)
+        if (frozen_proposal is not None and frozen_proposal["active"]
+                and getattr(self.env, "frozen_epsilon_source", "template") == "template"):
             underline_drl_action = frozen_proposal["epsilon_by_bv_id"]
         proposal_mode = self._proposal_mode()
         epsilon_by_index, selected_epsilon_values = self._selected_epsilon_values(
@@ -279,6 +285,22 @@ class NADEBVGlobalController(NDDBVGlobalController):
             else:
                 whole_weight_list.append(None)
 
+        if "online_policy" in self.control_log:
+            terms = {}
+            for index in selected_bv_idx:
+                if weight_list[index] is None:
+                    continue
+                bv = controlled_bvs_list[index]
+                action_id = bv_action_idx_list[index]
+                terms[bv.id] = {
+                    "action_id": action_id,
+                    "epsilon": epsilon_by_index[index],
+                    "p": float(ndd_possi_list[index]),
+                    "q": float(IS_possi_list[index]),
+                    "c": float(bv.controller.normalized_critical_pdf_array[action_id]),
+                    "weight": float(weight_list[index]),
+                }
+            self.control_log["online_policy"]["sampled_terms"] = terms
         joint_proposal = None
         if proposal_mode == "joint_pair":
             joint_proposal = self._sample_selected_joint_pair(
@@ -350,6 +372,27 @@ class NADEBVGlobalController(NDDBVGlobalController):
     def _proposal_mode(self):
         """Read the rollout proposal family without changing legacy defaults."""
         return getattr(self.env, "multibv_proposal_mode", "joint_pair")
+
+    def _online_epsilon_action(self, full_obs, candidates, selected_indices, criticalities):
+        # Training logs enumerate selected vehicles in candidate order, not risk order.
+        actor_ids = [candidates[index].id for index in sorted(selected_indices)]
+        audit = {"actor_ids": actor_ids, "status": "noncritical"}
+        self.control_log["online_policy"] = audit
+        if sum(criticalities) <= 0:
+            return {actor_id: 1.0 for actor_id in actor_ids}
+        if len(actor_ids) != 2:
+            audit["status"] = "incomplete_actor_set_naturalistic_fallback"
+            return {actor_id: 1.0 for actor_id in actor_ids}
+        log = self.env.info_extractor.episode_log
+        observation = build_multibv_joint_obs(
+            full_obs, actor_ids, log["weight_episode"], log.get("log_importance_weight")
+        )
+        actions = self.env.online_epsilon_policy.compute_action(observation)
+        if len(actions) != len(actor_ids):
+            raise ValueError("Online policy action count differs from selected actor count")
+        result = dict(zip(actor_ids, actions))
+        audit.update(status="inferred", observation=observation, epsilon_by_bv_id=result)
+        return result
 
     def _frozen_collision_proposal(self, controlled_bvs_list, fallback_arrays):
         """Return an auditable per-step categorical proposal for a frozen CEM result."""

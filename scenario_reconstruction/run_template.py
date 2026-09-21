@@ -17,7 +17,21 @@ def run_template(
     gui_delay: int = 100,
     epsilon: float | Mapping[str, float] = 0.99,
     proposal_mode: str = "joint_pair",
+    online_policy=None,
+    frozen_epsilon_source: str = "template",
+    simulation_seed: int | None = None,
 ) -> float:
+    if online_policy is not None and (proposal_mode != "factorized" or frozen_epsilon_source != "runtime"):
+        raise ValueError("Online epsilon requires factorized proposals and runtime epsilon")
+    if online_policy is not None and conf.weight_threshold != 0:
+        raise ValueError("Online probability audit requires weight_threshold=0")
+    if frozen_epsilon_source not in {"template", "runtime"}:
+        raise ValueError("Invalid frozen_epsilon_source")
+    if simulation_seed is not None:
+        import random
+        import numpy as np
+        random.seed(simulation_seed)
+        np.random.seed(simulation_seed)
     valid_modes = {"naturalistic", "factorized", "joint_pair"}
     if proposal_mode not in valid_modes:
         raise ValueError(f"proposal_mode must be one of {sorted(valid_modes)}")
@@ -35,6 +49,17 @@ def run_template(
     from .environment import ScenarioNADE
 
     env = ScenarioNADE(template_path, multibv_proposal_mode=proposal_mode)
+    env.online_epsilon_policy = online_policy
+    env.closed_loop_evaluation = online_policy is not None or simulation_seed is not None
+    env.frozen_epsilon_source = frozen_epsilon_source
+    if online_policy is not None and env.multi_bv_control_num != 2:
+        raise ValueError("Online policy requires a multibv template")
+    env.info_extractor.episode_log["scenario_metadata"].update({
+        "epsilon_source": "online_policy" if online_policy is not None else "fixed",
+        "frozen_epsilon_source": frozen_epsilon_source,
+        "simulation_seed": simulation_seed,
+        "online_policy": online_policy.metadata if online_policy is not None else None,
+    })
     sim = Simulator(
         sumo_net_file_path="./maps/2LaneHighway/2LaneHighway.net.xml",
         sumo_config_file_path="./maps/2LaneHighway/2LaneHighwayHighSpeed.sumocfg",
@@ -49,6 +74,7 @@ def run_template(
         experiment_path=experiment_path,
     )
     sim.bind_env(env)
+    sim.simulation_seed = simulation_seed
     Path(experiment_path, "crash").mkdir(parents=True, exist_ok=True)
     Path(experiment_path, "tested_and_safe").mkdir(parents=True, exist_ok=True)
     Path(experiment_path, "rejected").mkdir(parents=True, exist_ok=True)

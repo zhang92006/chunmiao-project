@@ -23,7 +23,18 @@ def run_template_manifest(
     max_initial_primary_ttc_s: float | None = None,
     require_context_blocking: bool = False,
     source_event_ids: set[int] | None = None,
+    online_policy_path: str | None = None,
+    frozen_epsilon_source: str = "template",
+    simulation_seed: int | None = None,
 ) -> dict:
+    online_policy = None
+    if online_policy_path is not None:
+        if split not in {"train", "validation"}:
+            raise ValueError("Online development runs require train or validation; test remains locked")
+        if proposal_mode != "factorized" or frozen_epsilon_source != "runtime":
+            raise ValueError("Online epsilon requires factorized proposals and runtime epsilon")
+        from .d2rl_online_policy import OnlineEpsilonPolicy
+        online_policy = OnlineEpsilonPolicy(online_policy_path)
     manifest_path = Path(manifest_path)
     experiment_path = Path(experiment_path)
     for subdir in ("crash", "tested_and_safe", "rejected"):
@@ -45,6 +56,17 @@ def run_template_manifest(
         normalized_record["path"] = template_path
         records.append(normalized_record)
     records_after_split = len(records)
+    if online_policy is not None:
+        from .templates import load_template
+        for record in records:
+            template = load_template(record['path'])
+            if template.bridge_metadata.get('source_split') != split:
+                raise ValueError('Template source split disagrees with online run split')
+            if template.bridge_metadata.get('not_for_d2rl_training') or any(
+                event.params.get('search_only') or event.params.get('calibration_only')
+                for event in template.events
+            ):
+                raise ValueError('Search/calibration intervention cannot enter online evaluation')
     if source_event_ids is not None:
         records = [
             record
@@ -92,6 +114,16 @@ def run_template_manifest(
     results = []
     for episode_id, record, repeat_index in records_to_run:
         template_path = record["path"]
+        runtime_options = {}
+        if online_policy is not None or frozen_epsilon_source != "template" or simulation_seed is not None:
+            runtime_options = {
+                "online_policy": online_policy,
+                "frozen_epsilon_source": frozen_epsilon_source,
+                "simulation_seed": None if simulation_seed is None else simulation_seed + episode_id,
+            }
+            if any((experiment_path / folder / f"{episode_id}.json").exists()
+                   for folder in ("crash", "tested_and_safe", "rejected")):
+                raise FileExistsError("Use a fresh output directory; rollout files already exist")
         try:
             weight = run_template(
                 template_path,
@@ -100,6 +132,7 @@ def run_template_manifest(
                 gui=gui_episode is not None,
                 epsilon=epsilon,
                 proposal_mode=proposal_mode,
+                **runtime_options,
             )
             results.append(
                 {
@@ -153,6 +186,9 @@ def run_template_manifest(
         "max_initial_primary_ttc_s": max_initial_primary_ttc_s,
         "attempted": len(results),
         "repeats": repeats,
+        "online_policy": online_policy.metadata if online_policy is not None else None,
+        "frozen_epsilon_source": frozen_epsilon_source,
+        "simulation_seed_base": simulation_seed,
         "proposal_mode": proposal_mode,
         "epsilon": 1.0 if proposal_mode == "naturalistic" else epsilon,
         "successful_runs": sum(1 for item in results if item["status"] == "ok"),
@@ -333,6 +369,9 @@ def main() -> None:
         default=None,
         help="Open one manifest record in SUMO GUI instead of running the full batch.",
     )
+    parser.add_argument("--online_policy", default=None, help="Verified portable epsilon model (.pt)")
+    parser.add_argument("--frozen_epsilon_source", choices=("template", "runtime"), default="template")
+    parser.add_argument("--simulation_seed", type=int, default=None)
     args = parser.parse_args()
 
     if (args.epsilon_primary is None) != (args.epsilon_context is None):
@@ -358,6 +397,9 @@ def main() -> None:
         max_initial_primary_ttc_s=args.max_initial_primary_ttc_s,
         require_context_blocking=args.require_context_blocking,
         source_event_ids=set(args.source_event_id) if args.source_event_id is not None else None,
+        online_policy_path=args.online_policy,
+        frozen_epsilon_source=args.frozen_epsilon_source,
+        simulation_seed=args.simulation_seed,
     )
     print("Manifest run finished.")
     print(f"attempted={summary['attempted']}")
