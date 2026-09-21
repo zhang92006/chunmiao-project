@@ -449,14 +449,22 @@ class NADEBVGlobalController(NDDBVGlobalController):
         limit = getattr(self.env, "online_max_proposal_likelihood_ratio", None)
         if limit is None:
             return dict(epsilon_by_index), None
+        guarded_actor_ids = getattr(
+            self.env, "online_likelihood_ratio_guard_actor_ids", None
+        )
+        guarded_actor_ids = (
+            None if guarded_actor_ids is None else set(guarded_actor_ids)
+        )
         applied = dict(epsilon_by_index)
         by_actor = {}
         for index in selected_indices:
+            actor_id = candidates[index].id
+            if guarded_actor_ids is not None and actor_id not in guarded_actor_ids:
+                continue
             criticality = np.asarray(criticality_arrays[index], dtype=float)
             total = float(np.sum(criticality))
             if total <= conf.criticality_threshold:
                 continue
-            actor_id = candidates[index].id
             actual, diagnostics = constrain_epsilon(
                 applied[index],
                 candidates[index].controller.get_NDD_possi(),
@@ -467,6 +475,9 @@ class NADEBVGlobalController(NDDBVGlobalController):
             by_actor[actor_id] = diagnostics
         return applied, {
             "maximum_proposal_ratio": float(limit),
+            "guarded_actor_ids": (
+                None if guarded_actor_ids is None else sorted(guarded_actor_ids)
+            ),
             "by_actor": by_actor,
             "adjusted_actor_ids": [
                 actor_id

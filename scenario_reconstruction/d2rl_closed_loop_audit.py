@@ -19,6 +19,8 @@ def summarize(root):
     max_q_error = max_weight_error = max_obs_error = 0.0
     intervention_budget = run.get('online_intervention_budget')
     likelihood_ratio_limit = run.get('online_max_proposal_likelihood_ratio')
+    guarded_actor_ids = run.get('online_likelihood_ratio_guard_actor_ids')
+    guarded_actor_set = None if guarded_actor_ids is None else set(guarded_actor_ids)
     likelihood_ratio_adjusted_steps = 0
     likelihood_ratio_adjusted_actors = Counter()
     for result in run['results']:
@@ -83,7 +85,8 @@ def summarize(root):
                             or set(applied) != set(step['actor_ids'])
                             or not isinstance(guard, dict)
                             or abs(float(guard.get('maximum_proposal_ratio', math.nan))
-                                   - float(likelihood_ratio_limit)) > 1e-7):
+                                   - float(likelihood_ratio_limit)) > 1e-7
+                            or guard.get('guarded_actor_ids') != guarded_actor_ids):
                         failures.append(
                             f'episode {episode_id} time {time}: invalid likelihood-ratio guard metadata'
                         )
@@ -98,7 +101,10 @@ def summarize(root):
                             likelihood_ratio_adjusted_steps += 1
                             likelihood_ratio_adjusted_actors.update(adjusted_ids)
                         by_actor = guard.get('by_actor', {})
-                        if not isinstance(by_actor, dict) or not adjusted_ids.issubset(by_actor):
+                        if (not isinstance(by_actor, dict)
+                                or not adjusted_ids.issubset(by_actor)
+                                or (guarded_actor_set is not None
+                                    and not set(by_actor).issubset(guarded_actor_set))):
                             failures.append(
                                 f'episode {episode_id} time {time}: invalid guarded actor set'
                             )
@@ -131,6 +137,7 @@ def summarize(root):
                     failures.append(f'episode {episode_id}: sampled zero-probability action')
                     continue
                 if (likelihood_ratio_limit is not None
+                        and (guarded_actor_set is None or actor in guarded_actor_set)
                         and float(terms['q']) / float(terms['p'])
                         > float(likelihood_ratio_limit) * (1.0 + 1e-7)):
                     failures.append(
@@ -176,6 +183,7 @@ def summarize(root):
         'online_step_status_counts': dict(status_counts), 'checked_sampled_bv_actions': checked_terms,
         'online_intervention_budget': intervention_budget,
         'online_max_proposal_likelihood_ratio': likelihood_ratio_limit,
+        'online_likelihood_ratio_guard_actor_ids': guarded_actor_ids,
         'likelihood_ratio_adjusted_steps': likelihood_ratio_adjusted_steps,
         'likelihood_ratio_adjusted_actor_counts': dict(likelihood_ratio_adjusted_actors),
         'raw_weight_status_counts': dict(raw_weight_status_counts),

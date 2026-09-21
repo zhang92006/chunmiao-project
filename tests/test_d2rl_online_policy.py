@@ -87,6 +87,29 @@ class OnlinePolicyTests(unittest.TestCase):
             5.0,
         )
 
+    def test_likelihood_ratio_guard_can_target_context_actor_only(self):
+        ctrl = self.controller()
+        ctrl.env.online_max_proposal_likelihood_ratio = 5.0
+        ctrl.env.online_likelihood_ratio_guard_actor_ids = ['BV_context']
+        candidates = [
+            SimpleNamespace(
+                id='BV_primary',
+                controller=SimpleNamespace(get_NDD_possi=lambda: np.array([.9, .1])),
+            ),
+            SimpleNamespace(
+                id='BV_context',
+                controller=SimpleNamespace(get_NDD_possi=lambda: np.array([.9, .1])),
+            ),
+        ]
+        applied, diagnostics = ctrl._apply_likelihood_ratio_guard(
+            {0: .1, 1: .1}, [0, 1], candidates,
+            [np.array([0., 1.]), np.array([0., 1.])],
+        )
+        self.assertEqual(applied[0], .1)
+        self.assertAlmostEqual(applied[1], 5 / 9)
+        self.assertEqual(diagnostics['guarded_actor_ids'], ['BV_context'])
+        self.assertEqual(set(diagnostics['by_actor']), {'BV_context'})
+
 
 if __name__ == '__main__':
     unittest.main()

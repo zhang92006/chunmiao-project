@@ -3,6 +3,7 @@ import unittest
 from scenario_reconstruction.run_template import (
     _validated_online_intervention_budget,
     _validated_online_likelihood_ratio,
+    _validated_guard_actor_ids,
 )
 
 
@@ -28,6 +29,19 @@ class OnlineInterventionBudgetValidationTests(unittest.TestCase):
                     _validated_online_likelihood_ratio(policy, invalid)
         with self.assertRaisesRegex(ValueError, 'requires an online policy'):
             _validated_online_likelihood_ratio(None, 50)
+
+    def test_guard_actor_ids_require_ratio_limit_and_known_unique_ids(self):
+        policy = object()
+        self.assertEqual(
+            _validated_guard_actor_ids(policy, 50, ['BV_context']),
+            ['BV_context'],
+        )
+        for values in ([], ['unknown'], ['BV_context', 'BV_context']):
+            with self.subTest(values=values):
+                with self.assertRaises(ValueError):
+                    _validated_guard_actor_ids(policy, 50, values)
+        with self.assertRaises(ValueError):
+            _validated_guard_actor_ids(policy, None, ['BV_context'])
 
 
 if __name__ == '__main__':

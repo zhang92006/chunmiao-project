@@ -23,12 +23,18 @@ def run_template(
     simulation_seed: int | None = None,
     online_intervention_budget: int | None = None,
     online_max_proposal_likelihood_ratio: float | None = None,
+    online_likelihood_ratio_guard_actor_ids=None,
 ) -> float:
     online_intervention_budget = _validated_online_intervention_budget(
         online_policy, online_intervention_budget
     )
     online_max_proposal_likelihood_ratio = _validated_online_likelihood_ratio(
         online_policy, online_max_proposal_likelihood_ratio
+    )
+    online_likelihood_ratio_guard_actor_ids = _validated_guard_actor_ids(
+        online_policy,
+        online_max_proposal_likelihood_ratio,
+        online_likelihood_ratio_guard_actor_ids,
     )
     if online_policy is not None and (proposal_mode != "factorized" or frozen_epsilon_source != "runtime"):
         raise ValueError("Online epsilon requires factorized proposals and runtime epsilon")
@@ -61,6 +67,7 @@ def run_template(
     env.online_epsilon_policy = online_policy
     env.online_intervention_budget = online_intervention_budget
     env.online_max_proposal_likelihood_ratio = online_max_proposal_likelihood_ratio
+    env.online_likelihood_ratio_guard_actor_ids = online_likelihood_ratio_guard_actor_ids
     env.closed_loop_evaluation = online_policy is not None or simulation_seed is not None
     env.frozen_epsilon_source = frozen_epsilon_source
     if online_policy is not None and env.multi_bv_control_num != 2:
@@ -72,6 +79,7 @@ def run_template(
         "online_policy": online_policy.metadata if online_policy is not None else None,
         "online_intervention_budget": online_intervention_budget,
         "online_max_proposal_likelihood_ratio": online_max_proposal_likelihood_ratio,
+        "online_likelihood_ratio_guard_actor_ids": online_likelihood_ratio_guard_actor_ids,
     })
     sim = Simulator(
         sumo_net_file_path="./maps/2LaneHighway/2LaneHighway.net.xml",
@@ -137,6 +145,22 @@ def _validated_online_likelihood_ratio(online_policy, maximum):
             "online_max_proposal_likelihood_ratio must be finite and greater than one"
         )
     return maximum
+
+
+def _validated_guard_actor_ids(online_policy, maximum, actor_ids):
+    if actor_ids is None:
+        return None
+    if online_policy is None or maximum is None:
+        raise ValueError(
+            "online_likelihood_ratio_guard_actor_ids requires an online policy and ratio limit"
+        )
+    values = list(actor_ids)
+    allowed = {"BV_primary", "BV_context"}
+    if not values or len(values) != len(set(values)) or not set(values).issubset(allowed):
+        raise ValueError(
+            "online_likelihood_ratio_guard_actor_ids must be unique BV_primary/BV_context ids"
+        )
+    return sorted(values)
 
 
 def _ensure_sumo_home() -> None:

@@ -29,6 +29,7 @@ def run_template_manifest(
     simulation_seed: int | None = None,
     online_intervention_budget: int | None = None,
     online_max_proposal_likelihood_ratio: float | None = None,
+    online_likelihood_ratio_guard_actor_ids: list[str] | None = None,
 ) -> dict:
     if online_intervention_budget is not None:
         if online_policy_path is None:
@@ -51,6 +52,19 @@ def run_template_manifest(
             raise ValueError(
                 "online_max_proposal_likelihood_ratio must be finite and greater than one"
             )
+    if online_likelihood_ratio_guard_actor_ids is not None:
+        values = list(online_likelihood_ratio_guard_actor_ids)
+        allowed = {"BV_primary", "BV_context"}
+        if online_policy_path is None or online_max_proposal_likelihood_ratio is None:
+            raise ValueError(
+                "online_likelihood_ratio_guard_actor_ids requires an online policy and ratio limit"
+            )
+        if (not values or len(values) != len(set(values))
+                or not set(values).issubset(allowed)):
+            raise ValueError(
+                "online_likelihood_ratio_guard_actor_ids must be unique BV_primary/BV_context ids"
+            )
+        online_likelihood_ratio_guard_actor_ids = sorted(values)
     online_policy = None
     if online_policy_path is not None:
         if split not in {"train", "validation"}:
@@ -141,7 +155,8 @@ def run_template_manifest(
         runtime_options = {}
         if (online_policy is not None or frozen_epsilon_source != "template"
                 or simulation_seed is not None or online_intervention_budget is not None
-                or online_max_proposal_likelihood_ratio is not None):
+                or online_max_proposal_likelihood_ratio is not None
+                or online_likelihood_ratio_guard_actor_ids is not None):
             runtime_options = {
                 "online_policy": online_policy,
                 "frozen_epsilon_source": frozen_epsilon_source,
@@ -149,6 +164,9 @@ def run_template_manifest(
                 "online_intervention_budget": online_intervention_budget,
                 "online_max_proposal_likelihood_ratio": (
                     online_max_proposal_likelihood_ratio
+                ),
+                "online_likelihood_ratio_guard_actor_ids": (
+                    online_likelihood_ratio_guard_actor_ids
                 ),
             }
             if any((experiment_path / folder / f"{episode_id}.json").exists()
@@ -221,6 +239,7 @@ def run_template_manifest(
         "simulation_seed_base": simulation_seed,
         "online_intervention_budget": online_intervention_budget,
         "online_max_proposal_likelihood_ratio": online_max_proposal_likelihood_ratio,
+        "online_likelihood_ratio_guard_actor_ids": online_likelihood_ratio_guard_actor_ids,
         "proposal_mode": proposal_mode,
         "epsilon": 1.0 if proposal_mode == "naturalistic" else epsilon,
         "successful_runs": sum(1 for item in results if item["status"] == "ok"),
@@ -416,6 +435,13 @@ def main() -> None:
         default=None,
         help="Per-BV upper bound on q(a|s)/p(a|s), enforced before sampling.",
     )
+    parser.add_argument(
+        "--online_likelihood_ratio_guard_actor",
+        action="append",
+        choices=("BV_primary", "BV_context"),
+        default=None,
+        help="Apply the likelihood-ratio bound only to this BV id; repeat if needed.",
+    )
     args = parser.parse_args()
 
     if (args.epsilon_primary is None) != (args.epsilon_context is None):
@@ -447,6 +473,9 @@ def main() -> None:
         online_intervention_budget=args.online_intervention_budget,
         online_max_proposal_likelihood_ratio=(
             args.online_max_proposal_likelihood_ratio
+        ),
+        online_likelihood_ratio_guard_actor_ids=(
+            args.online_likelihood_ratio_guard_actor
         ),
     )
     print("Manifest run finished.")

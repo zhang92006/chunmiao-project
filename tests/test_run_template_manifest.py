@@ -28,6 +28,11 @@ class RunTemplateManifestTests(unittest.TestCase):
                 'missing.json', 'unused', online_policy_path='missing.pt',
                 online_max_proposal_likelihood_ratio=1,
             )
+        with self.assertRaisesRegex(ValueError, 'requires an online policy and ratio limit'):
+            run_template_manifest(
+                'missing.json', 'unused', online_policy_path='missing.pt',
+                online_likelihood_ratio_guard_actor_ids=['BV_context'],
+            )
 
     def test_repeats_assign_unique_episode_ids_and_preserve_repeat_number(self):
         manifest = {
