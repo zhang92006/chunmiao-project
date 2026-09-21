@@ -9,10 +9,13 @@ import math
 from pathlib import Path
 
 from .prepare_training_data import write_importance_weight_diagnostics
+from .training_pool_ledger_audit import validate_episode_probability_ledger
 
 
 def assemble_training_pool(
-    experiment_roots: list[str | Path], output_dir: str | Path
+    experiment_roots: list[str | Path],
+    output_dir: str | Path,
+    skip_invalid_probability_ledger: bool = False,
 ) -> dict:
     """Merge training-ready crash indexes without copying episode JSON files."""
     if not experiment_roots:
@@ -24,6 +27,7 @@ def assemble_training_pool(
     source_counts = Counter()
     provenance = []
     duplicate_count = 0
+    excluded_invalid_probability_ledger_count = 0
     for raw_root in experiment_roots:
         root = Path(raw_root)
         with (root / "crash_weight_dict.json").open("r", encoding="utf-8") as stream:
@@ -51,6 +55,15 @@ def assemble_training_pool(
             source = metadata.get("source_event_id")
             if source is None:
                 raise ValueError(f"Episode has no source_event_id: {path}")
+            probability_audit = validate_episode_probability_ledger(episode)
+            if not probability_audit["audit_passed"]:
+                if skip_invalid_probability_ledger:
+                    excluded_invalid_probability_ledger_count += 1
+                    continue
+                raise ValueError(
+                    f"Episode has an invalid probability ledger: {path}: "
+                    + "; ".join(probability_audit["failures"])
+                )
             log_weight = float(log_weights[key])
             if not math.isfinite(log_weight):
                 raise ValueError(f"Episode has non-finite log weight: {path}")
@@ -78,6 +91,9 @@ def assemble_training_pool(
         "source_event_count": len(source_counts),
         "crash_count_by_source_event": dict(sorted(source_counts.items())),
         "duplicate_path_count": duplicate_count,
+        "excluded_invalid_probability_ledger_count": (
+            excluded_invalid_probability_ledger_count
+        ),
         "provenance": provenance,
         "importance_weight_diagnostics": diagnostics,
         "recommended_training_sampler": "uniform_source",
@@ -101,8 +117,13 @@ def main() -> None:
     )
     parser.add_argument("--experiment_root", action="append", required=True)
     parser.add_argument("--output", required=True)
+    parser.add_argument("--skip_invalid_probability_ledger", action="store_true")
     args = parser.parse_args()
-    result = assemble_training_pool(args.experiment_root, args.output)
+    result = assemble_training_pool(
+        args.experiment_root,
+        args.output,
+        skip_invalid_probability_ledger=args.skip_invalid_probability_ledger,
+    )
     print(json.dumps(result, ensure_ascii=False, indent=2))
 
 

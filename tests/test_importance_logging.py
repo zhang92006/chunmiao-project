@@ -76,15 +76,28 @@ class ImportanceLoggingTests(unittest.TestCase):
             crash = root / "crash"
             crash.mkdir()
             episode_path = crash / "episode.json"
+            step_weight = 1e-100
+            step_log_weight = -230.25850929940458
             episode_path.write_text(json.dumps({
-                "weight_episode": 1e-300,
-                "log_importance_weight": -800.0,
-                "weight_step_info": {"0.0": {"joint": 0.1, "per_agent": [0.1, 1.0]}},
-                "drl_obs_step_info": {
-                    "0.0": {"joint": list(range(14)), "per_agent": [list(range(10)), list(range(10))]}
+                "weight_episode": 0.0,
+                "log_importance_weight": 4 * step_log_weight,
+                "weight_step_info": {
+                    str(index): {"joint": step_weight, "per_agent": [step_weight, 1.0]}
+                    for index in range(4)
                 },
-                "criticality_step_info": {"0.0": 1.0},
-                "ndd_step_info": {"0.0": {"joint": 0.01, "per_agent": [0.01, 1.0]}},
+                "log_probability_step_info": {
+                    str(index): {"log_importance_weight": step_log_weight}
+                    for index in range(4)
+                },
+                "drl_obs_step_info": {
+                    str(index): {"joint": list(range(14)), "per_agent": [list(range(10)), list(range(10))]}
+                    for index in range(4)
+                },
+                "criticality_step_info": {str(index): 1.0 for index in range(4)},
+                "ndd_step_info": {
+                    str(index): {"joint": 0.01, "per_agent": [0.01, 1.0]}
+                    for index in range(4)
+                },
             }), encoding="utf-8")
 
             from scenario_reconstruction.prepare_training_data import prepare_crash_weight_dict
@@ -92,7 +105,9 @@ class ImportanceLoggingTests(unittest.TestCase):
             sidecar = json.loads((root / "crash_log_weight_dict.json").read_text(encoding="utf-8"))
 
         self.assertEqual(len(result), 1)
-        self.assertEqual(sidecar["log_weights"][episode_path.as_posix()], -800.0)
+        self.assertAlmostEqual(
+            sidecar["log_weights"][episode_path.as_posix()], 4 * step_log_weight
+        )
 
     def test_joint_observation_uses_log_weight_after_raw_underflow(self):
         full_obs = {

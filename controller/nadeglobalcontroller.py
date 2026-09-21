@@ -459,6 +459,7 @@ class NADEBVGlobalController(NDDBVGlobalController):
         active_ids = []
         arrays = []
         epsilon_by_bv_id = {}
+        removed_unsupported_mass_by_bv_id = {}
         action_count = len(conf.BV_ACTIONS)
         for index, bv in enumerate(controlled_bvs_list):
             agent = agents.get(bv.id)
@@ -474,7 +475,23 @@ class NADEBVGlobalController(NDDBVGlobalController):
                 total = float(np.sum(values))
                 if not np.isfinite(total) or total <= 0:
                     raise ValueError(f"Frozen action_pdf for {bv.id} has no mass")
-                arrays.append(values / total)
+                values = values / total
+                naturalistic = np.asarray(bv.controller.get_NDD_possi(), dtype=float)
+                if naturalistic.shape != (action_count,) or np.any(naturalistic < 0):
+                    raise ValueError(f"Invalid naturalistic action support for {bv.id}")
+                supported = naturalistic > 0.0
+                removed_mass = float(np.sum(values[~supported]))
+                values = np.where(supported, values, 0.0)
+                supported_total = float(np.sum(values))
+                if supported_total <= 0.0:
+                    naturalistic_total = float(np.sum(naturalistic))
+                    if not np.isfinite(naturalistic_total) or naturalistic_total <= 0.0:
+                        raise ValueError(f"Naturalistic action PDF for {bv.id} has no mass")
+                    values = naturalistic / naturalistic_total
+                else:
+                    values = values / supported_total
+                arrays.append(values)
+                removed_unsupported_mass_by_bv_id[bv.id] = removed_mass
                 epsilon_by_bv_id[bv.id] = float(agent["epsilon"])
                 active_ids.append(bv.id)
             else:
@@ -507,6 +524,9 @@ class NADEBVGlobalController(NDDBVGlobalController):
                 "active_bv_ids": active_ids,
                 "time_s": current_time,
                 "epsilon_by_bv_id": epsilon_by_bv_id,
+                "removed_unsupported_mass_by_bv_id": (
+                    removed_unsupported_mass_by_bv_id
+                ),
             },
         }
 

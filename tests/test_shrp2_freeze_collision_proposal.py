@@ -124,6 +124,41 @@ class FrozenCollisionProposalTests(unittest.TestCase):
         })
         self.assertAlmostEqual(proposal["criticality_arrays"][0][0], 1.0)
 
+    def test_controller_masks_frozen_actions_without_naturalistic_support(self):
+        controller = NADEBVGlobalController.__new__(NADEBVGlobalController)
+        controller.control_log = {}
+        controller.env = SimpleNamespace(
+            multibv_proposal_mode="factorized",
+            simulator=SimpleNamespace(get_time=lambda: 1.2),
+            scenario_template=SimpleNamespace(bridge_metadata={
+                "frozen_collision_proposal": {
+                    "proposal_id": "p1",
+                    "agents": {
+                        "BV_primary": {
+                            "start_time_s": 1.0,
+                            "duration_s": 1.0,
+                            "epsilon": 0.05,
+                            "action_pdf": [0.75, 0.25] + [0.0] * 31,
+                        },
+                    },
+                }
+            }),
+        )
+        naturalistic = np.asarray([0.0, 0.4, 0.6] + [0.0] * 30)
+        bv = SimpleNamespace(
+            id="BV_primary",
+            controller=SimpleNamespace(get_NDD_possi=lambda: naturalistic),
+        )
+
+        proposal = controller._frozen_collision_proposal([bv], [np.zeros(33)])
+
+        self.assertEqual(proposal["criticality_arrays"][0][0], 0.0)
+        self.assertEqual(proposal["criticality_arrays"][0][1], 1.0)
+        self.assertEqual(
+            proposal["debug"]["removed_unsupported_mass_by_bv_id"],
+            {"BV_primary": 0.75},
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

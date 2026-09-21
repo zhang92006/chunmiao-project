@@ -1,4 +1,5 @@
 import json
+import math
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
@@ -24,6 +25,13 @@ class AssembleTrainingPoolTests(unittest.TestCase):
                         "source_split": "train",
                     },
                     "log_importance_weight": -float(index + 1),
+                    "weight_episode": math.exp(-float(index + 1)),
+                    "log_probability_step_info": {
+                        "0.0": {"log_importance_weight": -float(index + 1)}
+                    },
+                    "weight_step_info": {
+                        "0.0": {"joint": math.exp(-float(index + 1))}
+                    },
                 }), encoding="utf-8")
                 key = episode.as_posix()
                 (experiment / "crash_weight_dict.json").write_text(
@@ -59,6 +67,13 @@ class AssembleTrainingPoolTests(unittest.TestCase):
                     "collision_search_only": True,
                 },
                 "log_importance_weight": -1.0,
+                "weight_episode": 0.36787944117144233,
+                "log_probability_step_info": {
+                    "0.0": {"log_importance_weight": -1.0}
+                },
+                "weight_step_info": {
+                    "0.0": {"joint": 0.36787944117144233}
+                },
             }), encoding="utf-8")
             key = episode.as_posix()
             (experiment / "crash_weight_dict.json").write_text(
@@ -70,6 +85,44 @@ class AssembleTrainingPoolTests(unittest.TestCase):
 
             with self.assertRaisesRegex(ValueError, "Search-only"):
                 assemble_training_pool([experiment], root / "pool")
+
+    def test_can_explicitly_skip_invalid_probability_ledger(self):
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            experiment = root / "experiment"
+            crash = experiment / "crash"
+            crash.mkdir(parents=True)
+            episode = crash / "0.json"
+            episode.write_text(json.dumps({
+                "scenario_metadata": {
+                    "source_event_id": 101,
+                    "source_split": "train",
+                },
+                "log_importance_weight": -1.0,
+                "weight_episode": 0.0,
+                "log_probability_step_info": {
+                    "0.0": {"log_importance_weight": -1.0}
+                },
+                "weight_step_info": {"0.0": {"joint": 0.0}},
+            }), encoding="utf-8")
+            key = episode.as_posix()
+            (experiment / "crash_weight_dict.json").write_text(
+                json.dumps({key: [0.0, 0.0]}), encoding="utf-8"
+            )
+            (experiment / "crash_log_weight_dict.json").write_text(
+                json.dumps({"log_weights": {key: -1.0}}), encoding="utf-8"
+            )
+
+            result = assemble_training_pool(
+                [experiment],
+                root / "pool",
+                skip_invalid_probability_ledger=True,
+            )
+
+            self.assertEqual(result["crash_episode_count"], 0)
+            self.assertEqual(
+                result["excluded_invalid_probability_ledger_count"], 1
+            )
 
 
 if __name__ == "__main__":

@@ -6,6 +6,7 @@ from math import isfinite, log
 from pathlib import Path
 
 from .importance import stable_weight_diagnostics
+from .training_pool_ledger_audit import validate_episode_probability_ledger
 
 
 def prepare_crash_weight_dict(
@@ -31,6 +32,13 @@ def prepare_crash_weight_dict(
         with crash_json_path.open("r", encoding="utf-8") as stream:
             episode = json.load(stream)
         weight_episode = float(episode["weight_episode"])
+        if multi_bv:
+            try:
+                probability_audit = validate_episode_probability_ledger(episode)
+            except (KeyError, TypeError, ValueError):
+                continue
+            if not probability_audit["audit_passed"]:
+                continue
         if weight_episode < threshold and _is_training_ready_episode(
             episode,
             min_criticality=min_criticality,
