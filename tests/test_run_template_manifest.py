@@ -64,6 +64,44 @@ class RunTemplateManifestTests(unittest.TestCase):
         )
         self.assertEqual(run.call_count, 6)
 
+    def test_stratified_allocation_uses_declared_per_template_counts(self):
+        manifest = {
+            "records": [
+                {"status": "template_created", "split": "validation", "path": "one.json"},
+                {"status": "template_created", "split": "validation", "path": "two.json"},
+            ]
+        }
+        allocation = {
+            "schema_version": 1,
+            "template_count": 2,
+            "allocation_total": 5,
+            "templates": {
+                "one.json": {"additional_rollouts": 4},
+                "two.json": {"additional_rollouts": 1},
+            },
+        }
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            manifest_path = root / "manifest.json"
+            allocation_path = root / "allocation.json"
+            manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+            allocation_path.write_text(json.dumps(allocation), encoding="utf-8")
+            with patch(
+                "scenario_reconstruction.run_template_manifest.run_template",
+                return_value=1.0,
+            ) as run:
+                summary = run_template_manifest(
+                    manifest_path, root / "episodes", split="validation",
+                    stratified_allocation_path=allocation_path,
+                )
+
+        self.assertEqual(summary["attempted"], 5)
+        self.assertEqual([x["repeat"] for x in summary["results"]], [0, 1, 2, 3, 0])
+        self.assertEqual(summary["stratified_allocation"]["rollouts_by_template"], {
+            "one.json": 4, "two.json": 1,
+        })
+        self.assertEqual(run.call_count, 5)
+
     def test_initial_primary_ttc_filter_keeps_only_closing_same_lane_templates(self):
         manifest = {
             "records": [

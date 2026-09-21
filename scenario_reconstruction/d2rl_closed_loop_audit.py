@@ -12,6 +12,7 @@ def summarize(root):
     run = json.loads((root / 'manifest_run_summary.json').read_text(encoding='utf-8'))
     failures = []
     episodes = []
+    episode_rows = []
     status_counts = Counter()
     checked_terms = 0
     inferred = 0
@@ -35,6 +36,7 @@ def summarize(root):
             continue
         data = json.loads(files[0].read_text(encoding='utf-8'))
         episodes.append(data)
+        episode_rows.append((str(Path(result.get('template', ''))), data))
         log_terms = data.get('log_probability_step_info', {})
         total_log_weight = sum(float(x['log_importance_weight']) for x in log_terms.values())
         if not math.isfinite(total_log_weight) or abs(total_log_weight-float(data['log_importance_weight'])) > 1e-7:
@@ -174,12 +176,110 @@ def summarize(root):
         ess = sum(scaled)**2 / sum(value**2 for value in scaled)
     else:
         weighted_log_mean = None
+    stratified = run.get('stratified_allocation')
+    stratified_summary = None
+    if stratified is not None:
+        planned = {
+            str(Path(path)): int(count)
+            for path, count in stratified.get('rollouts_by_template', {}).items()
+        }
+        grouped = {template: [] for template in planned}
+        unknown_templates = Counter()
+        for template, data in episode_rows:
+            if template not in grouped:
+                unknown_templates[template] += 1
+                continue
+            is_crash = bool(
+                data['collision_result'] and 'CAV' in (data.get('collision_id') or [])
+            )
+            grouped[template].append(
+                math.exp(float(data['log_importance_weight'])) if is_crash else 0.0
+            )
+        if unknown_templates:
+            failures.append(f'Unplanned templates in stratified run: {dict(unknown_templates)}')
+        actual = {template: len(values) for template, values in grouped.items()}
+        if actual != planned:
+            failures.append(
+                f'Stratified rollout counts disagree with plan: actual={actual}, planned={planned}'
+            )
+        if grouped:
+            stratum_means = {
+                template: math.fsum(values) / len(values) if values else 0.0
+                for template, values in grouped.items()
+            }
+            template_count = len(grouped)
+            stratified_mean = math.fsum(stratum_means.values()) / template_count
+            variance_terms = {}
+            estimator_contributions = []
+            raw_rates = {}
+            for template, values in grouped.items():
+                sample_count = len(values)
+                raw_rates[template] = (
+                    sum(value > 0.0 for value in values) / sample_count
+                    if sample_count else None
+                )
+                if sample_count > 1:
+                    center = stratum_means[template]
+                    sample_variance = math.fsum(
+                        (value - center) ** 2 for value in values
+                    ) / (sample_count - 1)
+                    variance_terms[template] = sample_variance / sample_count
+                else:
+                    variance_terms[template] = None
+                if sample_count:
+                    estimator_contributions.extend(
+                        value / (template_count * sample_count) for value in values
+                    )
+            variance_estimable = all(value is not None for value in variance_terms.values())
+            stratified_variance = (
+                math.fsum(variance_terms.values()) / (template_count ** 2)
+                if variance_estimable else None
+            )
+            contribution_sum = math.fsum(estimator_contributions)
+            contribution_square_sum = math.fsum(
+                value * value for value in estimator_contributions
+            )
+            stratified_ess = (
+                contribution_sum ** 2 / contribution_square_sum
+                if contribution_square_sum > 0.0 else 0.0
+            )
+            standard_error = (
+                math.sqrt(max(0.0, stratified_variance))
+                if stratified_variance is not None else None
+            )
+            stratified_summary = {
+                'estimator': 'equal-template stratified mean',
+                'template_count': template_count,
+                'rollouts_by_template': actual,
+                'raw_cav_collision_mean_across_templates': (
+                    math.fsum(raw_rates.values()) / template_count
+                    if all(value is not None for value in raw_rates.values()) else None
+                ),
+                'weighted_cav_collision_mean': stratified_mean,
+                'log_weighted_cav_collision_mean': (
+                    math.log(stratified_mean) if stratified_mean > 0.0 else None
+                ),
+                'estimated_variance': stratified_variance,
+                'estimated_standard_error': standard_error,
+                'estimated_95pct_relative_half_width': (
+                    1.96 * standard_error / stratified_mean
+                    if standard_error is not None and stratified_mean > 0.0 else None
+                ),
+                'crash_contribution_ess': stratified_ess,
+                'per_template_weighted_means': stratum_means,
+            }
+            weighted_mean = stratified_mean
+            weighted_log_mean = (
+                math.log(stratified_mean) if stratified_mean > 0.0 else None
+            )
+            ess = stratified_ess
     return {
         'attempted': run['attempted'], 'complete_episode_count': n,
         'raw_cav_crashes': len(collision), 'raw_cav_collision_rate': len(collision)/n if n else None,
         'conditional_weighted_cav_collision_mean': weighted_mean if not failures else None,
         'log_conditional_weighted_cav_collision_mean': weighted_log_mean if not failures else None,
         'crash_contribution_ess': ess if not failures else None,
+        'stratified_estimation': stratified_summary if not failures else None,
         'online_step_status_counts': dict(status_counts), 'checked_sampled_bv_actions': checked_terms,
         'online_intervention_budget': intervention_budget,
         'online_max_proposal_likelihood_ratio': likelihood_ratio_limit,

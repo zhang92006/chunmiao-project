@@ -7,6 +7,48 @@ from scenario_reconstruction.d2rl_closed_loop_audit import summarize
 
 
 class ClosedLoopAuditTests(unittest.TestCase):
+    def test_stratified_estimator_uses_equal_template_weights(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for folder in ('crash', 'tested_and_safe', 'rejected'):
+                (root / folder).mkdir(parents=True)
+            results = []
+            episode_id = 0
+            for template, values in (("one.json", [1.0, 1.0, 1.0, 1.0]),
+                                     ("two.json", [0.0, 0.0])):
+                for value in values:
+                    episode = {
+                        'collision_result': int(value > 0),
+                        'collision_id': ['CAV', 'BV_primary'] if value > 0 else None,
+                        'weight_episode': value if value > 0 else 1.0,
+                        'log_importance_weight': 0.0,
+                        'initial_weight': 1.0,
+                        'log_probability_step_info': {},
+                        'online_policy_step_info': {},
+                    }
+                    folder = 'crash' if value > 0 else 'tested_and_safe'
+                    (root / folder / f'{episode_id}.json').write_text(json.dumps(episode))
+                    results.append({
+                        'episode': episode_id, 'status': 'ok', 'template': template,
+                    })
+                    episode_id += 1
+            (root / 'manifest_run_summary.json').write_text(json.dumps({
+                'attempted': 6,
+                'results': results,
+                'online_policy': None,
+                'stratified_allocation': {
+                    'rollouts_by_template': {'one.json': 4, 'two.json': 2},
+                },
+            }))
+
+            result = summarize(root)
+
+        self.assertTrue(result['audit_passed'])
+        self.assertAlmostEqual(result['conditional_weighted_cav_collision_mean'], .5)
+        self.assertAlmostEqual(
+            result['stratified_estimation']['raw_cav_collision_mean_across_templates'], .5
+        )
+
     def test_likelihood_ratio_guard_is_reconstructed_and_counted(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

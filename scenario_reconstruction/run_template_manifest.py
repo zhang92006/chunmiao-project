@@ -30,6 +30,7 @@ def run_template_manifest(
     online_intervention_budget: int | None = None,
     online_max_proposal_likelihood_ratio: float | None = None,
     online_likelihood_ratio_guard_actor_ids: list[str] | None = None,
+    stratified_allocation_path: str | Path | None = None,
 ) -> dict:
     if online_intervention_budget is not None:
         if online_policy_path is None:
@@ -138,10 +139,44 @@ def run_template_manifest(
         records = records[:limit]
     if repeats < 1:
         raise ValueError("repeats must be positive")
+    stratified_allocation = None
+    if stratified_allocation_path is not None:
+        if (gui_episode is not None or repeats != 1 or start != 0 or limit is not None
+                or source_event_ids is not None or require_context_blocking
+                or max_initial_primary_ttc_s is not None):
+            raise ValueError(
+                "Stratified allocation cannot be combined with GUI, repeats, slicing, "
+                "or template filters"
+            )
+        stratified_allocation = json.loads(
+            Path(stratified_allocation_path).read_text(encoding="utf-8")
+        )
+        planned = {
+            str(Path(path)): int(item["additional_rollouts"])
+            for path, item in stratified_allocation.get("templates", {}).items()
+        }
+        selected = {str(Path(record["path"])) for record in records}
+        if set(planned) != selected:
+            missing = sorted(selected - set(planned))
+            extra = sorted(set(planned) - selected)
+            raise ValueError(
+                f"Stratified allocation template set mismatch; missing={missing}, extra={extra}"
+            )
+        if any(value < 1 for value in planned.values()):
+            raise ValueError("Every stratified template requires at least one rollout")
+        if sum(planned.values()) != int(stratified_allocation["allocation_total"]):
+            raise ValueError("Stratified allocation total is inconsistent")
     if gui_episode is not None:
         if gui_episode < 0 or gui_episode >= len(records):
             raise ValueError(f"gui_episode={gui_episode} is out of range 0..{len(records) - 1}")
         records_to_run = [(gui_episode, records[gui_episode], 0)]
+    elif stratified_allocation is not None:
+        records_to_run = []
+        episode_id = 0
+        for record in records:
+            for repeat_index in range(planned[str(Path(record["path"]))]):
+                records_to_run.append((episode_id, record, repeat_index))
+                episode_id += 1
     else:
         records_to_run = [
             (repeat_index * len(records) + record_index, record, repeat_index)
@@ -240,6 +275,18 @@ def run_template_manifest(
         "online_intervention_budget": online_intervention_budget,
         "online_max_proposal_likelihood_ratio": online_max_proposal_likelihood_ratio,
         "online_likelihood_ratio_guard_actor_ids": online_likelihood_ratio_guard_actor_ids,
+        "stratified_allocation_path": (
+            None if stratified_allocation_path is None else str(stratified_allocation_path)
+        ),
+        "stratified_allocation": (
+            None if stratified_allocation is None else {
+                "schema_version": stratified_allocation.get("schema_version"),
+                "allocation_total": stratified_allocation["allocation_total"],
+                "template_count": stratified_allocation["template_count"],
+                "equal_template_mixture_weight": 1.0 / len(planned),
+                "rollouts_by_template": planned,
+            }
+        ),
         "proposal_mode": proposal_mode,
         "epsilon": 1.0 if proposal_mode == "naturalistic" else epsilon,
         "successful_runs": sum(1 for item in results if item["status"] == "ok"),
@@ -442,6 +489,14 @@ def main() -> None:
         default=None,
         help="Apply the likelihood-ratio bound only to this BV id; repeat if needed.",
     )
+    parser.add_argument(
+        "--stratified_allocation",
+        default=None,
+        help=(
+            "Validation-only allocation JSON produced by d2rl_stratified_allocation; "
+            "uses per-template rollout counts and requires --repeats 1."
+        ),
+    )
     args = parser.parse_args()
 
     if (args.epsilon_primary is None) != (args.epsilon_context is None):
@@ -477,6 +532,7 @@ def main() -> None:
         online_likelihood_ratio_guard_actor_ids=(
             args.online_likelihood_ratio_guard_actor
         ),
+        stratified_allocation_path=args.stratified_allocation,
     )
     print("Manifest run finished.")
     print(f"attempted={summary['attempted']}")
