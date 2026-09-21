@@ -10,6 +10,14 @@ def main():
     parser.add_argument('--yaml_conf', required=True)
     parser.add_argument('--checkpoint', required=True)
     parser.add_argument('--output', required=True)
+    parser.add_argument(
+        '--seed', type=int, default=None,
+        help='Override the YAML training seed for checkpoint provenance.',
+    )
+    parser.add_argument(
+        '--experiment_name', default=None,
+        help='Override the YAML experiment name for checkpoint provenance.',
+    )
     args = parser.parse_args()
     import numpy as np
     import torch
@@ -23,6 +31,10 @@ def main():
     from .d2rl_smoke_train import build_rllib_config
 
     config = yaml.safe_load(Path(args.yaml_conf).read_text(encoding='utf-8'))
+    if args.seed is not None:
+        config['seed'] = args.seed
+    if args.experiment_name:
+        config['experiment_name'] = args.experiment_name
     if config.get('action_distribution') != 'bounded_beta' or config.get('multi_bv_num') != 2:
         raise ValueError('Only the two-BV bounded-Beta policy is supported')
     output = Path(args.output)
