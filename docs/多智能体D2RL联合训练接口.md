@@ -29,7 +29,15 @@ SHRP2 多车事件
 | `ndd_step_info[t].per_agent` | `K` | 每辆车的自然驾驶概率 |
 | `controlled_bv_ids_step_info[t]` | `K` | 动作位置与车辆 ID 的可追溯映射 |
 
-联合动作的 importance 项按车辆相乘：对于每一辆 BV，`weight > 1` 时使用 `1 / epsilon`；`weight < 0.999` 时使用 `ndd_probability / (1 - epsilon)`。这避免了旧代码只取列表中第一个 epsilon 的错误。
+联合 importance weight 按车辆相乘。一般 factorized proposal 对每辆 BV 使用
+`q(epsilon) = epsilon * p + (1 - epsilon) * c`，其中 `p` 是自然驾驶动作概率、`c` 是
+关键动作提议概率，因此新权重必须精确计算为 `p/q(epsilon)`。生成日志中的旧权重满足
+`weight_generation=p/q_generation`，结合生成 epsilon 可重建 `c`。车辆 ID、生成 epsilon、
+自然概率与权重必须在同一顺序对齐。
+
+旧兼容模式曾按 `weight > 1` 使用 `1/epsilon`、按 `weight < 0.999` 使用
+`p/(1-epsilon)`；它只适用于特殊退化分布，不适用于一般 factorized 或冻结 CEM proposal，
+不得用于新的正式实验。
 
 ## 代码开关
 
@@ -40,7 +48,29 @@ SHRP2 多车事件
 ```yaml
 multi_bv_training: true
 multi_bv_num: 2
+multi_bv_factorized_reward_mode: "exact_mixture"
+multi_bv_reward_mode: "bounded_log_weight"
+multi_bv_log_reward_scale: 5.0
+log_episode_rewards: false
+num_workers: 0
+direct_training: true
+action_distribution: "bounded_beta"
 ```
+
+`log_episode_rewards` 默认为 `false`，正式训练时不再逐 episode 打印动作和奖励。
+只有诊断单个 episode 时才应临时设为 `true`；该开关不改变奖励公式或训练样本。
+
+`exact_mixture` 会拒绝缺少精确概率重建字段的 episode；`bounded_log_weight` 使用
+`-R*tanh(log(weight)/scale)`，避免旧线性奖励在极端权重下大量硬截断到 ±R。
+保留 `legacy` / `legacy_linear` 仅用于复现实验，不与新奖励的数值直接横向比较。
+
+在约 16 GiB 内存的 Windows 主机上，`num_workers=0` 配合 `direct_training=true` 可让
+PPO 在驱动进程中本地采样和训练，避免 Ray Tune 的独立 Trainer actor 触发 95% 内存保护。
+该选项只影响执行方式和并行度，不改变训练样本、奖励或策略结构。
+
+`bounded_beta` 在 RLlib 的归一化动作域 [-1,1] 内使用独立 Beta 分布，再由框架映射到
+epsilon [0.001,0.999]。与默认无界对角高斯相比，它不会依赖事后裁剪制造边界动作，
+同时提供 PPO 需要的 log-probability、entropy 与 KL。旧无界高斯配置保留为对照。
 
 则 `D2RLTrainingEnv` 的空间变为：
 

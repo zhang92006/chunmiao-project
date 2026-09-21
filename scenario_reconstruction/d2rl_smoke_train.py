@@ -9,13 +9,14 @@ consume the reviewed episode pool; it is not a final training protocol.
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
 import sys
 
 
 def build_rllib_config(config: dict, env_name: str = "shrp2_multibv_smoke") -> dict:
     """Build the shared legacy RLlib configuration used by train and eval."""
-    return {
+    rllib_config = {
         "env": env_name,
         "num_gpus": 0,
         "num_workers": int(config.get("num_workers", 1)),
@@ -27,6 +28,38 @@ def build_rllib_config(config: dict, env_name: str = "shrp2_multibv_smoke") -> d
         "ignore_worker_failures": False,
         "seed": int(config.get("seed", 7)),
     }
+    if config.get("action_distribution") == "bounded_beta":
+        rllib_config["model"] = {"custom_action_dist": "d2rl_bounded_beta"}
+    return rllib_config
+
+
+def run_direct_training(config: dict, iterations: int) -> None:
+    """Train in the driver process to reduce memory use on 16 GiB hosts."""
+    from ray.rllib.agents.ppo import PPOTrainer
+
+    output_dir = (
+        Path(config["local_dir"]).resolve()
+        / config["experiment_name"]
+        / "direct"
+    )
+    output_dir.mkdir(parents=True, exist_ok=True)
+    trainer = PPOTrainer(config=build_rllib_config(config))
+    try:
+        for iteration in range(1, iterations + 1):
+            result = trainer.train()
+            checkpoint_path = trainer.save(str(output_dir))
+            summary = {
+                "training_iteration": iteration,
+                "timesteps_total": result.get("timesteps_total"),
+                "episode_reward_mean": result.get("episode_reward_mean"),
+                "episode_reward_min": result.get("episode_reward_min"),
+                "episode_reward_max": result.get("episode_reward_max"),
+                "episode_len_mean": result.get("episode_len_mean"),
+                "checkpoint_path": checkpoint_path,
+            }
+            print(json.dumps(summary, ensure_ascii=False))
+    finally:
+        trainer.stop()
 
 
 def main() -> None:
@@ -38,6 +71,11 @@ def main() -> None:
         "--experiment_name",
         default=None,
         help="Override the YAML Ray result directory name.",
+    )
+    parser.add_argument(
+        "--direct",
+        action="store_true",
+        help="Train PPO in the driver process instead of a Tune trial actor.",
     )
     args = parser.parse_args()
 
@@ -78,6 +116,12 @@ def main() -> None:
 
     from d2rl_training.d2rl_training_env import D2RLTrainingEnv
 
+    if config.get("action_distribution") == "bounded_beta":
+        from scenario_reconstruction.d2rl_bounded_action_dist import (
+            register_bounded_action_distribution,
+        )
+        register_bounded_action_distribution()
+
     def env_creator(_env_config):
         return D2RLTrainingEnv(config)
 
@@ -87,14 +131,17 @@ def main() -> None:
     # Windows hosts without NVIDIA tooling installed.
     ray.init(num_gpus=0, include_dashboard=False, ignore_reinit_error=True)
     try:
-        tune.run(
-            "PPO",
-            stop={"training_iteration": iterations},
-            config=build_rllib_config(config),
-            checkpoint_freq=1,
-            local_dir=config["local_dir"],
-            name=config["experiment_name"],
-        )
+        if args.direct or config.get("direct_training", False):
+            run_direct_training(config, iterations)
+        else:
+            tune.run(
+                "PPO",
+                stop={"training_iteration": iterations},
+                config=build_rllib_config(config),
+                checkpoint_freq=1,
+                local_dir=config["local_dir"],
+                name=config["experiment_name"],
+            )
     finally:
         ray.shutdown()
 

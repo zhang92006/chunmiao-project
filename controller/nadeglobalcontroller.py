@@ -151,6 +151,13 @@ class NADEBVGlobalController(NDDBVGlobalController):
                 "per_agent": self.control_log["weight_list_per_agent"],
                 "joint_naturalistic_probability": joint_naturalistic,
                 "joint_proposal_probability": joint_proposal_probability,
+                "per_agent_proposal_probability": [
+                    float(ndd) / float(weight) if float(weight) > 0.0 else 0.0
+                    for ndd, weight in zip(
+                        self.control_log["ndd_possi_list_per_agent"],
+                        self.control_log["weight_list_per_agent"],
+                    )
+                ],
             }
             self.control_log["ndd_record"] = {
                 "proposal_type": fallback_proposal_type,
@@ -159,7 +166,13 @@ class NADEBVGlobalController(NDDBVGlobalController):
             }
         self._record_probability_terms()
         if self.drl_epsilon_value != -1:
-            epsilon = self.drl_epsilon_value
+            epsilon_by_vehicle = self.control_log.get("epsilon_by_bv_id", {})
+            if isinstance(epsilon_by_vehicle, dict) and all(
+                bv_id in epsilon_by_vehicle for bv_id in selected_ids
+            ):
+                epsilon = [epsilon_by_vehicle[bv_id] for bv_id in selected_ids]
+            else:
+                epsilon = self.drl_epsilon_value
             if isinstance(epsilon, (list, tuple, np.ndarray)):
                 epsilon_values = [float(value) for value in list(epsilon)]
                 if not epsilon_values:

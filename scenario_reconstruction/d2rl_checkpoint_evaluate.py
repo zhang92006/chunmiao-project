@@ -17,6 +17,11 @@ def discover_crash_episodes(pool: str | Path, expected_split: str) -> list[Path]
     """Return event-disjoint crash episodes and reject split contamination."""
     crash_dir = Path(pool) / "crash"
     paths = sorted(crash_dir.glob("*.json"))
+    # Assembled pools keep external episode paths instead of copying JSONs.
+    index = Path(pool) / "crash_weight_dict.json"
+    if not paths and index.is_file():
+        with index.open("r", encoding="utf-8") as stream:
+            paths = sorted({Path(path).resolve() for path in json.load(stream)})
     if not paths:
         raise ValueError(f"No crash episode JSON files found in {crash_dir}")
     mismatches = []
@@ -54,6 +59,22 @@ def summarize_records(
             "min": min(values),
             "max": max(values),
         })
+    raw_records = [item for item in accepted if "raw_normalized_action" in item]
+    raw_action_summary = []
+    raw_action_count = max(
+        (len(item["raw_normalized_action"]) for item in raw_records), default=0
+    )
+    for index in range(raw_action_count):
+        values = [float(item["raw_normalized_action"][index]) for item in raw_records]
+        raw_action_summary.append({
+            "agent_index": index,
+            "mean": statistics.fmean(values),
+            "min": min(values),
+            "max": max(values),
+            "outside_normalized_bounds_count": sum(
+                value < -1.0 or value > 1.0 for value in values
+            ),
+        })
     by_source_event = {}
     for source_event_id in sorted({item["source_event_id"] for item in accepted}, key=str):
         source_records = [
@@ -69,6 +90,23 @@ def summarize_records(
                 value <= -clip_reward_threshold for value in source_rewards
             ),
         }
+        paired_source = [
+            item for item in source_records if "reference_reward" in item
+        ]
+        if paired_source:
+            reference_rewards = [
+                float(item["reference_reward"]) for item in paired_source
+            ]
+            differences = [
+                float(item["reward"]) - float(item["reference_reward"])
+                for item in paired_source
+            ]
+            by_source_event[str(source_event_id)].update({
+                "reference_reward_mean": statistics.fmean(reference_rewards),
+                "policy_minus_reference_mean": statistics.fmean(differences),
+                "policy_better_count": sum(value > 0 for value in differences),
+                "policy_worse_count": sum(value < 0 for value in differences),
+            })
     summary = {
         "schema_version": 1,
         "evaluation_mode": "deterministic_explore_false",
@@ -81,6 +119,20 @@ def summarize_records(
         "unique_source_event_count": len({item["source_event_id"] for item in accepted}),
         "reward": None,
         "action_by_agent": action_summary,
+        "raw_normalized_action_by_agent": raw_action_summary,
+        "action_transform_diagnostics": {
+            "records_with_raw_action": len(raw_records),
+            "raw_outside_normalized_bounds_count": sum(
+                any(float(value) < -1.0 or float(value) > 1.0
+                    for value in item["raw_normalized_action"])
+                for item in raw_records
+            ),
+            "environment_boundary_action_count": sum(
+                any(float(value) <= 0.0010001 or float(value) >= 0.9989999
+                    for value in item["action"])
+                for item in accepted
+            ),
+        },
         "by_source_event": by_source_event,
         "records": records,
     }
@@ -95,6 +147,21 @@ def summarize_records(
             "lower_clipped_fraction": sum(
                 value <= -clip_reward_threshold for value in rewards
             ) / len(rewards),
+        }
+    paired = [item for item in accepted if "reference_reward" in item]
+    if paired:
+        reference_rewards = [float(item["reference_reward"]) for item in paired]
+        differences = [
+            float(item["reward"]) - float(item["reference_reward"]) for item in paired
+        ]
+        summary["reference_comparison"] = {
+            "reference_action": paired[0].get("reference_action"),
+            "paired_count": len(paired),
+            "reference_reward_mean": statistics.fmean(reference_rewards),
+            "policy_minus_reference_mean": statistics.fmean(differences),
+            "policy_better_count": sum(value > 0 for value in differences),
+            "policy_equal_count": sum(value == 0 for value in differences),
+            "policy_worse_count": sum(value < 0 for value in differences),
         }
     return summary
 
@@ -117,6 +184,13 @@ def main() -> None:
     parser.add_argument("--episode_pool", required=True)
     parser.add_argument("--expected_split", choices=("train", "validation", "test"), required=True)
     parser.add_argument("--output", required=True)
+    parser.add_argument(
+        "--reference_action",
+        nargs="+",
+        type=float,
+        default=None,
+        help="Optional fixed epsilon vector evaluated on every accepted episode.",
+    )
     args = parser.parse_args()
 
     if sys.version_info >= (3, 10):
@@ -137,6 +211,11 @@ def main() -> None:
 
     with Path(args.yaml_conf).open("r", encoding="utf-8") as stream:
         config = yaml.safe_load(stream)
+    if config.get("action_distribution") == "bounded_beta":
+        from scenario_reconstruction.d2rl_bounded_action_dist import (
+            register_bounded_action_distribution,
+        )
+        register_bounded_action_distribution()
     episode_paths = discover_crash_episodes(args.episode_pool, args.expected_split)
     checkpoint = _checkpoint_file(args.checkpoint).resolve()
     env_name = "shrp2_multibv_checkpoint_eval"
@@ -168,20 +247,51 @@ def main() -> None:
                 with contextlib.redirect_stdout(io.StringIO()):
                     observation = env.reset(str(path))
                     if hasattr(trainer, "compute_single_action"):
-                        action = trainer.compute_single_action(observation, explore=False)
+                        raw_action, _, extra = trainer.compute_single_action(
+                            observation,
+                            explore=False,
+                            full_fetch=True,
+                            unsquash_action=False,
+                        )
+                        action = trainer.compute_single_action(
+                            observation, explore=False
+                        )
                     else:
                         action = trainer.compute_action(observation, explore=False)
+                        raw_action = action
+                        extra = {}
                     _, reward, done, info = env.step(action)
+                    reference_reward = None
+                    if args.reference_action is not None:
+                        if len(args.reference_action) != int(config["multi_bv_num"]):
+                            raise ValueError(
+                                "reference_action length must equal multi_bv_num"
+                            )
+                        env.reset(str(path))
+                        _, reference_reward, _, _ = env.step(
+                            np.asarray(args.reference_action, dtype=float)
+                        )
                 selection = info.get("multi_bv_decision_selection") or {}
                 record.update({
                     "status": "evaluated",
                     "action": np.asarray(action, dtype=float).reshape(-1).tolist(),
+                    "raw_normalized_action": np.asarray(
+                        raw_action, dtype=float
+                    ).reshape(-1).tolist(),
+                    "action_dist_inputs": np.asarray(
+                        extra.get("action_dist_inputs", []), dtype=float
+                    ).reshape(-1).tolist(),
                     "reward": float(reward),
                     "done": bool(done),
                     "selected_timestep": selection.get("selected_timestep"),
                     "selected_criticality": selection.get("selected_criticality"),
                     "reference_q_amplifier": selection.get("reference_q_amplifier"),
                 })
+                if reference_reward is not None:
+                    record.update({
+                        "reference_action": list(args.reference_action),
+                        "reference_reward": float(reference_reward),
+                    })
             except (KeyError, TypeError, ValueError) as exc:
                 record.update({"status": "rejected", "reason": str(exc)})
             records.append(record)
@@ -199,11 +309,17 @@ def main() -> None:
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(json.dumps({key: summary[key] for key in (
+    report_keys = (
         "expected_split", "episode_count", "evaluated_count", "rejected_count",
         "unique_source_event_count", "reward", "action_by_agent",
-        "by_source_event",
-    )}, ensure_ascii=False, indent=2))
+        "raw_normalized_action_by_agent", "action_transform_diagnostics",
+        "by_source_event", "reference_comparison",
+    )
+    print(json.dumps(
+        {key: summary[key] for key in report_keys if key in summary},
+        ensure_ascii=False,
+        indent=2,
+    ))
 
 
 if __name__ == "__main__":

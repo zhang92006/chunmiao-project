@@ -50,6 +50,18 @@ class D2RLTrainingEnv(core.Env):
 		self.multi_bv_max_reference_q_amplifier = float(
 			yaml_conf.get("multi_bv_max_reference_q_amplifier", 0.004)
 		)
+		self.multi_bv_factorized_reward_mode = str(
+			yaml_conf.get("multi_bv_factorized_reward_mode", "legacy")
+		)
+		self.multi_bv_reward_mode = str(
+			yaml_conf.get("multi_bv_reward_mode", "legacy_linear")
+		)
+		self.multi_bv_log_reward_scale = float(
+			yaml_conf.get("multi_bv_log_reward_scale", 5.0)
+		)
+		self.log_episode_rewards = yaml_conf.get("log_episode_rewards", False)
+		if not isinstance(self.log_episode_rewards, bool):
+			raise ValueError("log_episode_rewards must be a boolean")
 		if self.multi_bv_training and self.multi_bv_num < 1:
 			raise ValueError("multi_bv_num must be positive when multi_bv_training=true")
 		if self.crash_sampling_mode not in {"importance", "uniform_episode", "uniform_source"}:
@@ -69,6 +81,16 @@ class D2RLTrainingEnv(core.Env):
 			raise ValueError("multi_bv_reference_epsilon must lie strictly between zero and one")
 		if self.multi_bv_max_reference_q_amplifier <= 0:
 			raise ValueError("multi_bv_max_reference_q_amplifier must be positive")
+		if self.multi_bv_factorized_reward_mode not in {"legacy", "exact_mixture"}:
+			raise ValueError(
+				"multi_bv_factorized_reward_mode must be legacy or exact_mixture"
+			)
+		if self.multi_bv_reward_mode not in {"legacy_linear", "bounded_log_weight"}:
+			raise ValueError(
+				"multi_bv_reward_mode must be legacy_linear or bounded_log_weight"
+			)
+		if self.multi_bv_log_reward_scale <= 0:
+			raise ValueError("multi_bv_log_reward_scale must be positive")
 		self.action_dim = self.multi_bv_num if self.multi_bv_training else 1
 		self.observation_dim = 6 + 4 * self.multi_bv_num if self.multi_bv_training else 10
 		self.action_space = spaces.Box(low=0.001, high=0.999, shape=(self.action_dim, ))
@@ -102,6 +124,26 @@ class D2RLTrainingEnv(core.Env):
 						crash_data_path_list,
 						log_weight_path,
 					)
+			if self.multi_bv_factorized_reward_mode == "exact_mixture":
+				weight_by_path = dict(zip(crash_data_path_list, crash_data_weight_list))
+				accepted_paths = []
+				for path in crash_data_path_list:
+					with open(path, encoding="utf-8") as episode_file:
+						episode = json.load(episode_file)
+					try:
+						self.filter_episode_data(episode)
+					except ValueError:
+						continue
+					accepted_paths.append(path)
+				self.excluded_untrainable_crash_count = (
+					len(crash_data_path_list) - len(accepted_paths)
+				)
+				crash_data_path_list = accepted_paths
+				crash_data_weight_list = [
+					weight_by_path[path] for path in crash_data_path_list
+				]
+				if not crash_data_path_list:
+					raise ValueError("No exact-mixture trainable crash episodes")
 			if self.crash_sampling_mode == "uniform_episode":
 				crash_data_weight_list = [1.0] * len(crash_data_path_list)
 			elif self.crash_sampling_mode == "uniform_source":
@@ -232,10 +274,14 @@ class D2RLTrainingEnv(core.Env):
 			for timestep in candidates:
 				try:
 					per_agent = weight_info[timestep]["per_agent"]
+					generation_epsilon = self._generation_epsilon_record(
+						episode_data, timestep
+					)
 					q_amplifier = self._joint_epsilon_weight(
 						weight_info[timestep],
 						[self.multi_bv_reference_epsilon] * len(per_agent),
 						episode_data["ndd_step_info"][timestep],
+						generation_epsilon,
 					)
 				except (KeyError, TypeError, ValueError):
 					continue
@@ -286,6 +332,22 @@ class D2RLTrainingEnv(core.Env):
 				"reference_q_amplifier": candidate_q_amplifiers[selected],
 				"max_reference_q_amplifier": self.multi_bv_max_reference_q_amplifier,
 			})
+
+	def _generation_epsilon_record(self, episode_data, timestep):
+		"""Return generation epsilons aligned with the logged BV record order."""
+		if getattr(self, "multi_bv_factorized_reward_mode", "legacy") != "exact_mixture":
+			return None
+		vehicle_ids = episode_data.get("controlled_bv_ids_step_info", {}).get(timestep)
+		debug = episode_data.get("multibv_selection_debug_step_info", {}).get(timestep, {})
+		by_vehicle = debug.get("epsilon_by_bv_id", {}) if isinstance(debug, dict) else {}
+		if isinstance(vehicle_ids, list) and isinstance(by_vehicle, dict) and all(
+			vehicle_id in by_vehicle for vehicle_id in vehicle_ids
+		):
+			return [float(by_vehicle[vehicle_id]) for vehicle_id in vehicle_ids]
+		generation = episode_data.get("real_epsilon_step_info", {}).get(timestep)
+		if generation is None:
+			raise ValueError("Exact factorized reward requires generation epsilon")
+		return generation
 
 	def sample_data_this_episode(self):
 		if self.crash_data_weight_list:
@@ -404,22 +466,43 @@ class D2RLTrainingEnv(core.Env):
 		if not stop:
 			return 0
 		else:			
-			drl_epsilon_weight = self._get_drl_epsilon_weight(self.episode_data["weight_step_info"], self.episode_data["drl_epsilon_step_info"], self.episode_data["ndd_step_info"], self.episode_data["criticality_step_info"])
+			generation_epsilon_info = {
+				timestep: self._generation_epsilon_record(self.episode_data, timestep)
+				for timestep in self.episode_data["weight_step_info"]
+			}
+			drl_epsilon_weight = self._get_drl_epsilon_weight(self.episode_data["weight_step_info"], self.episode_data["drl_epsilon_step_info"], self.episode_data["ndd_step_info"], self.episode_data["criticality_step_info"], generation_epsilon_info)
 			if 1 in reason:
-				print(self.episode_data["drl_epsilon_step_info"])
+				if getattr(self, "log_episode_rewards", False):
+					print(self.episode_data["drl_epsilon_step_info"])
 				adv_action_num = self.get_multiple_adv_action_num(self.episode_data["weight_step_info"])
 				if adv_action_num > 1:
 					return 0 # if multiple adversarial action is detected, this episode will be of no use
-				clip_reward_threshold = self.yaml_conf["clip_reward_threshold"]
-				q_amplifier_reward = clip_reward_threshold - drl_epsilon_weight * 500 * clip_reward_threshold # drl epsilon weight reward
-				if q_amplifier_reward < -clip_reward_threshold:
-					q_amplifier_reward = -clip_reward_threshold
-				print("final_reward:", q_amplifier_reward)
+				q_amplifier_reward = self._importance_weight_reward(
+					drl_epsilon_weight
+				)
+				if getattr(self, "log_episode_rewards", False):
+					print("final_reward:", q_amplifier_reward)
 				return q_amplifier_reward
 			else:
 				return 0
 
-	def _get_drl_epsilon_weight(self, weight_info, epsilon_info, ndd_info, criticality_info=None):
+	def _importance_weight_reward(self, importance_weight):
+		"""Map p/q to a bounded reward while preserving its ordering."""
+		importance_weight = float(importance_weight)
+		if not np.isfinite(importance_weight) or importance_weight < 0:
+			raise ValueError("Importance weight must be finite and non-negative")
+		clip_reward_threshold = float(self.yaml_conf["clip_reward_threshold"])
+		if getattr(self, "multi_bv_reward_mode", "legacy_linear") == "bounded_log_weight":
+			if importance_weight == 0.0:
+				return clip_reward_threshold
+			return float(
+				-clip_reward_threshold
+				* np.tanh(np.log(importance_weight) / self.multi_bv_log_reward_scale)
+			)
+		result = clip_reward_threshold - importance_weight * 500 * clip_reward_threshold
+		return max(-clip_reward_threshold, result)
+
+	def _get_drl_epsilon_weight(self, weight_info, epsilon_info, ndd_info, criticality_info=None, generation_epsilon_info=None):
 		total_q_amplifier = 1
 		for timestep in epsilon_info:
 			if timestep in weight_info:
@@ -428,6 +511,7 @@ class D2RLTrainingEnv(core.Env):
 						weight_info[timestep],
 						epsilon_info[timestep],
 						ndd_info.get(timestep) if ndd_info is not None else None,
+						generation_epsilon_info.get(timestep) if generation_epsilon_info else None,
 					)
 					continue
 				weight = self._joint_value(weight_info[timestep])
@@ -445,7 +529,7 @@ class D2RLTrainingEnv(core.Env):
 		return total_q_amplifier	
 
 	@staticmethod
-	def _joint_epsilon_weight(weight_record, epsilon_record, ndd_record):
+	def _joint_epsilon_weight(weight_record, epsilon_record, ndd_record, generation_epsilon_record=None):
 		"""Return the correct IS term for factorised or correlated BV proposals."""
 		if not isinstance(weight_record, dict) or not isinstance(ndd_record, dict):
 			raise ValueError("MultiBV importance weighting requires joint step records")
@@ -465,6 +549,48 @@ class D2RLTrainingEnv(core.Env):
 			raise ValueError("MultiBV importance weighting requires per_agent values")
 		if not (len(weights) == len(ndd_values) == len(epsilons)):
 			raise ValueError("MultiBV weight, epsilon, and NDD lengths must match")
+		if generation_epsilon_record is not None:
+			generation_epsilons = np.asarray(
+				generation_epsilon_record, dtype=float
+			).reshape(-1)
+			if len(generation_epsilons) != len(weights):
+				raise ValueError("Generation epsilon and factorized weight lengths must match")
+			proposal_values = weight_record.get("per_agent_proposal_probability")
+			if proposal_values is not None and len(proposal_values) != len(weights):
+				raise ValueError("Per-agent proposal probability length must match weights")
+			result = 1.0
+			for index, (weight, epsilon, ndd, generation_epsilon) in enumerate(
+				zip(weights, epsilons, ndd_values, generation_epsilons)
+			):
+				weight, ndd = float(weight), float(ndd)
+				if not 0 <= generation_epsilon <= 1:
+					raise ValueError("Generation epsilon must lie in [0, 1]")
+				if ndd == 0.0 and weight == 0.0:
+					return 0.0
+				if weight <= 0.0 or ndd < 0.0:
+					raise ValueError("Factorized weights/probabilities must be positive/non-negative")
+				generation_proposal = (
+					float(proposal_values[index])
+					if proposal_values is not None
+					else ndd / weight
+				)
+				if generation_epsilon >= 1.0 - 1e-12:
+					if not np.isclose(generation_proposal, ndd, rtol=1e-5, atol=1e-12):
+						raise ValueError("Naturalistic generation probability must equal NDD")
+					critical = ndd
+				else:
+					critical = (
+						generation_proposal - generation_epsilon * ndd
+					) / (1.0 - generation_epsilon)
+				if critical < -1e-10 or critical > 1.0 + 1e-8:
+					raise ValueError("Recovered critical proposal probability is invalid")
+				critical = min(1.0, max(0.0, critical))
+				proposal = float(epsilon) * ndd + (1.0 - float(epsilon)) * critical
+				if proposal <= 0.0:
+					raise ValueError("Policy proposal probability must be positive")
+				result *= ndd / proposal
+			return result
+
 		result = 1.0
 		for weight, epsilon, ndd in zip(weights, epsilons, ndd_values):
 			if not np.isfinite(epsilon) or epsilon <= 0 or epsilon >= 1:

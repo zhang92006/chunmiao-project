@@ -1,5 +1,47 @@
 # SHRP2 多智能体 D2RL 泛化评估
 
+> 2026-09-21 更新：精确混合权重、有界对数奖励和有界 Beta 动作分布的 Seed19
+> 已完成 20 轮训练。独立验证相对固定 epsilon 基线为 +0.52，29/38 逐条更优，
+> 且动作越界/边界裁剪为 0/38。下一步固定协议补跑 seed 7、29；下文早期命令和
+> legacy 结果仅用于保留实验演进记录，当前正式配置以
+> `d2rl_train_shrp2_multibv_frozen5_exact_log_bounded_beta_seed19.yaml` 为准。
+
+## 2026-09-19 五来源训练协议
+
+执行状态更新：seed=19 的 20 轮训练及 checkpoint-20 的 train/validation 确定性评估
+已完成。训练集平均奖励 55.04，验证集 -68.94（29/38 下限截断），验证固定 epsilon=0.5
+基线为 12.60。多 seed 扩跑暂缓，先检查动作边界与概率/奖励契约。
+详见 [五来源训练与验证结果](SHRP2五来源Seed19训练与验证结果.md)。下文命令保留供复现。
+
+当前正式候选训练池为 `shrp2_multibv_frozen5_source_balanced_train_v1`，包含 86 条
+crash episode、5 个互不相同的 train 源事件。训练按源事件均衡抽样；该分布用于学习
+多样化策略，不作为自然碰撞率的无偏估计器。
+
+逐 episode 的动作和奖励输出现由 `log_episode_rewards` 控制，默认关闭。94 项单元测试
+和 2 轮安静模式冒烟训练均已通过；相同 seed 下第 2 轮 reward 仍为 `-0.8095`，证明
+关闭日志没有改变训练数值。
+
+下一项只运行 seed=19 的 20 轮训练：
+
+```powershell
+Set-Location 'G:\chunmiao\d2rl\Dense-Deep-Reinforcement-Learning\scenario_reconstruction'
+$trainPython = 'D:\Anaconda3\envs\D2RLTrain39\python.exe'
+New-Item -ItemType Directory -Force 'data_analysis\logs' | Out-Null
+
+& $trainPython -m scenario_reconstruction.d2rl_smoke_train `
+  --yaml_conf 'd2rl_training\d2rl_train_shrp2_multibv_frozen5_source_balanced_seed19.yaml' `
+  2>&1 | Tee-Object -FilePath 'data_analysis\logs\shrp2_multibv_frozen5_source_balanced_seed19_20iter.log'
+```
+
+程序名保留 `d2rl_smoke_train` 是为了兼容已有入口；本配置和独立实验目录明确标记为
+20 轮候选训练，不再与 2 轮 smoke 结果混放。此任务耗时较长，应在用户终端运行。
+
+训练完成后才能执行下一项：固定 `checkpoint_000020`，在已有
+`shrp2_multibv_validation14_x50_factorized_epsilon0001` 上关闭探索进行确定性评估。
+该 validation 池有 38 条 crash，但只来自 3 个独立 validation 源事件，所以可用于
+第一轮事件外泛化检查，不能作为最终稳定性能结论。seed=19 验证通过后，再建立另外
+两个显式 seed 配置；在此之前不批量训练，避免在协议尚未验证时浪费计算。
+
 ## 当前结论
 
 K=2 `single_trainable_critical` 已完成优化可行性验证：seed=7 的 20 轮 PPO

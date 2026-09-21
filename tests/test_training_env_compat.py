@@ -1,7 +1,9 @@
+import io
 import json
 from pathlib import Path
 import tempfile
 import unittest
+from contextlib import redirect_stdout
 
 import numpy as np
 from types import SimpleNamespace
@@ -53,6 +55,57 @@ class MultiBVCompatibilityTests(unittest.TestCase):
             {"joint": 0.02, "per_agent": [0.1, 0.2]},
         )
         self.assertAlmostEqual(result, (0.1 / (1 - 0.5)) * (0.2 / (1 - 0.25)))
+
+    def test_exact_factorized_weight_reconstructs_defensive_mixture(self):
+        naturalistic = [0.2, 0.4]
+        critical = [0.8, 0.1]
+        generation_epsilon = [0.1, 0.1]
+        generation_proposal = [
+            epsilon * ndd + (1 - epsilon) * proposal
+            for ndd, proposal, epsilon in zip(
+                naturalistic, critical, generation_epsilon
+            )
+        ]
+        weights = [
+            ndd / proposal
+            for ndd, proposal in zip(naturalistic, generation_proposal)
+        ]
+
+        result = D2RLTrainingEnv._joint_epsilon_weight(
+            {
+                "proposal_type": "factorized",
+                "joint": float(np.prod(weights)),
+                "per_agent": weights,
+                "per_agent_proposal_probability": generation_proposal,
+            },
+            [0.5, 0.5],
+            {"joint": 0.08, "per_agent": naturalistic},
+            generation_epsilon,
+        )
+
+        self.assertAlmostEqual(result, 0.4 * 1.6)
+
+    def test_generation_epsilon_uses_vehicle_id_alignment(self):
+        env = D2RLTrainingEnv.__new__(D2RLTrainingEnv)
+        env.multi_bv_factorized_reward_mode = "exact_mixture"
+        episode = {
+            "controlled_bv_ids_step_info": {
+                "0.0": ["BV_primary", "BV_context"]
+            },
+            "multibv_selection_debug_step_info": {
+                "0.0": {
+                    "epsilon_by_bv_id": {
+                        "BV_context": 0.9,
+                        "BV_primary": 0.1,
+                    }
+                }
+            },
+            "real_epsilon_step_info": {"0.0": [0.9, 0.1]},
+        }
+
+        self.assertEqual(
+            env._generation_epsilon_record(episode, "0.0"), [0.1, 0.9]
+        )
 
     def test_joint_pair_importance_weight_uses_the_correlated_proposal(self):
         result = D2RLTrainingEnv._joint_epsilon_weight(
@@ -117,6 +170,54 @@ class MultiBVCompatibilityTests(unittest.TestCase):
                 [0.2, 0.8],
             )
         )
+
+    def test_episode_reward_logging_is_quiet_by_default_and_opt_in(self):
+        env = D2RLTrainingEnv.__new__(D2RLTrainingEnv)
+        env.multi_bv_training = True
+        env.yaml_conf = {"clip_reward_threshold": 100}
+        env.total_steps = 0
+        env.episode_data = {
+            "collision_result": 1,
+            "weight_step_info": {
+                "0.0": {"joint": 0.02, "per_agent": [0.1, 0.2]}
+            },
+            "drl_epsilon_step_info": {"0.0": [0.5, 0.5]},
+            "drl_obs_step_info": {"0.0": {"joint": list(range(14))}},
+            "criticality_step_info": {"0.0": 1.0},
+            "ndd_step_info": {
+                "0.0": {"joint": 0.0002, "per_agent": [0.01, 0.02]}
+            },
+        }
+
+        quiet_output = io.StringIO()
+        with redirect_stdout(quiet_output):
+            quiet_reward = env._get_reward()
+        self.assertEqual(quiet_output.getvalue(), "")
+
+        env.log_episode_rewards = True
+        verbose_output = io.StringIO()
+        with redirect_stdout(verbose_output):
+            verbose_reward = env._get_reward()
+        self.assertEqual(quiet_reward, verbose_reward)
+        self.assertIn("final_reward:", verbose_output.getvalue())
+
+    def test_bounded_log_reward_is_monotonic_and_does_not_hard_clip(self):
+        env = D2RLTrainingEnv.__new__(D2RLTrainingEnv)
+        env.yaml_conf = {"clip_reward_threshold": 100}
+        env.multi_bv_reward_mode = "bounded_log_weight"
+        env.multi_bv_log_reward_scale = 5.0
+
+        rewards = [
+            env._importance_weight_reward(weight)
+            for weight in (0.0, 0.004, 1.0, 10.0)
+        ]
+
+        self.assertEqual(rewards[0], 100)
+        self.assertGreater(rewards[0], rewards[1])
+        self.assertGreater(rewards[1], rewards[2])
+        self.assertGreater(rewards[2], rewards[3])
+        self.assertEqual(rewards[2], 0.0)
+        self.assertGreater(rewards[3], -100)
 
     def test_log_weight_sidecar_preserves_relative_sampling_weights(self):
         with tempfile.TemporaryDirectory() as directory:
