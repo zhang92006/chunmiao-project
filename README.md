@@ -5,6 +5,12 @@ perturb traffic scenarios in the D2RL/NADE SUMO environment. It packages the
 scenario layer together with the D2RL modules, SUMO map, and probability tables
 that the runtime imports.
 
+The bounded Songdo Traffic feasibility audit and its staged integration plan are
+documented in
+[`docs/Songdo_Traffic数据接入可行性分析.md`](docs/Songdo_Traffic数据接入可行性分析.md).
+The pilot adapter audits measured naturalistic trajectories only; it does not
+label proxy conflicts as real crashes or reuse the legacy highway NDD table.
+
 The D2RL core is derived from
 [`michigan-traffic-lab/Dense-Deep-Reinforcement-Learning`](https://github.com/michigan-traffic-lab/Dense-Deep-Reinforcement-Learning)
 at commit `087921a994b3f5176fb0d75667a0a11fa357cd2b`, with the local integration
