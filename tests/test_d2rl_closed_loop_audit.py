@@ -7,6 +7,41 @@ from scenario_reconstruction.d2rl_closed_loop_audit import summarize
 
 
 class ClosedLoopAuditTests(unittest.TestCase):
+    def test_budgeted_policy_records_one_inference_then_naturalistic_fallback(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            episode = self.make_pool(root)
+            run_path = root / 'manifest_run_summary.json'
+            run = json.loads(run_path.read_text())
+            run.update(online_policy={'model': 'test'}, online_intervention_budget=1)
+            run_path.write_text(json.dumps(run))
+            (root / 'tested_and_safe').mkdir()
+            episode['online_policy_step_info'] = {
+                '0': {
+                    'status': 'inferred', 'actor_ids': ['a', 'b'],
+                    'intervention_budget': 1, 'decisions_used_before': 0,
+                    'decisions_used_after': 1,
+                    'epsilon_by_bv_id': {'a': .2, 'b': .8},
+                },
+                '1': {
+                    'status': 'budget_exhausted_naturalistic', 'actor_ids': ['a', 'b'],
+                    'intervention_budget': 1, 'decisions_used_before': 1,
+                    'decisions_used_after': 1,
+                    'epsilon_by_bv_id': {'a': 1, 'b': 1},
+                },
+            }
+            (root / 'crash' / '0.json').write_text(json.dumps(episode))
+            safe = dict(episode, collision_result=0, collision_id=None, online_policy_step_info={})
+            (root / 'tested_and_safe' / '1.json').write_text(json.dumps(safe))
+            result = summarize(root)
+            self.assertTrue(result['audit_passed'])
+            self.assertEqual(result['online_intervention_budget'], 1)
+            self.assertEqual(result['online_step_status_counts'][
+                'budget_exhausted_naturalistic'], 1)
+            episode['online_policy_step_info']['1']['epsilon_by_bv_id']['a'] = .5
+            (root / 'crash' / '0.json').write_text(json.dumps(episode))
+            self.assertFalse(summarize(root)['audit_passed'])
+
     def test_single_actor_sample_cannot_be_missing_even_if_raw_weight_underflows(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

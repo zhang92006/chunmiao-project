@@ -20,7 +20,11 @@ def run_template(
     online_policy=None,
     frozen_epsilon_source: str = "template",
     simulation_seed: int | None = None,
+    online_intervention_budget: int | None = None,
 ) -> float:
+    online_intervention_budget = _validated_online_intervention_budget(
+        online_policy, online_intervention_budget
+    )
     if online_policy is not None and (proposal_mode != "factorized" or frozen_epsilon_source != "runtime"):
         raise ValueError("Online epsilon requires factorized proposals and runtime epsilon")
     if online_policy is not None and conf.weight_threshold != 0:
@@ -50,6 +54,7 @@ def run_template(
 
     env = ScenarioNADE(template_path, multibv_proposal_mode=proposal_mode)
     env.online_epsilon_policy = online_policy
+    env.online_intervention_budget = online_intervention_budget
     env.closed_loop_evaluation = online_policy is not None or simulation_seed is not None
     env.frozen_epsilon_source = frozen_epsilon_source
     if online_policy is not None and env.multi_bv_control_num != 2:
@@ -59,6 +64,7 @@ def run_template(
         "frozen_epsilon_source": frozen_epsilon_source,
         "simulation_seed": simulation_seed,
         "online_policy": online_policy.metadata if online_policy is not None else None,
+        "online_intervention_budget": online_intervention_budget,
     })
     sim = Simulator(
         sumo_net_file_path="./maps/2LaneHighway/2LaneHighway.net.xml",
@@ -101,6 +107,16 @@ def _validated_epsilon(
     if not 0.0 < value < 1.0:
         raise ValueError("epsilon must lie strictly between zero and one")
     return value
+
+
+def _validated_online_intervention_budget(online_policy, budget):
+    if budget is None:
+        return None
+    if online_policy is None:
+        raise ValueError("online_intervention_budget requires an online policy")
+    if isinstance(budget, bool) or int(budget) != budget or int(budget) < 1:
+        raise ValueError("online_intervention_budget must be a positive integer")
+    return int(budget)
 
 
 def _ensure_sumo_home() -> None:

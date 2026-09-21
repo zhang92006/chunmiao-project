@@ -11,6 +11,7 @@ class OnlinePolicyTests(unittest.TestCase):
     def controller(self):
         ctrl = NADEBVGlobalController.__new__(NADEBVGlobalController)
         ctrl.control_log = {}
+        ctrl.online_intervention_decisions_used = 0
         ctrl.env = SimpleNamespace(
             online_epsilon_policy=Mock(compute_action=Mock(return_value=[.2, .8])),
             info_extractor=SimpleNamespace(episode_log={'weight_episode': 1.0}),
@@ -42,6 +43,24 @@ class OnlinePolicyTests(unittest.TestCase):
         self.assertIn('fallback', ctrl.control_log['online_policy']['status'])
         ctrl._online_epsilon_action({}, bvs, [0], [0])
         self.assertEqual(ctrl.control_log['online_policy']['status'], 'noncritical')
+
+    def test_intervention_budget_counts_only_successful_critical_inference(self):
+        ctrl = self.controller()
+        ctrl.env.online_intervention_budget = 1
+        bvs = [SimpleNamespace(id='BV_primary'), SimpleNamespace(id='BV_context')]
+        ctrl._online_epsilon_action({}, bvs, [0, 1], [0, 0])
+        self.assertEqual(ctrl.online_intervention_decisions_used, 0)
+        first = ctrl._online_epsilon_action({
+            'CAV': {'position': [400, 46], 'velocity': 30},
+            'BV_primary': {'position': [410, 46], 'velocity': 29},
+            'BV_context': {'position': [395, 42], 'velocity': 28},
+        }, bvs, [0, 1], [1, 1])
+        self.assertEqual(first, {'BV_primary': .2, 'BV_context': .8})
+        second = ctrl._online_epsilon_action({}, bvs, [0, 1], [1, 1])
+        self.assertEqual(second, {'BV_primary': 1.0, 'BV_context': 1.0})
+        self.assertEqual(ctrl.online_intervention_decisions_used, 1)
+        self.assertEqual(ctrl.control_log['online_policy']['status'], 'budget_exhausted_naturalistic')
+        self.assertEqual(ctrl.env.online_epsilon_policy.compute_action.call_count, 1)
 
 
 if __name__ == '__main__':

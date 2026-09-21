@@ -26,7 +26,16 @@ def run_template_manifest(
     online_policy_path: str | None = None,
     frozen_epsilon_source: str = "template",
     simulation_seed: int | None = None,
+    online_intervention_budget: int | None = None,
 ) -> dict:
+    if online_intervention_budget is not None:
+        if online_policy_path is None:
+            raise ValueError("online_intervention_budget requires --online_policy")
+        if (isinstance(online_intervention_budget, bool)
+                or int(online_intervention_budget) != online_intervention_budget
+                or int(online_intervention_budget) < 1):
+            raise ValueError("online_intervention_budget must be a positive integer")
+        online_intervention_budget = int(online_intervention_budget)
     online_policy = None
     if online_policy_path is not None:
         if split not in {"train", "validation"}:
@@ -115,11 +124,13 @@ def run_template_manifest(
     for episode_id, record, repeat_index in records_to_run:
         template_path = record["path"]
         runtime_options = {}
-        if online_policy is not None or frozen_epsilon_source != "template" or simulation_seed is not None:
+        if (online_policy is not None or frozen_epsilon_source != "template"
+                or simulation_seed is not None or online_intervention_budget is not None):
             runtime_options = {
                 "online_policy": online_policy,
                 "frozen_epsilon_source": frozen_epsilon_source,
                 "simulation_seed": None if simulation_seed is None else simulation_seed + episode_id,
+                "online_intervention_budget": online_intervention_budget,
             }
             if any((experiment_path / folder / f"{episode_id}.json").exists()
                    for folder in ("crash", "tested_and_safe", "rejected")):
@@ -189,6 +200,7 @@ def run_template_manifest(
         "online_policy": online_policy.metadata if online_policy is not None else None,
         "frozen_epsilon_source": frozen_epsilon_source,
         "simulation_seed_base": simulation_seed,
+        "online_intervention_budget": online_intervention_budget,
         "proposal_mode": proposal_mode,
         "epsilon": 1.0 if proposal_mode == "naturalistic" else epsilon,
         "successful_runs": sum(1 for item in results if item["status"] == "ok"),
@@ -372,6 +384,12 @@ def main() -> None:
     parser.add_argument("--online_policy", default=None, help="Verified portable epsilon model (.pt)")
     parser.add_argument("--frozen_epsilon_source", choices=("template", "runtime"), default="template")
     parser.add_argument("--simulation_seed", type=int, default=None)
+    parser.add_argument(
+        "--online_intervention_budget",
+        type=int,
+        default=None,
+        help="Maximum online-policy critical decisions per episode; then use naturalistic actions.",
+    )
     args = parser.parse_args()
 
     if (args.epsilon_primary is None) != (args.epsilon_context is None):
@@ -400,6 +418,7 @@ def main() -> None:
         online_policy_path=args.online_policy,
         frozen_epsilon_source=args.frozen_epsilon_source,
         simulation_seed=args.simulation_seed,
+        online_intervention_budget=args.online_intervention_budget,
     )
     print("Manifest run finished.")
     print(f"attempted={summary['attempted']}")

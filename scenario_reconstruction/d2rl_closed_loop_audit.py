@@ -17,6 +17,7 @@ def summarize(root):
     inferred = 0
     raw_weight_status_counts = Counter()
     max_q_error = max_weight_error = max_obs_error = 0.0
+    intervention_budget = run.get('online_intervention_budget')
     for result in run['results']:
         episode_id = result['episode']
         if result['status'] != 'ok':
@@ -47,22 +48,38 @@ def summarize(root):
             raw_weight_status_counts['underflowed_zero'] += 1
         if float(data.get('initial_weight', 1.0)) != 1.0:
             failures.append(f'episode {episode_id}: initial-state weight requires explicit handling')
+        episode_inferred = 0
         for time, step in data.get('online_policy_step_info', {}).items():
             status_counts[step['status']] += 1
-            if step['status'] != 'inferred':
-                continue
-            inferred += 1
-            ids = data.get('controlled_bv_ids_step_info', {}).get(time)
-            logged = data.get('real_epsilon_step_info', {}).get(time)
-            if ids is not None:
-                if ids != step['actor_ids'] or logged is None or any(
-                    abs(float(value) - step['epsilon_by_bv_id'][actor]) > 1e-7
-                    for actor, value in zip(ids, logged)
-                ) or len(logged) != len(ids):
-                    failures.append(f'episode {episode_id} time {time}: action/actor mismatch')
-                obs = data.get('drl_obs_step_info', {}).get(time, {}).get('joint')
-                if obs is not None:
-                    max_obs_error = max(max_obs_error, max(abs(a-b) for a,b in zip(obs, step['observation'])))
+            if step['status'] == 'inferred':
+                inferred += 1
+                episode_inferred += 1
+                if intervention_budget is not None and (
+                    step.get('intervention_budget') != intervention_budget
+                    or step.get('decisions_used_after') != step.get('decisions_used_before', 0) + 1
+                    or step.get('decisions_used_after') > intervention_budget
+                ):
+                    failures.append(f'episode {episode_id} time {time}: invalid intervention budget transition')
+                ids = data.get('controlled_bv_ids_step_info', {}).get(time)
+                logged = data.get('real_epsilon_step_info', {}).get(time)
+                if ids is not None:
+                    if ids != step['actor_ids'] or logged is None or any(
+                        abs(float(value) - step['epsilon_by_bv_id'][actor]) > 1e-7
+                        for actor, value in zip(ids, logged)
+                    ) or len(logged) != len(ids):
+                        failures.append(f'episode {episode_id} time {time}: action/actor mismatch')
+                    obs = data.get('drl_obs_step_info', {}).get(time, {}).get('joint')
+                    if obs is not None:
+                        max_obs_error = max(max_obs_error, max(abs(a-b) for a,b in zip(obs, step['observation'])))
+            elif step['status'] == 'budget_exhausted_naturalistic':
+                epsilon_by_actor = step.get('epsilon_by_bv_id', {})
+                if (intervention_budget is None
+                        or step.get('intervention_budget') != intervention_budget
+                        or step.get('decisions_used_before') != intervention_budget
+                        or step.get('decisions_used_after') != intervention_budget
+                        or set(epsilon_by_actor) != set(step['actor_ids'])
+                        or any(abs(float(value)-1.0) > 1e-7 for value in epsilon_by_actor.values())):
+                    failures.append(f'episode {episode_id} time {time}: invalid budget exhaustion fallback')
             sampled = step.get('sampled_terms', {})
             sampled_log_weight = 0.0
             for actor, terms in sampled.items():
@@ -75,7 +92,9 @@ def summarize(root):
                     continue
                 max_weight_error = max(max_weight_error, abs(terms['weight']-terms['p']/terms['q']))
                 sampled_log_weight += math.log(terms['p']) - math.log(terms['q'])
-                if abs(epsilon-step['epsilon_by_bv_id'][actor]) > 1e-7:
+                if actor not in step.get('epsilon_by_bv_id', {}) or abs(
+                    epsilon-step['epsilon_by_bv_id'][actor]
+                ) > 1e-7:
                     failures.append(f'episode {episode_id}: proposal overwrote policy epsilon')
             if sampled:
                 recorded = log_terms.get(time)
@@ -83,6 +102,8 @@ def summarize(root):
                     failures.append(f'episode {episode_id} time {time}: sampled actions missing from probability ledger')
                 elif abs(sampled_log_weight-float(recorded['log_importance_weight'])) > 1e-7:
                     failures.append(f'episode {episode_id} time {time}: sampled actions disagree with probability ledger')
+        if intervention_budget is not None and episode_inferred > intervention_budget:
+            failures.append(f'episode {episode_id}: intervention budget exceeded')
     if max_q_error > 1e-7 or max_weight_error > 1e-7 or max_obs_error > 1e-7:
         failures.append('Probability or observation contract exceeded tolerance')
     if run.get('online_policy') is not None and inferred == 0:
@@ -107,6 +128,7 @@ def summarize(root):
         'log_conditional_weighted_cav_collision_mean': weighted_log_mean if not failures else None,
         'crash_contribution_ess': ess if not failures else None,
         'online_step_status_counts': dict(status_counts), 'checked_sampled_bv_actions': checked_terms,
+        'online_intervention_budget': intervention_budget,
         'raw_weight_status_counts': dict(raw_weight_status_counts),
         'max_q_reconstruction_error': max_q_error, 'max_weight_reconstruction_error': max_weight_error,
         'max_online_vs_logged_observation_error': max_obs_error,

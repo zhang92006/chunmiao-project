@@ -22,6 +22,7 @@ class NADEBVGlobalController(NDDBVGlobalController):
     def __init__(self, env, veh_type="BV"):
         super().__init__(env, veh_type)
         self.joint_control_num = max(1, int(getattr(env, "multi_bv_control_num", 1)))
+        self.online_intervention_decisions_used = 0
         self.drl_info = None
         self.drl_epsilon_value = -1
         self.real_epsilon_value = -1
@@ -402,13 +403,30 @@ class NADEBVGlobalController(NDDBVGlobalController):
     def _online_epsilon_action(self, full_obs, candidates, selected_indices, criticalities):
         # Training logs enumerate selected vehicles in candidate order, not risk order.
         actor_ids = [candidates[index].id for index in sorted(selected_indices)]
-        audit = {"actor_ids": actor_ids, "status": "noncritical"}
+        budget = getattr(self.env, "online_intervention_budget", None)
+        used = getattr(self, "online_intervention_decisions_used", 0)
+        audit = {
+            "actor_ids": actor_ids,
+            "status": "noncritical",
+            "intervention_budget": budget,
+            "decisions_used_before": used,
+        }
         self.control_log["online_policy"] = audit
         if sum(criticalities) <= 0:
             return {actor_id: 1.0 for actor_id in actor_ids}
         if len(actor_ids) != 2:
             audit["status"] = "incomplete_actor_set_naturalistic_fallback"
-            return {actor_id: 1.0 for actor_id in actor_ids}
+            result = {actor_id: 1.0 for actor_id in actor_ids}
+            audit["epsilon_by_bv_id"] = result
+            return result
+        if budget is not None and used >= budget:
+            result = {actor_id: 1.0 for actor_id in actor_ids}
+            audit.update(
+                status="budget_exhausted_naturalistic",
+                decisions_used_after=used,
+                epsilon_by_bv_id=result,
+            )
+            return result
         log = self.env.info_extractor.episode_log
         observation = build_multibv_joint_obs(
             full_obs, actor_ids, log["weight_episode"], log.get("log_importance_weight")
@@ -417,7 +435,14 @@ class NADEBVGlobalController(NDDBVGlobalController):
         if len(actions) != len(actor_ids):
             raise ValueError("Online policy action count differs from selected actor count")
         result = dict(zip(actor_ids, actions))
-        audit.update(status="inferred", observation=observation, epsilon_by_bv_id=result)
+        used += 1
+        self.online_intervention_decisions_used = used
+        audit.update(
+            status="inferred",
+            observation=observation,
+            epsilon_by_bv_id=result,
+            decisions_used_after=used,
+        )
         return result
 
     def _frozen_collision_proposal(self, controlled_bvs_list, fallback_arrays):

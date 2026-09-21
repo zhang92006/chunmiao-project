@@ -8,6 +8,15 @@ from scenario_reconstruction.run_template_manifest import run_template_manifest
 
 
 class RunTemplateManifestTests(unittest.TestCase):
+    def test_intervention_budget_requires_online_policy_and_positive_integer(self):
+        with self.assertRaisesRegex(ValueError, 'requires --online_policy'):
+            run_template_manifest('missing.json', 'unused', online_intervention_budget=1)
+        with self.assertRaisesRegex(ValueError, 'positive integer'):
+            run_template_manifest(
+                'missing.json', 'unused', online_policy_path='missing.pt',
+                online_intervention_budget=1.5,
+            )
+
     def test_repeats_assign_unique_episode_ids_and_preserve_repeat_number(self):
         manifest = {
             "records": [
