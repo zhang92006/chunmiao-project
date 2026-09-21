@@ -5,6 +5,7 @@ from envs.nde import *
 from controller.nadecontroller import NADEBackgroundController
 from controller.nadeglobalcontroller import NADEBVGlobalController
 from nadeinfoextractor import NADEInfoExtractor
+from scenario_reconstruction.fault_aware_idm import FaultAwareIDMController
 
 
 class NADE(NDE):
@@ -14,6 +15,8 @@ class NADE(NDE):
                  ):
         if cav_model == "IDM":
             cav_controller = IDMController
+        elif cav_model == "FaultAwareIDM":
+            cav_controller = FaultAwareIDMController
         else:
             raise ValueError("Unknown AV controller!")
         super().__init__(

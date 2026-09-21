@@ -17,6 +17,7 @@ data_analysis/raw_data/
 outputs/
 results/raw/
 runs/
+ray_results/
 wandb/
 scenario_reconstruction/generated_templates*/
 

@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "dataset_doi": "10.15787/VTT1/T7UUC1",
+  "seed": 20260914,
+  "source_category": "Crash",
+  "source_split": "train",
+  "split_fractions": {
+    "train": 0.7,
+    "validation": 0.15,
+    "test": 0.15
+  },
+  "conflict_types": {
+    "leading": "rear_end",
+    "adjacent_lane": "lateral_sideswipe",
+    "intersection_crossing": "crossing",
+    "turning_into_opposite": "opposing_turn"
+  },
+  "maximum_target_alignment_dt_s": 0.2,
+  "maximum_source_box_clearance_m": 8.0,
+  "duration_s": 6.0,
+  "impact_time_s": 4.0,
+  "sample_hz": 10,
+  "collision_substeps": 10,
+  "contact_penetration_m": 0.05,
+  "variants": [
+    {
+      "name": "source_speed",
+      "ego_speed_scale": 1.0,
+      "target_speed_scale": 1.0
+    },
+    {
+      "name": "ego_faster_10pct",
+      "ego_speed_scale": 1.1,
+      "target_speed_scale": 1.0
+    },
+    {
+      "name": "target_slower_10pct",
+      "ego_speed_scale": 1.0,
+      "target_speed_scale": 0.9
+    }
+  ]
+}

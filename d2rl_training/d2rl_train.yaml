@@ -5,3 +5,8 @@ data_folder_weights: [1]
 local_dir: "./ray_results/"
 num_workers: 12
 clip_reward_threshold: 100
+# Keep this false for the legacy 10-D, single-epsilon learner.  Set true only
+# with episodes generated using --multi_bv_num and a policy configured for the
+# corresponding joint observation/action dimensions.
+multi_bv_training: false
+multi_bv_num: 2

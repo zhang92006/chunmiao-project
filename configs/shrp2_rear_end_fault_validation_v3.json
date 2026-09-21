@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "source_split": "train",
+  "gap_offset_m": 2.0,
+  "bv_braking_acceleration_mps2": -2.0,
+  "bv_braking_start_time_s": 0.0,
+  "bv_braking_duration_s": 5.0,
+  "control_delay_start_time_s": 0.0,
+  "control_delay_duration_s": 4.0,
+  "control_delay_s": 4.0,
+  "initial_action": {"lateral": "central", "longitudinal": 0.0},
+  "target_collision_time_s": 4.0,
+  "time_tolerance_s": 0.3
+}

@@ -4,15 +4,24 @@ from controller.treesearchnadecontroller import TreeSearchNADEBackgroundControll
 import numpy as np
 from copy import deepcopy
 import collections
+from itertools import combinations
 import utils
 from conf import conf
 from controller.nddglobalcontroller import NDDBVGlobalController
+from scenario_reconstruction.multibv import build_multibv_joint_obs
+from scenario_reconstruction.joint_criticality import (
+    joint_pair_proposal,
+    pairwise_joint_criticality_details,
+    sample_joint_action_pair,
+)
+from scenario_reconstruction.importance import probability_record
 
 class NADEBVGlobalController(NDDBVGlobalController):
     controlled_bv_num = 4
 
     def __init__(self, env, veh_type="BV"):
         super().__init__(env, veh_type)
+        self.joint_control_num = max(1, int(getattr(env, "multi_bv_control_num", 1)))
         self.drl_info = None
         self.drl_epsilon_value = -1
         self.real_epsilon_value = -1
@@ -24,7 +33,11 @@ class NADEBVGlobalController(NDDBVGlobalController):
         """
         self.real_epsilon_value = -1
         self.drl_epsilon_value = -1
-        self.control_log = {"criticality":0, "discriminator_input":0}
+        self.control_log = {
+            "criticality": 0,
+            "discriminator_input": 0,
+            "proposal_mode": self._proposal_mode(),
+        }
         bv_action_idx_list, weight_list, max_vehicle_criticality, ndd_possi_list, IS_possi_list, controlled_bvs_list = [], [], [], [], [], []
         vehicle_criticality_list = []
         self.reset_control_and_action_state()
@@ -58,11 +71,148 @@ class NADEBVGlobalController(NDDBVGlobalController):
                         bv.update() # apply bv.controller.action
             else:
                 raise ValueError("conf experiment mode not recognized. should be NDE or D2RL")
-        self.control_log["weight_list_per_simulation"] = [
-            val for val in weight_list if val is not None]
+        joint_proposal = self.control_log.get("joint_proposal_record")
+        if joint_proposal is not None:
+            self.control_log["weight_list_per_simulation"] = [
+                float(joint_proposal["importance_weight"])
+            ]
+        else:
+            self.control_log["weight_list_per_simulation"] = [
+                val for val in weight_list if val is not None]
         if len(self.control_log["weight_list_per_simulation"]) == 0:
             self.control_log["weight_list_per_simulation"] = [1]
+        if self.joint_control_num > 1:
+            self._record_joint_training_context(
+                controlled_bvs_list, weight_list, ndd_possi_list, vehicle_criticality_list
+            )
+        # Likelihood accounting covers every executed proposal, independently of
+        # whether this step has enough active agents for a K-agent training row.
+        self._record_executed_probability(
+            controlled_bvs_list, weight_list, ndd_possi_list, IS_possi_list
+        )
         return vehicle_criticality_list
+
+    def _record_executed_probability(self, bvs, weights, naturalistic, proposal):
+        active = [index for index, weight in enumerate(weights) if weight is not None]
+        if not active:
+            return  # All actions are naturalistic: likelihood ratio is one.
+        joint = self.control_log.get("joint_proposal_record")
+        if joint is not None:
+            # Correlated proposals must use their joint probability, not a
+            # product of marginal ratios.
+            p, q = joint["naturalistic_probability"], joint["proposal_probability"]
+            mode = joint["proposal_type"]
+        else:
+            p = float(np.prod([naturalistic[index] for index in active]))
+            q = float(np.prod([proposal[index] for index in active]))
+            mode = "naturalistic" if self._proposal_mode() == "naturalistic" else "factorized"
+        record = probability_record(mode, p, q)
+        actual_weight = float(np.prod(self.control_log["weight_list_per_simulation"]))
+        if not np.isclose(record["importance_weight"], actual_weight, rtol=1e-7, atol=0.0):
+            raise ValueError("Executed probability disagrees with simulation weight")
+        record["executed_bv_ids"] = [bvs[index].id for index in active]
+        self.control_log["probability_record"] = record
+
+    def _record_joint_training_context(
+        self, controlled_bvs_list, weight_list, ndd_possi_list, vehicle_criticality_list
+    ):
+        """Expose K selected BV observations and proposal terms to the extractor."""
+        selected = [
+            (index, bv)
+            for index, bv in enumerate(controlled_bvs_list)
+            if weight_list[index] is not None and ndd_possi_list[index] is not None
+        ]
+        if len(selected) != self.joint_control_num:
+            return
+        selected_indices = [index for index, _ in selected]
+        selected_bvs = [bv for _, bv in selected]
+        full_obs = getattr(self, "_joint_full_obs", None)
+        if not full_obs:
+            return
+        selected_ids = [bv.id for bv in selected_bvs]
+        episode_log = self.env.info_extractor.episode_log
+        episode_weight = episode_log.get("weight_episode", 1.0)
+        log_episode_weight = episode_log.get("log_importance_weight")
+        self.control_log["joint_training"] = True
+        self.control_log["joint_controlled_bv_ids"] = selected_ids
+        joint_proposal = self.control_log.get("joint_proposal_record")
+        self.control_log["weight_list_per_agent"] = [
+            float(weight_list[index]) for index in selected_indices
+        ]
+        self.control_log["ndd_possi_list_per_agent"] = [
+            float(ndd_possi_list[index]) for index in selected_indices
+        ]
+        self.control_log["drl_obs_joint"] = build_multibv_joint_obs(
+            full_obs, selected_ids, episode_weight, log_episode_weight
+        )
+        self.control_log["drl_obs_per_agent"] = [
+            build_multibv_joint_obs(
+                full_obs, [bv_id], episode_weight, log_episode_weight
+            )
+            for bv_id in selected_ids
+        ]
+        self.control_log["discriminator_input"] = {
+            "joint": self.control_log["drl_obs_joint"],
+            "per_agent": self.control_log["drl_obs_per_agent"],
+        }
+        if joint_proposal is not None:
+            self.control_log["weight_record"] = dict(joint_proposal["weight_record"])
+            self.control_log["ndd_record"] = dict(joint_proposal["ndd_record"])
+        else:
+            fallback_proposal_type = (
+                "naturalistic"
+                if self._proposal_mode() == "naturalistic"
+                else "factorized"
+            )
+            joint_weight = float(np.prod(self.control_log["weight_list_per_agent"]))
+            joint_naturalistic = float(
+                np.prod(self.control_log["ndd_possi_list_per_agent"])
+            )
+            joint_proposal_probability = (
+                joint_naturalistic / joint_weight if joint_weight > 0.0 else None
+            )
+            self.control_log["weight_record"] = {
+                "proposal_type": fallback_proposal_type,
+                "joint": joint_weight,
+                "per_agent": self.control_log["weight_list_per_agent"],
+                "joint_naturalistic_probability": joint_naturalistic,
+                "joint_proposal_probability": joint_proposal_probability,
+                "per_agent_proposal_probability": [
+                    float(ndd) / float(weight) if float(weight) > 0.0 else 0.0
+                    for ndd, weight in zip(
+                        self.control_log["ndd_possi_list_per_agent"],
+                        self.control_log["weight_list_per_agent"],
+                    )
+                ],
+            }
+            self.control_log["ndd_record"] = {
+                "proposal_type": fallback_proposal_type,
+                "joint": joint_naturalistic,
+                "per_agent": self.control_log["ndd_possi_list_per_agent"],
+            }
+        self._record_probability_terms()
+        if self.drl_epsilon_value != -1:
+            epsilon_by_vehicle = self.control_log.get("epsilon_by_bv_id", {})
+            if isinstance(epsilon_by_vehicle, dict) and all(
+                bv_id in epsilon_by_vehicle for bv_id in selected_ids
+            ):
+                epsilon = [epsilon_by_vehicle[bv_id] for bv_id in selected_ids]
+            else:
+                epsilon = self.drl_epsilon_value
+            if isinstance(epsilon, (list, tuple, np.ndarray)):
+                epsilon_values = [float(value) for value in list(epsilon)]
+                if not epsilon_values:
+                    epsilon_values = [0.0]
+                epsilon_values = epsilon_values[: len(selected_bvs)]
+                epsilon_values.extend(
+                    [epsilon_values[-1]] * (len(selected_bvs) - len(epsilon_values))
+                )
+            else:
+                epsilon_values = [float(epsilon) for _ in selected_bvs]
+            if joint_proposal is not None:
+                epsilon_values = [float(joint_proposal["epsilon"])] * len(selected_bvs)
+            self.drl_epsilon_value = epsilon_values
+            self.real_epsilon_value = list(epsilon_values)
 
     # @profile
     def select_controlled_bv_and_action(self):
@@ -76,23 +226,65 @@ class NADEBVGlobalController(NDDBVGlobalController):
             list(float): List of critical possibility.
             list(Vehicle): List of all studied vehicles.
         """
-        num_controlled_critical_bvs = 1
+        num_controlled_critical_bvs = self.joint_control_num
         controlled_bvs_list = self.get_bv_candidates()
         CAV_obs = self.env.vehicle_list["CAV"].observation.information
         full_obs = self.get_full_obs_from_cav_obs_and_bv_list(CAV_obs, controlled_bvs_list)
+        self._joint_full_obs = full_obs
         self.nade_candidates = controlled_bvs_list
         bv_criticality_list, criticality_array_list, bv_action_idx_list, weight_list, ndd_possi_list, IS_possi_list = self.calculate_criticality_list(controlled_bvs_list, CAV_obs, full_obs)
+        frozen_proposal = self._frozen_collision_proposal(
+            controlled_bvs_list, criticality_array_list
+        )
+        if frozen_proposal is not None:
+            bv_criticality_list = frozen_proposal["criticality"]
+            criticality_array_list = frozen_proposal["criticality_arrays"]
+            self.control_log["frozen_collision_proposal"] = frozen_proposal["debug"]
+        elif self.joint_control_num > 1:
+            bv_criticality_list, criticality_array_list = self._augment_pairwise_criticality(
+                controlled_bvs_list, full_obs, criticality_array_list
+            )
         whole_weight_list = []
         self.control_log["criticality"] = sum(bv_criticality_list)
-    
-        discriminator_input = self.collect_discriminator_input_simplified(full_obs, controlled_bvs_list, bv_criticality_list) # get D2RL agent observation
+        selected_bv_idx = sorted(
+            range(len(bv_criticality_list)), key=lambda i: bv_criticality_list[i]
+        )[-num_controlled_critical_bvs:]
+        if self.joint_control_num > 1 and len(selected_bv_idx) == self.joint_control_num:
+            selected_ids = [controlled_bvs_list[index].id for index in selected_bv_idx]
+            discriminator_input = np.asarray(
+                build_multibv_joint_obs(
+                    full_obs,
+                    selected_ids,
+                    self.env.info_extractor.episode_log["weight_episode"],
+                    self.env.info_extractor.episode_log.get("log_importance_weight"),
+                ),
+                dtype=np.float32,
+            )
+        else:
+            discriminator_input = self.collect_discriminator_input_simplified(
+                full_obs, controlled_bvs_list, bv_criticality_list
+            )
         self.control_log["discriminator_input"] = discriminator_input.tolist()
         self.epsilon_value = -1
-        underline_drl_action = self.get_underline_drl_action(discriminator_input, bv_criticality_list)
-        
+        if getattr(self.env, "online_epsilon_policy", None) is not None:
+            underline_drl_action = self._online_epsilon_action(
+                full_obs, controlled_bvs_list, selected_bv_idx, bv_criticality_list
+            )
+        else:
+            underline_drl_action = self.get_underline_drl_action(discriminator_input, bv_criticality_list)
+        if (frozen_proposal is not None and frozen_proposal["active"]
+                and getattr(self.env, "frozen_epsilon_source", "template") == "template"):
+            underline_drl_action = frozen_proposal["epsilon_by_bv_id"]
+        proposal_mode = self._proposal_mode()
+        epsilon_by_index, selected_epsilon_values = self._selected_epsilon_values(
+            underline_drl_action, selected_bv_idx, controlled_bvs_list
+        )
+        if proposal_mode == "naturalistic":
+            epsilon_by_index = {index: 1.0 for index in selected_bv_idx}
+            selected_epsilon_values = [1.0 for _ in selected_bv_idx]
         if sum(bv_criticality_list) > 0:
-            self.drl_epsilon_value = underline_drl_action
-            self.real_epsilon_value = underline_drl_action
+            self.drl_epsilon_value = selected_epsilon_values
+            self.real_epsilon_value = list(selected_epsilon_values)
 
         for i in range(len(controlled_bvs_list)):
             bv = controlled_bvs_list[i]
@@ -100,7 +292,17 @@ class NADEBVGlobalController(NDDBVGlobalController):
             bv_criticality_array = criticality_array_list[i]
             bv_pdf = bv.controller.get_NDD_possi()
             combined_bv_criticality_array = bv_criticality_array
-            bv_action_idx, weight, ndd_possi, critical_possi, single_weight_list = bv.controller.Decompose_sample_action(np.sum(combined_bv_criticality_array), combined_bv_criticality_array, bv_pdf, underline_drl_action)
+            if i not in selected_bv_idx:
+                bv_action_idx, weight, ndd_possi, critical_possi, single_weight_list = (
+                    None, None, None, None, None
+                )
+            else:
+                bv_action_idx, weight, ndd_possi, critical_possi, single_weight_list = bv.controller.Decompose_sample_action(
+                    np.sum(combined_bv_criticality_array),
+                    combined_bv_criticality_array,
+                    bv_pdf,
+                    epsilon_by_index[i],
+                )
             if bv_action_idx is not None:
                 bv_action_idx = bv_action_idx.item()
             bv_action_idx_list.append(bv_action_idx), weight_list.append(weight), ndd_possi_list.append(ndd_possi), IS_possi_list.append(critical_possi)
@@ -108,23 +310,321 @@ class NADEBVGlobalController(NDDBVGlobalController):
                 whole_weight_list.append(min(single_weight_list))
             else:
                 whole_weight_list.append(None)
+
+        if "online_policy" in self.control_log:
+            terms = {}
+            for index in selected_bv_idx:
+                if weight_list[index] is None:
+                    continue
+                bv = controlled_bvs_list[index]
+                action_id = bv_action_idx_list[index]
+                terms[bv.id] = {
+                    "action_id": action_id,
+                    "epsilon": epsilon_by_index[index],
+                    "p": float(ndd_possi_list[index]),
+                    "q": float(IS_possi_list[index]),
+                    "c": float(bv.controller.normalized_critical_pdf_array[action_id]),
+                    "weight": float(weight_list[index]),
+                }
+            self.control_log["online_policy"]["sampled_terms"] = terms
+        joint_proposal = None
+        if proposal_mode == "joint_pair":
+            joint_proposal = self._sample_selected_joint_pair(
+                selected_bv_idx, epsilon_by_index
+            )
+        if joint_proposal is not None:
+            for index, action, marginal_weight, marginal_ndd, marginal_proposal in zip(
+                joint_proposal["indices"],
+                joint_proposal["action_pair"],
+                joint_proposal["per_agent_marginal_weight"],
+                joint_proposal["per_agent_ndd_probability"],
+                joint_proposal["per_agent_proposal_probability"],
+            ):
+                bv_action_idx_list[index] = int(action)
+                weight_list[index] = float(marginal_weight)
+                ndd_possi_list[index] = float(marginal_ndd)
+                IS_possi_list[index] = float(marginal_proposal)
+                whole_weight_list[index] = float(joint_proposal["importance_weight"])
+            self.control_log["joint_proposal_record"] = joint_proposal
                 
         vehicle_criticality_list = deepcopy(bv_criticality_list)
-        # Select the Principal Other Vehicle (POV) with highest criticality
-        selected_bv_idx = sorted(range(len(bv_criticality_list)),
-                                 key=lambda i: bv_criticality_list[i])[-num_controlled_critical_bvs:]
+        raw_weight_list = list(weight_list)
+        raw_ndd_possi_list = list(ndd_possi_list)
         for i in range(len(controlled_bvs_list)):
             if i in selected_bv_idx:
                 if whole_weight_list[i] and whole_weight_list[i]*self.env.info_extractor.episode_log["weight_episode"]*self.env.initial_weight < conf.weight_threshold:
                     bv_action_idx_list[i], weight_list[i], ndd_possi_list[i], IS_possi_list[i] = None, None, None, None
             if i not in selected_bv_idx:
                 bv_action_idx_list[i], weight_list[i], ndd_possi_list[i], IS_possi_list[i] = None, None, None, None
+        if self.joint_control_num > 1:
+            self.control_log["multibv_selection_debug"] = {
+                "candidate_ids": [bv.id for bv in controlled_bvs_list],
+                "criticality": [
+                    None if value is None else float(value)
+                    for value in bv_criticality_list
+                ],
+                "raw_weight": [
+                    None if value is None else float(value) for value in raw_weight_list
+                ],
+                "raw_ndd_possi": [
+                    None if value is None else float(value) for value in raw_ndd_possi_list
+                ],
+                "selected_candidate_ids": [
+                    controlled_bvs_list[index].id
+                    for index in selected_bv_idx
+                    if index < len(controlled_bvs_list)
+                    and weight_list[index] is not None
+                    and ndd_possi_list[index] is not None
+                ],
+                "sampled_action_ids": [
+                    None if action_id is None else int(action_id)
+                    for action_id in bv_action_idx_list
+                ],
+                "pair_criticality": self.control_log.get("joint_pair_criticality", []),
+                "joint_proposal": self.control_log.get("joint_proposal_record"),
+                "proposal_mode": proposal_mode,
+                "epsilon_by_bv_id": self.control_log.get("epsilon_by_bv_id", {}),
+                "frozen_collision_proposal": self.control_log.get(
+                    "frozen_collision_proposal"
+                ),
+            }
         if len(bv_criticality_list):
             max_vehicle_criticality = np.max(bv_criticality_list)
         else:
             max_vehicle_criticality = -np.inf
 
         return bv_action_idx_list, weight_list, max_vehicle_criticality, ndd_possi_list, IS_possi_list, controlled_bvs_list, vehicle_criticality_list, discriminator_input
+
+    def _proposal_mode(self):
+        """Read the rollout proposal family without changing legacy defaults."""
+        return getattr(self.env, "multibv_proposal_mode", "joint_pair")
+
+    def _online_epsilon_action(self, full_obs, candidates, selected_indices, criticalities):
+        # Training logs enumerate selected vehicles in candidate order, not risk order.
+        actor_ids = [candidates[index].id for index in sorted(selected_indices)]
+        audit = {"actor_ids": actor_ids, "status": "noncritical"}
+        self.control_log["online_policy"] = audit
+        if sum(criticalities) <= 0:
+            return {actor_id: 1.0 for actor_id in actor_ids}
+        if len(actor_ids) != 2:
+            audit["status"] = "incomplete_actor_set_naturalistic_fallback"
+            return {actor_id: 1.0 for actor_id in actor_ids}
+        log = self.env.info_extractor.episode_log
+        observation = build_multibv_joint_obs(
+            full_obs, actor_ids, log["weight_episode"], log.get("log_importance_weight")
+        )
+        actions = self.env.online_epsilon_policy.compute_action(observation)
+        if len(actions) != len(actor_ids):
+            raise ValueError("Online policy action count differs from selected actor count")
+        result = dict(zip(actor_ids, actions))
+        audit.update(status="inferred", observation=observation, epsilon_by_bv_id=result)
+        return result
+
+    def _frozen_collision_proposal(self, controlled_bvs_list, fallback_arrays):
+        """Return an auditable per-step categorical proposal for a frozen CEM result."""
+        config = self.env.scenario_template.bridge_metadata.get(
+            "frozen_collision_proposal"
+        )
+        if not isinstance(config, dict):
+            return None
+        if self._proposal_mode() != "factorized":
+            raise ValueError("frozen_collision_proposal requires proposal_mode='factorized'")
+        agents = config.get("agents", {})
+        current_time = float(self.env.simulator.get_time())
+        active_ids = []
+        arrays = []
+        epsilon_by_bv_id = {}
+        action_count = len(conf.BV_ACTIONS)
+        for index, bv in enumerate(controlled_bvs_list):
+            agent = agents.get(bv.id)
+            active = False
+            if isinstance(agent, dict):
+                start = float(agent["start_time_s"])
+                duration = float(agent["duration_s"])
+                active = start <= current_time < start + duration
+            if active:
+                values = np.asarray(agent["action_pdf"], dtype=float)
+                if values.shape != (action_count,) or np.any(values < 0):
+                    raise ValueError(f"Invalid frozen action_pdf for {bv.id}")
+                total = float(np.sum(values))
+                if not np.isfinite(total) or total <= 0:
+                    raise ValueError(f"Frozen action_pdf for {bv.id} has no mass")
+                arrays.append(values / total)
+                epsilon_by_bv_id[bv.id] = float(agent["epsilon"])
+                active_ids.append(bv.id)
+            else:
+                arrays.append(np.asarray(bv.controller.get_NDD_possi(), dtype=float))
+                epsilon_by_bv_id[bv.id] = 1.0
+        if not active_ids:
+            return {
+                "active": False,
+                "criticality": [0.0 for _ in controlled_bvs_list],
+                "criticality_arrays": [
+                    np.zeros_like(np.asarray(values, dtype=float))
+                    for values in fallback_arrays
+                ],
+                "epsilon_by_bv_id": epsilon_by_bv_id,
+                "debug": {
+                    "proposal_id": config.get("proposal_id"),
+                    "active": False,
+                    "active_bv_ids": [],
+                    "time_s": current_time,
+                },
+            }
+        return {
+            "active": True,
+            "criticality": [float(np.sum(values)) for values in arrays],
+            "criticality_arrays": arrays,
+            "epsilon_by_bv_id": epsilon_by_bv_id,
+            "debug": {
+                "proposal_id": config.get("proposal_id"),
+                "active": True,
+                "active_bv_ids": active_ids,
+                "time_s": current_time,
+                "epsilon_by_bv_id": epsilon_by_bv_id,
+            },
+        }
+
+    def _record_probability_terms(self):
+        """Expose exact joint p/q terms to the episode information extractor."""
+        weight_record = self.control_log.get("weight_record")
+        ndd_record = self.control_log.get("ndd_record")
+        if not isinstance(weight_record, dict) or not isinstance(ndd_record, dict):
+            return
+        naturalistic = weight_record.get(
+            "joint_naturalistic_probability", ndd_record.get("joint")
+        )
+        proposal = weight_record.get("joint_proposal_probability")
+        if proposal is None:
+            joint_weight = float(weight_record.get("joint", 0.0))
+            proposal = float(naturalistic) / joint_weight if joint_weight > 0.0 else None
+        if naturalistic is None or proposal is None:
+            return
+        try:
+            record = probability_record(
+                str(weight_record.get("proposal_type", self._proposal_mode())),
+                float(naturalistic),
+                float(proposal),
+            )
+        except (TypeError, ValueError):
+            return
+        if not np.isclose(record["importance_weight"], float(weight_record["joint"])):
+            raise ValueError("Recorded joint p/q disagrees with the sampled weight")
+        self.control_log["probability_record"] = record
+
+    def _augment_pairwise_criticality(
+        self, controlled_bvs_list, full_obs, criticality_array_list
+    ):
+        """Add bounded BV-pair risk while preserving factorised NADE sampling."""
+        enhanced_arrays = [np.asarray(values, dtype=float).copy() for values in criticality_array_list]
+        pair_debug = []
+        self._joint_pair_details = {}
+        for first_index, second_index in combinations(range(len(controlled_bvs_list)), 2):
+            first_bv, second_bv = controlled_bvs_list[first_index], controlled_bvs_list[second_index]
+            first_array, second_array, debug, details = pairwise_joint_criticality_details(
+                full_obs,
+                first_bv.id,
+                second_bv.id,
+                first_bv.controller.get_NDD_possi(),
+                second_bv.controller.get_NDD_possi(),
+            )
+            enhanced_arrays[first_index] += first_array
+            enhanced_arrays[second_index] += second_array
+            pair_debug.append(debug)
+            self._joint_pair_details[(first_index, second_index)] = {
+                "details": details,
+                "ids": [first_bv.id, second_bv.id],
+            }
+        self.control_log["joint_pair_criticality"] = pair_debug
+        enhanced_list = [float(np.sum(values)) for values in enhanced_arrays]
+        return enhanced_list, enhanced_arrays
+
+    def _sample_selected_joint_pair(self, selected_bv_idx, epsilon_by_index):
+        """Sample an ordered BV action pair from a correlated IS proposal."""
+        if self.joint_control_num != 2 or len(selected_bv_idx) != 2:
+            return None
+        key = tuple(sorted(int(index) for index in selected_bv_idx))
+        pair = getattr(self, "_joint_pair_details", {}).get(key)
+        if pair is None:
+            return None
+        epsilon = float(np.mean([epsilon_by_index[index] for index in key]))
+        proposal = joint_pair_proposal(pair["details"], epsilon)
+        if proposal is None:
+            return None
+        sampled = sample_joint_action_pair(proposal)
+        first_action, second_action = sampled["action_pair"]
+        naturalistic = proposal["naturalistic_pdf"]
+        proposal_pdf = proposal["proposal_pdf"]
+        per_agent_ndd = [
+            float(np.sum(naturalistic[first_action, :])),
+            float(np.sum(naturalistic[:, second_action])),
+        ]
+        per_agent_proposal = [
+            float(np.sum(proposal_pdf[first_action, :])),
+            float(np.sum(proposal_pdf[:, second_action])),
+        ]
+        marginal_weights = [
+            natural / proposed
+            for natural, proposed in zip(per_agent_ndd, per_agent_proposal)
+        ]
+        return {
+            "proposal_type": "joint_pair",
+            "selected_bv_ids": pair["ids"],
+            "indices": list(key),
+            "action_pair": [first_action, second_action],
+            "epsilon": float(epsilon),
+            "critical_mass": float(sampled["critical_mass"]),
+            "naturalistic_probability": float(sampled["naturalistic_probability"]),
+            "proposal_probability": float(sampled["proposal_probability"]),
+            "importance_weight": float(sampled["importance_weight"]),
+            "per_agent_ndd_probability": per_agent_ndd,
+            "per_agent_proposal_probability": per_agent_proposal,
+            "per_agent_marginal_weight": marginal_weights,
+            "weight_record": {
+                "proposal_type": "joint_pair",
+                "joint": float(sampled["importance_weight"]),
+                "per_agent": marginal_weights,
+                "joint_naturalistic_probability": float(sampled["naturalistic_probability"]),
+                "joint_proposal_probability": float(sampled["proposal_probability"]),
+            },
+            "ndd_record": {
+                "proposal_type": "joint_pair",
+                "joint": float(sampled["naturalistic_probability"]),
+                "per_agent": per_agent_ndd,
+            },
+        }
+
+    def _selected_epsilon_values(self, epsilon, selected_bv_idx, controlled_bvs_list=None):
+        """Assign epsilon values to selected BVs, preferring explicit vehicle IDs."""
+        if epsilon is None:
+            epsilon = conf.epsilon_value
+        if isinstance(epsilon, dict):
+            if controlled_bvs_list is None:
+                raise ValueError("per-BV epsilon requires the controlled BV list")
+            values = []
+            for index in selected_bv_idx:
+                bv_id = controlled_bvs_list[index].id
+                if bv_id not in epsilon:
+                    raise ValueError(f"No epsilon configured for selected BV {bv_id!r}")
+                values.append(float(epsilon[bv_id]))
+        elif isinstance(epsilon, (list, tuple, np.ndarray)):
+            values = [float(value) for value in list(epsilon)]
+        else:
+            values = [float(epsilon)]
+        if not values:
+            fallback = conf.epsilon_value
+            if isinstance(fallback, dict):
+                raise ValueError("empty epsilon sequence cannot use a per-BV fallback")
+            values = [float(fallback)]
+        values = values[: len(selected_bv_idx)]
+        values.extend([values[-1]] * (len(selected_bv_idx) - len(values)))
+        if not all(0.0 <= value <= 1.0 for value in values):
+            raise ValueError("epsilon values must lie between zero and one")
+        self.control_log["epsilon_by_bv_id"] = {
+            controlled_bvs_list[index].id: value
+            for index, value in zip(selected_bv_idx, values)
+        } if controlled_bvs_list is not None else {}
+        return dict(zip(selected_bv_idx, values)), values
 
     def apply_control_permission(self):
         for vehicle in self.get_bv_candidates():
@@ -181,8 +681,12 @@ class NADEBVGlobalController(NDDBVGlobalController):
         """
         CAV_global_position = list(full_obs["CAV"]["position"])
         CAV_speed = full_obs["CAV"]["velocity"]
-        tmp_weight = self.env.info_extractor.episode_log["weight_episode"]
-        tmp_weight = np.log10(tmp_weight)
+        episode_log = self.env.info_extractor.episode_log
+        log_weight = episode_log.get("log_importance_weight")
+        if log_weight is not None and np.isfinite(float(log_weight)):
+            tmp_weight = max(float(log_weight) / np.log(10.0), -300.0)
+        else:
+            tmp_weight = np.log10(max(float(episode_log["weight_episode"]), 1e-30))
         vehicle_info_list = []
         controlled_bv_num = 1
         total_bv_info_length = controlled_bv_num * 4
@@ -246,7 +750,11 @@ class NADEBVGlobalController(NDDBVGlobalController):
                 underline_drl_action = conf.discriminator_agent.compute_action(discriminator_input)
                 if sum(bv_criticality_list) > 0:
                     print(underline_drl_action, self.env.info_extractor.episode_log["weight_episode"])
-                underline_drl_action = max(0, min(underline_drl_action, 1))
+                values = np.asarray(underline_drl_action, dtype=float).reshape(-1)
+                if len(values) == 1:
+                    underline_drl_action = float(np.clip(values[0], 0.0, 1.0))
+                else:
+                    underline_drl_action = np.clip(values, 0.0, 1.0).tolist()
             elif conf.simulation_config["epsilon_setting"] == "fixed": # ! need to be corrected
                 underline_drl_action = conf.epsilon_value
                 underline_drl_action = conf.epsilon_value

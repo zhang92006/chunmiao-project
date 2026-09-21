@@ -1,0 +1,35 @@
+{
+  "status": "v2 interface smoke test passed; full grid not yet executed",
+  "v1_full_grid_diagnostic": {
+    "executed_count": 60,
+    "collision_count": 0,
+    "selected_count": 0,
+    "minimum_ttc_s": 1.3563438481653578,
+    "minimum_distance_m": 1.071,
+    "scientific_use": "diagnostic only",
+    "invalidating_issue": "calibration actions used Vehicle.act under global high_speed bounds and were clipped toward the 20 m/s lower bound"
+  },
+  "v2_changes": [
+    "bypass the 20 m/s Vehicle.act clamp for calibration-only low-speed actions",
+    "hold the primary BV braking intervention through 5.0 s",
+    "add an explicit CAV response-hold reachability intervention",
+    "exclude both calibration interventions from D2RL training bookkeeping"
+  ],
+  "v2_smoke": {
+    "executed_count": 3,
+    "collision_count": 3,
+    "selected_count": 3,
+    "initial_position_delta_m": 17.3551003067808,
+    "bv_braking_acceleration_mps2": -2.0,
+    "bv_braking_duration_s": 5.0,
+    "cav_override_acceleration_mps2": 0.0,
+    "cav_override_durations_s": [3.5, 4.0, 4.5],
+    "collision_time_s": 3.8,
+    "target_collision_time_s": 4.0,
+    "collision_time_error_s": -0.2,
+    "selection_tolerance_s": 0.3,
+    "minimum_recorded_ttc_s": 0.005954806160475382,
+    "minimum_recorded_distance_m": 0.019625948062525822
+  },
+  "interpretation": "SUMO records the physical contact once project-level safety/clamping and event-window issues are corrected. The v2 CAV action proves crash reachability only and is not a perception-delay or control-delay model."
+}
