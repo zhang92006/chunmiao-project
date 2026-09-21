@@ -46,3 +46,125 @@ The generated `episodes/` folder contains `crash/`, `tested_and_safe/`,
 python -m scenario_reconstruction.validate_training_env \
   data_analysis/raw_data/ScenarioReconstructionMultiBV/episodes
 ```
+
+To train a centralized two-BV policy rather than use the legacy first-BV
+projection, set `multi_bv_training: true` and `multi_bv_num: 2` in the D2RL
+training configuration. The policy must then accept the 14-D joint observation
+and emit two epsilon values. Validate a generated K=2 episode set with:
+
+```bash
+python -m scenario_reconstruction.validate_training_env \
+  data_analysis/raw_data/ScenarioReconstructionMultiBV/episodes \
+  --multi_bv_training --multi_bv_num 2
+```
+
+Measured SHRP2 windows are only sources for multi-BV scenario seeds; they are
+not D2RL episodes until SUMO/NADE produces the joint observations, actions,
+NDD probabilities, and importance weights described in
+[`docs/多智能体D2RL联合训练接口.md`](../docs/多智能体D2RL联合训练接口.md).
+
+Export context-augmented K=2 source-frame seeds from a completed SHRP2 audit:
+
+```bash
+python -m scenario_reconstruction.shrp2_multibv_seed_export \
+  --source_root path/to/SHRP2_Public \
+  --audit_root data_analysis/raw_data/shrp2_diffusion_windows_v1 \
+  --output data_analysis/raw_data/shrp2_multibv_seeds_v1 \
+  --bv_count 2
+```
+
+This is a long HDF5 scan. The output is still `drl_training_ready=false` until
+the source-frame seed is mapped to a valid SUMO route and simulated by NADE.
+
+For the larger context-anchor pool, use the explicitly weaker mode below. It
+keeps one synchronized CAV/primary-BV/context-BV state and only requires an
+aligned context BV state at the requested anchor time; these records must remain
+separate from the strict full-history validation pool:
+
+```bash
+python -m scenario_reconstruction.shrp2_multibv_seed_export \
+  --source_root path/to/SHRP2_Public \
+  --audit_root data_analysis/raw_data/shrp2_diffusion_windows_v1 \
+  --output data_analysis/raw_data/shrp2_multibv_seeds_anchor_v1 \
+  --bv_count 2 \
+  --context_mode anchor_only
+```
+
+For autonomous NADE/D2RL rollout, do not initialize the simulator at that
+critical endpoint. Create a separate pre-critical pool that starts two seconds
+earlier; it requires the context BV to have an aligned state at that earlier
+time and records both the source critical time and the initialization offset:
+
+```bash
+python -m scenario_reconstruction.shrp2_multibv_seed_export \
+  --source_root path/to/SHRP2_Public \
+  --audit_root data_analysis/raw_data/shrp2_diffusion_windows_v1 \
+  --output data_analysis/raw_data/shrp2_multibv_seeds_precritical2s_v1 \
+  --bv_count 2 \
+  --context_mode anchor_only \
+  --initialization_offset_s 2.0
+```
+
+The pre-critical pool must be bridged into its own template directory, rather
+than mixed with the former critical-time templates:
+
+```bash
+python -m scenario_reconstruction.shrp2_multibv_sumo_bridge \
+  --seed_root data_analysis/raw_data/shrp2_multibv_seeds_precritical2s_v1 \
+  --output data_analysis/raw_data/shrp2_multibv_sumo_templates_v5_precritical2s \
+  --config configs/shrp2_multibv_sumo_bridge.json
+```
+
+Map the anchor-only seeds to autonomous 2Lane templates (no forced actions):
+
+```bash
+python -m scenario_reconstruction.shrp2_multibv_sumo_bridge \
+  --seed_root data_analysis/raw_data/shrp2_multibv_seeds_anchor_v1 \
+  --output data_analysis/raw_data/shrp2_multibv_sumo_templates_v4 \
+  --config configs/shrp2_multibv_sumo_bridge.json
+```
+
+The bridge blocks unsupported topologies, projected same-lane overlap, and
+initial speeds outside the configured D2RL domain (20--40 m/s on the current
+high-speed model), then writes a `bridge_summary.json`. It blocks rather than
+silently clips speed, preserving a traceable boundary between SHRP2
+observations and SUMO-executable initial states. Rejected low-speed seeds remain
+available for a future low-speed NDD/controller pipeline.
+Templates are only initialization candidates; run them through autonomous
+NADE/D2RL and require `joint`, `per_agent`, NDD, and weight fields before using
+the resulting episodes for learning.
+
+Run a bounded pilot directly from that bridge summary before launching a full
+split. The runner accepts both the older `path` manifest field and the bridge's
+`template_path` field:
+
+```bash
+python -m scenario_reconstruction.run_template_manifest \
+  data_analysis/raw_data/shrp2_multibv_sumo_templates_v1/bridge_summary.json \
+  --split train --start 0 --limit 20 \
+  --epsilon 0.1 \
+  --experiment_path data_analysis/raw_data/shrp2_multibv_rollout_pilot_train20
+```
+
+Inspect `manifest_run_summary.json` and the episode JSON files. A joint sample
+must contain two controlled IDs and the `joint`/`per_agent` fields described in
+the MultiBV contract; a safe episode without those fields is not a training
+sample.
+
+`--epsilon` is the fixed naturalistic-mixture probability used while collecting
+NADE importance-sampling episodes. The default `0.99` is close to ordinary NDD
+sampling and is useful for safety smoke tests. Use a documented lower pilot
+value such as `0.1` when collecting candidate D2RL training records, then run
+an epsilon sensitivity study before treating the data as a final experiment.
+
+`--repeats N` runs each selected template `N` independent times. Each run has a
+unique episode ID and records its zero-based `repeat` number in
+`manifest_run_summary.json`; use this for importance-sampling data collection,
+not for a GUI run. For example, after rebuilding a fresh bridge directory:
+
+```bash
+python -m scenario_reconstruction.run_template_manifest \
+  data_analysis/raw_data/shrp2_multibv_sumo_templates_v4/bridge_summary.json \
+  --split train --start 0 --limit 50 --repeats 5 --epsilon 0.01 \
+  --experiment_path data_analysis/raw_data/shrp2_multibv_highspeed_rollout_v4_train50_x5_epsilon001
+```
