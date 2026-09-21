@@ -1,0 +1,30 @@
+{
+  "status": "v3 control-delay interface smoke test passed",
+  "source": "shrp2_131785457_rear_end_source_speed",
+  "frozen_baseline": "candidate_19 from rear_end_reachability_grid_v2",
+  "interventions": {
+    "bv_braking": {
+      "acceleration_mps2": -2.0,
+      "start_time_s": 0.0,
+      "duration_s": 5.0,
+      "calibration_only": true
+    },
+    "cav_control_delay": {
+      "delay_s": 4.0,
+      "start_time_s": 0.0,
+      "duration_s": 4.0,
+      "initial_action": {"lateral": "central", "longitudinal": 0.0},
+      "fault_validation_only": true,
+      "not_for_d2rl_training": true
+    }
+  },
+  "result": {
+    "collision_result": true,
+    "collision_ids": ["BV_primary", "CAV"],
+    "collision_time_s": 4.1,
+    "collision_time_error_s": 0.1,
+    "selected": true,
+    "fault_log_step_count": 41
+  },
+  "interpretation": "The frozen timing target is reachable through an explicit control-delay model without calibration_cav_action. This validates the controller-boundary mechanism only; it does not estimate a real delay distribution or reproduce the original crash."
+}

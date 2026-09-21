@@ -1,0 +1,374 @@
+{
+  "schema_version": 1,
+  "status": "measured public SHRP2 data audit; no diffusion training or SUMO execution",
+  "mode": "metadata_only",
+  "config": {
+    "schema_version": 1,
+    "dataset_doi": "10.15787/VTT1/T7UUC1",
+    "dataset_version": "2.0",
+    "seed": 20260914,
+    "split_fractions": {
+      "train": 0.7,
+      "validation": 0.15,
+      "test": 0.15
+    },
+    "history_s": 4.0,
+    "sample_hz": 10,
+    "maximum_interpolation_gap_s": 0.2,
+    "maximum_target_alignment_dt_s": 0.2,
+    "heading_speed_threshold_mps": 0.5,
+    "maximum_speed_path_rmse_mps": 1.0,
+    "maximum_heading_path_mae_rad": 0.35,
+    "maximum_collision_time_error_s": 0.5
+  },
+  "unique_event_count": 6664,
+  "category_event_count_sum": 6664,
+  "cross_category_duplicate_event_count": 0,
+  "unique_events_by_split": {
+    "test": 1010,
+    "train": 4663,
+    "validation": 991
+  },
+  "quality_pass_unique_event_count": null,
+  "quality_pass_unique_events_by_split": null,
+  "export_windows": false,
+  "inventory": [
+    {
+      "category": "Crash",
+      "metadata_rows": 1242,
+      "unique_event_count": 1242,
+      "duplicate_event_rows": 0,
+      "event_meta_sha256": "5c064b48c4807a5c7a79735814c60fee35886585d3ffa1391b3b58ff6ea727d0",
+      "has_trajectory_hdf5": true,
+      "events_by_split": {
+        "test": 178,
+        "train": 869,
+        "validation": 195
+      },
+      "events_by_conflict": {
+        "leading": 90,
+        "none": 1019,
+        "adjacent_lane": 8,
+        "parked": 34,
+        "turning_across_opposite": 13,
+        "turning_into_opposite": 14,
+        "intersection_crossing": 12,
+        "animal": 29,
+        "turning_across_parallel": 8,
+        "turning_into_parallel": 5,
+        "unknown": 5,
+        "oncoming": 1,
+        "pedestrian": 2,
+        "cyclist": 2
+      },
+      "trajectory_scan_status": "not_scanned"
+    },
+    {
+      "category": "Crash-Crash",
+      "metadata_rows": 37,
+      "unique_event_count": 37,
+      "duplicate_event_rows": 0,
+      "event_meta_sha256": "fd9470dfcc4adb7c880e26eeb46096639141b1208c5fe891309afef58d6915c7",
+      "has_trajectory_hdf5": true,
+      "events_by_split": {
+        "validation": 5,
+        "train": 29,
+        "test": 3
+      },
+      "events_by_conflict": {
+        "adjacent_lane": 3,
+        "parked": 5,
+        "intersection_crossing": 2,
+        "animal": 1,
+        "none": 18,
+        "leading": 5,
+        "turning_into_opposite": 1,
+        "unknown": 2
+      },
+      "trajectory_scan_status": "not_scanned"
+    },
+    {
+      "category": "Crash-CrashRelevant",
+      "metadata_rows": 3,
+      "unique_event_count": 3,
+      "duplicate_event_rows": 0,
+      "event_meta_sha256": "f38de91358fa84f5789f829473222ca65350cd4fd49b1cbaffb00fd1f62664d1",
+      "has_trajectory_hdf5": true,
+      "events_by_split": {
+        "train": 3
+      },
+      "events_by_conflict": {
+        "turning_into_opposite": 1,
+        "leading": 1,
+        "adjacent_lane": 1
+      },
+      "trajectory_scan_status": "not_scanned"
+    },
+    {
+      "category": "Crash-NearCrash",
+      "metadata_rows": 30,
+      "unique_event_count": 30,
+      "duplicate_event_rows": 0,
+      "event_meta_sha256": "5f3a6cbb17c5cbf23aaf4398e028f0ae7edf889b131fb4614e8c7c22b4ffd9e3",
+      "has_trajectory_hdf5": true,
+      "events_by_split": {
+        "train": 25,
+        "test": 2,
+        "validation": 3
+      },
+      "events_by_conflict": {
+        "adjacent_lane": 3,
+        "none": 12,
+        "leading": 8,
+        "turning_into_parallel": 2,
+        "animal": 1,
+        "unknown": 2,
+        "parked": 1,
+        "oncoming": 1
+      },
+      "trajectory_scan_status": "not_scanned"
+    },
+    {
+      "category": "Crash-OtherConflict",
+      "metadata_rows": 9,
+      "unique_event_count": 9,
+      "duplicate_event_rows": 0,
+      "event_meta_sha256": "eb3fccfc65b9788af2824553316a56cf0424a8ef8e6fc89a296b4abea4fe65d2",
+      "has_trajectory_hdf5": true,
+      "events_by_split": {
+        "train": 6,
+        "test": 2,
+        "validation": 1
+      },
+      "events_by_conflict": {
+        "leading": 5,
+        "turning_across_opposite": 2,
+        "intersection_crossing": 1,
+        "parked": 1
+      },
+      "trajectory_scan_status": "not_scanned"
+    },
+    {
+      "category": "CrashRelevant-Crash",
+      "metadata_rows": 6,
+      "unique_event_count": 6,
+      "duplicate_event_rows": 0,
+      "event_meta_sha256": "828573115cbb8b5eab63e4bc1ba199471b0bd1640bf273ab684a4bf2cf902dec",
+      "has_trajectory_hdf5": true,
+      "events_by_split": {
+        "validation": 2,
+        "test": 3,
+        "train": 1
+      },
+      "events_by_conflict": {
+        "leading": 3,
+        "adjacent_lane": 1,
+        "turning_into_parallel": 1,
+        "oncoming": 1
+      },
+      "trajectory_scan_status": "not_scanned"
+    },
+    {
+      "category": "CrashRelevant-NearCrash",
+      "metadata_rows": 25,
+      "unique_event_count": 25,
+      "duplicate_event_rows": 0,
+      "event_meta_sha256": "c34b319413c2d3c9f0badc2027afd5a5694f2af14a37ea624322d07315b915ff",
+      "has_trajectory_hdf5": true,
+      "events_by_split": {
+        "train": 23,
+        "validation": 1,
+        "test": 1
+      },
+      "events_by_conflict": {
+        "leading": 19,
+        "turning_across_opposite": 2,
+        "adjacent_lane": 2,
+        "turning_into_parallel": 2
+      },
+      "trajectory_scan_status": "not_scanned"
+    },
+    {
+      "category": "NearCrash",
+      "metadata_rows": 4648,
+      "unique_event_count": 4648,
+      "duplicate_event_rows": 0,
+      "event_meta_sha256": "ba0265692969a3247b21d5c7a3d35d69a8d95ea822aacd821d7469dda2f709f0",
+      "has_trajectory_hdf5": true,
+      "events_by_split": {
+        "test": 731,
+        "train": 3246,
+        "validation": 671
+      },
+      "events_by_conflict": {
+        "leading": 2055,
+        "adjacent_lane": 1061,
+        "turning_into_parallel": 267,
+        "merging": 79,
+        "cyclist": 48,
+        "pedestrian": 109,
+        "animal": 152,
+        "parked": 85,
+        "none": 199,
+        "turning_across_opposite": 169,
+        "turning_into_opposite": 220,
+        "intersection_crossing": 107,
+        "oncoming": 46,
+        "turning_across_parallel": 40,
+        "unknown": 11
+      },
+      "trajectory_scan_status": "not_scanned"
+    },
+    {
+      "category": "NearCrash-Crash",
+      "metadata_rows": 61,
+      "unique_event_count": 61,
+      "duplicate_event_rows": 0,
+      "event_meta_sha256": "65c418933c32ac9e2cee15969d6c1726474dda597c88e8994f5947ef455819d6",
+      "has_trajectory_hdf5": true,
+      "events_by_split": {
+        "train": 40,
+        "validation": 12,
+        "test": 9
+      },
+      "events_by_conflict": {
+        "leading": 21,
+        "turning_across_parallel": 6,
+        "animal": 2,
+        "turning_into_parallel": 4,
+        "adjacent_lane": 14,
+        "turning_into_opposite": 3,
+        "none": 3,
+        "oncoming": 6,
+        "parked": 1,
+        "merging": 1
+      },
+      "trajectory_scan_status": "not_scanned"
+    },
+    {
+      "category": "NearCrash-CrashRelevant",
+      "metadata_rows": 88,
+      "unique_event_count": 88,
+      "duplicate_event_rows": 0,
+      "event_meta_sha256": "669889a6ef1cce6208207605456cdbf58cc8af4d7ed1ff703059662411742926",
+      "has_trajectory_hdf5": true,
+      "events_by_split": {
+        "test": 14,
+        "train": 59,
+        "validation": 15
+      },
+      "events_by_conflict": {
+        "leading": 55,
+        "merging": 4,
+        "turning_across_parallel": 1,
+        "turning_into_parallel": 5,
+        "adjacent_lane": 16,
+        "oncoming": 2,
+        "animal": 1,
+        "turning_across_opposite": 2,
+        "pedestrian": 1,
+        "unknown": 1
+      },
+      "trajectory_scan_status": "not_scanned"
+    },
+    {
+      "category": "NearCrash-NearCrash",
+      "metadata_rows": 391,
+      "unique_event_count": 391,
+      "duplicate_event_rows": 0,
+      "event_meta_sha256": "a3f26b371a1da7fb7e33257010df7f9f7194eee06ef7bbc8b08063f20860f77e",
+      "has_trajectory_hdf5": true,
+      "events_by_split": {
+        "train": 268,
+        "test": 55,
+        "validation": 68
+      },
+      "events_by_conflict": {
+        "adjacent_lane": 91,
+        "leading": 237,
+        "merging": 9,
+        "pedestrian": 7,
+        "turning_into_opposite": 3,
+        "turning_into_parallel": 11,
+        "cyclist": 1,
+        "oncoming": 10,
+        "turning_across_opposite": 2,
+        "none": 9,
+        "animal": 4,
+        "parked": 4,
+        "intersection_crossing": 1,
+        "unknown": 2
+      },
+      "trajectory_scan_status": "not_scanned"
+    },
+    {
+      "category": "NearCrash-OtherConflict",
+      "metadata_rows": 11,
+      "unique_event_count": 11,
+      "duplicate_event_rows": 0,
+      "event_meta_sha256": "eb11196ce4815784ecf04dc6b91b50472c2dd766247d95dcb86564a12125f123",
+      "has_trajectory_hdf5": true,
+      "events_by_split": {
+        "train": 8,
+        "validation": 2,
+        "test": 1
+      },
+      "events_by_conflict": {
+        "leading": 4,
+        "adjacent_lane": 5,
+        "turning_across_opposite": 1,
+        "oncoming": 1
+      },
+      "trajectory_scan_status": "not_scanned"
+    },
+    {
+      "category": "SecondaryCrash",
+      "metadata_rows": 14,
+      "unique_event_count": 14,
+      "duplicate_event_rows": 0,
+      "event_meta_sha256": "f06d12739b6dc8ece2c45862b3fa9e4c96d80f0f62361c2a6f4c25844d87624a",
+      "has_trajectory_hdf5": true,
+      "events_by_split": {
+        "train": 12,
+        "test": 2
+      },
+      "events_by_conflict": {
+        "none": 10,
+        "leading": 3,
+        "adjacent_lane": 1
+      },
+      "trajectory_scan_status": "not_scanned"
+    },
+    {
+      "category": "SecondaryNearCrash",
+      "metadata_rows": 99,
+      "unique_event_count": 99,
+      "duplicate_event_rows": 0,
+      "event_meta_sha256": "8d3b743b2a5d4405729802a16b4c075063abd344491d77ab1a0a41f48566c4ed",
+      "has_trajectory_hdf5": true,
+      "events_by_split": {
+        "train": 74,
+        "validation": 16,
+        "test": 9
+      },
+      "events_by_conflict": {
+        "leading": 78,
+        "adjacent_lane": 15,
+        "unknown": 2,
+        "animal": 1,
+        "merging": 1,
+        "none": 1,
+        "oncoming": 1
+      },
+      "trajectory_scan_status": "not_scanned"
+    }
+  ],
+  "limitations": [
+    "Counts of metadata events are not counts of usable training trajectories.",
+    "Quality-pass windows need not collide; NearCrash is retained as a distinct source category.",
+    "The same event ID always shares one split across categories and targets; trip/driver grouping needs additional identifiers.",
+    "Exports contain measured pairs, not complete multi-agent scenes or invented lane/map labels.",
+    "Geometric nearest-target association and contact diagnostics do not verify accident participant identity.",
+    "Heading channels are masked when path-heading consistency fails; fit normalization on train only."
+  ]
+}

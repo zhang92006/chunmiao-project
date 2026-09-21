@@ -1,0 +1,18 @@
+# K=2 PPO smoke run with a single decision that is trainable under the
+# unmodified legacy D2RL reward. Source episodes remain intact in storage.
+experiment_name: "SHRP2_MultiBV_K2_TrainableCritical_Smoke"
+root_folder: "./data_analysis/raw_data/"
+data_folders: ["shrp2_multibv_ablation_factorized_train3_x50_epsilon0001"]
+data_folder_weights: [1]
+local_dir: "./ray_results/"
+num_workers: 1
+clip_reward_threshold: 100
+multi_bv_training: true
+multi_bv_num: 2
+multi_bv_decision_mode: "single_trainable_critical"
+# The old reward is clipped at -100 once q >= 0.004:
+# 100 - 500 * 100 * q <= -100.
+multi_bv_reference_epsilon: 0.5
+multi_bv_max_reference_q_amplifier: 0.004
+training_iterations: 2
+seed: 7

@@ -2,7 +2,11 @@ from __future__ import annotations
 
 import argparse
 import json
+from math import isfinite, log
 from pathlib import Path
+
+from .importance import stable_weight_diagnostics
+from .training_pool_ledger_audit import validate_episode_probability_ledger
 
 
 def prepare_crash_weight_dict(
@@ -19,10 +23,22 @@ def prepare_crash_weight_dict(
         raise FileNotFoundError(f"Crash directory not found: {crash_dir}")
 
     crash_weight_dict: dict[str, list[float]] = {}
+    # Keep the legacy raw-weight index for existing consumers, but write a
+    # separate log-domain index for samplers. A long K-BV rollout can have a
+    # valid importance weight below floating-point resolution; using that raw
+    # value directly as random.choices weights makes sampling collapse.
+    crash_log_weight_dict: dict[str, float] = {}
     for crash_json_path in sorted(crash_dir.glob("*.json")):
         with crash_json_path.open("r", encoding="utf-8") as stream:
             episode = json.load(stream)
         weight_episode = float(episode["weight_episode"])
+        if multi_bv:
+            try:
+                probability_audit = validate_episode_probability_ledger(episode)
+            except (KeyError, TypeError, ValueError):
+                continue
+            if not probability_audit["audit_passed"]:
+                continue
         if weight_episode < threshold and _is_training_ready_episode(
             episode,
             min_criticality=min_criticality,
@@ -32,11 +48,93 @@ def prepare_crash_weight_dict(
         ):
             normalized_path = crash_json_path.as_posix()
             crash_weight_dict[normalized_path] = [weight_episode, weight_episode]
+            crash_log_weight_dict[normalized_path] = _episode_log_weight(episode)
 
     output_path = experiment_dir / "crash_weight_dict.json"
     with output_path.open("w", encoding="utf-8") as stream:
         json.dump(crash_weight_dict, stream, indent=4)
+    log_output_path = experiment_dir / "crash_log_weight_dict.json"
+    with log_output_path.open("w", encoding="utf-8") as stream:
+        json.dump(
+            {
+                "schema_version": 1,
+                "sampling_weight": "exp(log_importance_weight - max_log_weight)",
+                "log_weights": crash_log_weight_dict,
+            },
+            stream,
+            indent=4,
+        )
+    write_importance_weight_diagnostics(experiment_dir, crash_weight_dict)
     return crash_weight_dict
+
+
+def _episode_log_weight(episode: dict) -> float:
+    """Return a finite episode log-weight, including legacy episode files."""
+    log_weight = episode.get("log_importance_weight")
+    if log_weight is not None and isfinite(float(log_weight)):
+        return float(log_weight)
+    raw_weight = float(episode.get("weight_episode", 0.0))
+    if not isfinite(raw_weight) or raw_weight <= 0.0:
+        raise ValueError("Training-ready crash episode has no finite importance weight")
+    return log(raw_weight)
+
+
+def write_importance_weight_diagnostics(
+    experiment_dir: Path,
+    crash_weight_dict: dict[str, list[float]],
+) -> dict:
+    """Write stable ESS diagnostics for the exact crash pool passed to training."""
+    records = []
+    by_source: dict[str, list[dict]] = {}
+    missing_log_weight_count = 0
+    for raw_path in crash_weight_dict:
+        path = Path(raw_path)
+        with path.open("r", encoding="utf-8") as stream:
+            episode = json.load(stream)
+        log_weight = episode.get("log_importance_weight")
+        if log_weight is None:
+            raw_weight = float(episode.get("weight_episode", 0.0))
+            if not isfinite(raw_weight) or raw_weight <= 0.0:
+                missing_log_weight_count += 1
+                continue
+            log_weight = log(raw_weight)
+            missing_log_weight_count += 1
+        record = {
+            "episode_path": path.as_posix(),
+            "log_importance_weight": float(log_weight),
+            "proposal_modes": list(episode.get("proposal_modes", [])),
+        }
+        records.append(record)
+        source = str(episode.get("scenario_metadata", {}).get("source_event_id", "unknown"))
+        by_source.setdefault(source, []).append(record)
+
+    result = {
+        "schema_version": 1,
+        "pool": "training_ready_crashes",
+        "missing_log_weight_count": missing_log_weight_count,
+        "overall": stable_weight_diagnostics(records),
+        "by_source_event": {
+            source: stable_weight_diagnostics(source_records)
+            for source, source_records in sorted(by_source.items())
+        },
+        "proposal_mode_counts": _proposal_mode_counts(records),
+    }
+    output_path = experiment_dir / "importance_weight_diagnostics.json"
+    with output_path.open("w", encoding="utf-8") as stream:
+        json.dump(result, stream, indent=4)
+    return result
+
+
+def _proposal_mode_counts(records: list[dict]) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for record in records:
+        modes = record.get("proposal_modes", [])
+        if not modes:
+            counts["unknown"] = counts.get("unknown", 0) + 1
+            continue
+        for mode in modes:
+            counts[str(mode)] = counts.get(str(mode), 0) + 1
+    return counts
 
 
 def prepare_safe_weight_dict(
@@ -52,9 +150,15 @@ def prepare_safe_weight_dict(
 
     safe_weight_dict: dict[str, list[float]] = {}
     for safe_json_path in sorted(safe_dir.glob("*.json")):
+        with safe_json_path.open("r", encoding="utf-8") as stream:
+            episode = json.load(stream)
+        metadata = episode.get("scenario_metadata", {})
+        if (
+            metadata.get("collision_search_only") is True
+            or metadata.get("not_for_d2rl_training") is True
+        ):
+            continue
         if multi_bv:
-            with safe_json_path.open("r", encoding="utf-8") as stream:
-                episode = json.load(stream)
             if not _is_training_ready_episode(episode, multi_bv=True, agent_num=agent_num):
                 continue
         normalized_path = safe_json_path.as_posix()
@@ -73,6 +177,12 @@ def _is_training_ready_episode(
     multi_bv: bool = False,
     agent_num: int = 2,
 ) -> bool:
+    metadata = episode.get("scenario_metadata", {})
+    if (
+        metadata.get("collision_search_only") is True
+        or metadata.get("not_for_d2rl_training") is True
+    ):
+        return False
     weight_step_info = episode.get("weight_step_info", {})
     drl_obs_step_info = episode.get("drl_obs_step_info", {})
     criticality_step_info = episode.get("criticality_step_info", {})
@@ -192,6 +302,7 @@ def main() -> None:
     )
     print(f"Prepared {len(crash_weight_dict)} crash episodes.")
     print(f"Wrote {Path(args.experiment_path) / 'crash_weight_dict.json'}")
+    print(f"Wrote {Path(args.experiment_path) / 'crash_log_weight_dict.json'}")
     if args.include_safe_weight_dict:
         safe_weight_dict = prepare_safe_weight_dict(
             args.experiment_path,

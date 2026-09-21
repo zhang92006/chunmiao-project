@@ -1,0 +1,74 @@
+{
+  "status": "trajectory metrics; raw SHRP2 and SUMO closed-loop errors are reported separately",
+  "source_root": "G:\\chunmiao\\SHRP2_Public\\extracted\\Export_Online",
+  "source_event_id": 131785457,
+  "source_target_id": 22038,
+  "source_split": "train",
+  "comparison_window_s": [
+    0.0,
+    4.0
+  ],
+  "comparison_sample_count": 41,
+  "seed_vs_shrp2_raw": {
+    "alignment": "translate to the SHRP2 CAV state nearest annotated impact and rotate by its heading; compare only pre-impact [0, impact_time]",
+    "actors": {
+      "CAV": {
+        "ade_m": 1.1469600860506,
+        "fde_m": 0.010116172724214148,
+        "position_rmse_m": 1.5990723064776167,
+        "speed_mae_mps": 0.7942549775278769,
+        "speed_rmse_mps": 0.924051643790981,
+        "heading_mae_rad": 0.00916707202805727,
+        "max_position_error_m": 3.174574730753656,
+        "samples": 41
+      },
+      "BV_primary": {
+        "ade_m": 2.791893880512257,
+        "fde_m": 0.7396987385715087,
+        "position_rmse_m": 3.099811066473536,
+        "speed_mae_mps": 1.3095099898438922,
+        "speed_rmse_mps": 1.7726883380770568,
+        "heading_mae_rad": 1.7771398668747966,
+        "max_position_error_m": 6.13668072601836,
+        "samples": 41
+      }
+    }
+  },
+  "sumo_closed_loop_vs_bridge_kinematic_reference": {
+    "alignment": "compare SUMO world coordinates against constant-speed, same-lane projection from the bridge template",
+    "actors": {
+      "CAV": {
+        "ade_m": 0.6948064220988716,
+        "fde_m": 1.1293861674238659,
+        "position_rmse_m": 0.7282393894237904,
+        "speed_mae_mps": 0.18156404939481607,
+        "speed_rmse_mps": 0.18156404939481607,
+        "heading_mae_rad": 0.010956455238612425,
+        "max_position_error_m": 1.1293861674238659,
+        "samples": 41
+      },
+      "BV_primary": {
+        "ade_m": 0.8708588264525252,
+        "fde_m": 1.8976531739123175,
+        "position_rmse_m": 1.053520836093946,
+        "speed_mae_mps": 0.4853195622683937,
+        "speed_rmse_mps": 0.4967302612687934,
+        "heading_mae_rad": 0.0,
+        "max_position_error_m": 1.8976531739123175,
+        "samples": 41
+      }
+    },
+    "episode_collision": true,
+    "episode_collision_ids": [
+      "BV_primary",
+      "CAV"
+    ],
+    "minimum_ttc_pre_target_s": 0.005503351059996237,
+    "minimum_distance_pre_target_m": 0.018155116647960767
+  },
+  "interpretation": [
+    "seed_vs_shrp2_raw measures fidelity lost when the source trajectory is replaced by constant-heading, constant-speed kinematics and impact conditioning.",
+    "sumo_closed_loop_vs_bridge_kinematic_reference measures controller and map divergence, not raw SHRP2 replay error.",
+    "No claim of full-dataset reproduction is made from this single high-quality rear-end event."
+  ]
+}

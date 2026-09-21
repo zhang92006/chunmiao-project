@@ -1,0 +1,44 @@
+{
+  "dataset": "SHRP2 NDS public bird's-eye trajectory reconstruction",
+  "doi": "10.15787/VTT1/T7UUC1",
+  "version": "2.0",
+  "license": "CC BY 4.0",
+  "files": [
+    {
+      "name": "Bird's Eye View Trajectory Data Dictionary.pdf",
+      "dataverse_file_id": 5800,
+      "size_bytes": 178241,
+      "md5": "aaa70a696407d3e85d428045d799d28d"
+    },
+    {
+      "name": "T7UUC1_Bird'sEyeView_Dataset.zip.001",
+      "dataverse_file_id": 5806,
+      "size_bytes": 524288000,
+      "md5": "bf40cb4e27da91d4888e7c019a5d357c"
+    },
+    {
+      "name": "T7UUC1_Bird'sEyeView_Dataset.zip.002",
+      "dataverse_file_id": 5803,
+      "size_bytes": 524288000,
+      "md5": "d799da440edbeda46e8d17fda8139264"
+    },
+    {
+      "name": "T7UUC1_Bird'sEyeView_Dataset.zip.003",
+      "dataverse_file_id": 5805,
+      "size_bytes": 524288000,
+      "md5": "9935fef97cd4d0a456c653e889636584"
+    },
+    {
+      "name": "T7UUC1_Bird'sEyeView_Dataset.zip.004",
+      "dataverse_file_id": 5802,
+      "size_bytes": 524288000,
+      "md5": "38dd3c8ad7eadfe781508fdd6f8897bd"
+    },
+    {
+      "name": "T7UUC1_Bird'sEyeView_Dataset.zip.005",
+      "dataverse_file_id": 5804,
+      "size_bytes": 383306715,
+      "md5": "c0c8fd9db0580d0fb42296de854842b7"
+    }
+  ]
+}

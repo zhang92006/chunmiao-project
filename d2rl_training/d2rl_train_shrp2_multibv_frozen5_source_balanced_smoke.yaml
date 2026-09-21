@@ -1,0 +1,16 @@
+experiment_name: "SHRP2_MultiBV_K2_Frozen5_SourceBalanced_Smoke"
+root_folder: "./data_analysis/raw_data/"
+data_folders: ["shrp2_multibv_frozen5_source_balanced_train_v1"]
+data_folder_weights: [1]
+local_dir: "./ray_results/"
+num_workers: 1
+clip_reward_threshold: 100
+multi_bv_training: true
+multi_bv_num: 2
+crash_sampling_mode: "uniform_source"
+multi_bv_decision_mode: "single_trainable_critical"
+multi_bv_reference_epsilon: 0.5
+multi_bv_max_reference_q_amplifier: 0.004
+log_episode_rewards: false
+training_iterations: 20
+seed: 19

@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "status": "SHRP2 pre-impact soft-reference extraction summary",
+  "source": {
+    "dataset": "SHRP2 NDS public bird's-eye trajectory reconstruction",
+    "doi": "10.15787/VTT1/T7UUC1",
+    "category": "Crash",
+    "event_id": 131785457,
+    "associated_target_id": 22038,
+    "source_split": "train",
+    "event_meta_sha256": "5c064b48c4807a5c7a79735814c60fee35886585d3ffa1391b3b58ff6ea727d0",
+    "event_data_sha256": "de6d83de850aedb52094de9960878f2dfdc21538c270d21f1bd854468e334662"
+  },
+  "sample_count": 41,
+  "reference_window_s": [
+    0.0,
+    4.0
+  ],
+  "quality": {
+    "CAV": {
+      "reported_vs_path_speed_rmse_mps": 0.068539335170034,
+      "reported_vs_path_heading_mae_rad": 8.030490763501445e-05,
+      "heading_comparison_samples": 41,
+      "position_speed_consistent": true,
+      "heading_usable": true,
+      "rules": {
+        "maximum_speed_path_rmse_mps": 1.0,
+        "maximum_heading_path_mae_rad": 0.35,
+        "minimum_heading_speed_mps": 0.5
+      },
+      "reported_vs_derived_acceleration_rmse_mps2": 1.812237148359012
+    },
+    "BV_primary": {
+      "reported_vs_path_speed_rmse_mps": 2.4889023740318796,
+      "reported_vs_path_heading_mae_rad": 0.7538091123280909,
+      "heading_comparison_samples": 40,
+      "position_speed_consistent": false,
+      "heading_usable": false,
+      "rules": {
+        "maximum_speed_path_rmse_mps": 1.0,
+        "maximum_heading_path_mae_rad": 0.35,
+        "minimum_heading_speed_mps": 0.5
+      },
+      "source_front_bumper_diagnostics": {
+        "reported_vs_path_speed_rmse_mps": 0.8744741361677234,
+        "reported_vs_path_heading_mae_rad": 0.4757264537482271,
+        "heading_comparison_samples": 37,
+        "note": "SHRP2 x_sur/y_sur describe the target front bumper; converting to the vehicle center amplifies heading noise when psi_sur changes rapidly"
+      }
+    }
+  },
+  "collision_audit": {
+    "initial_collision": false,
+    "collision_in_reference_window": true,
+    "first_sampled_contact_time_s": 3.9000000000000004,
+    "minimum_sampled_signed_clearance_m": -0.36009475685438086,
+    "method": "oriented boxes at resampled source states; no between-sample interpolation"
+  },
+  "recommended_usage": {
+    "position": {
+      "CAV": "centroid position is usable as a soft fitting objective",
+      "BV_primary": "use the measured front-bumper path as a soft objective; the converted center path is diagnostic until target heading is reviewed"
+    },
+    "speed": "separate soft fitting objective; do not infer it from the target center path",
+    "heading": {
+      "CAV": "soft fitting objective",
+      "BV_primary": "diagnostic only until source trajectory is reviewed"
+    },
+    "impact": "hard event constraint",
+    "sumo_execution": "fit controller/fault parameters; do not teleport actors through every point"
+  }
+}
