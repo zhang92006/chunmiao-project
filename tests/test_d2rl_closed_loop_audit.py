@@ -30,6 +30,24 @@ class ClosedLoopAuditTests(unittest.TestCase):
             (root / 'crash' / '0.json').write_text(json.dumps(episode))
             self.assertTrue(summarize(root)['audit_passed'])
 
+    def test_subnormal_raw_weight_uses_authoritative_log_ledger(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            episode = self.make_pool(root)
+            (root / 'tested_and_safe').mkdir()
+            (root / 'tested_and_safe' / '1.json').write_text(json.dumps(dict(
+                episode, collision_result=0, collision_id=None)))
+            log_weight = -743.2287963322533
+            episode.update(
+                weight_episode=math.exp(log_weight),
+                log_importance_weight=log_weight,
+                log_probability_step_info={'0': {'log_importance_weight': log_weight}},
+            )
+            (root / 'crash' / '0.json').write_text(json.dumps(episode))
+            result = summarize(root)
+            self.assertTrue(result['audit_passed'])
+            self.assertEqual(result['raw_weight_status_counts']['subnormal_quantized'], 1)
+
     def make_pool(self, root):
         (root / 'crash').mkdir()
         (root / 'manifest_run_summary.json').write_text(json.dumps({

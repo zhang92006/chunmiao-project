@@ -4,6 +4,7 @@ from collections import Counter
 import json
 import math
 from pathlib import Path
+import sys
 
 
 def summarize(root):
@@ -14,6 +15,7 @@ def summarize(root):
     status_counts = Counter()
     checked_terms = 0
     inferred = 0
+    raw_weight_status_counts = Counter()
     max_q_error = max_weight_error = max_obs_error = 0.0
     for result in run['results']:
         episode_id = result['episode']
@@ -32,8 +34,17 @@ def summarize(root):
         if not math.isfinite(total_log_weight) or abs(total_log_weight-float(data['log_importance_weight'])) > 1e-7:
             failures.append(f'episode {episode_id}: inconsistent accumulated log weight')
         raw_weight = float(data['weight_episode'])
-        if raw_weight > 0 and abs(math.log(raw_weight)-total_log_weight) > 1e-6:
-            failures.append(f'episode {episode_id}: raw weight disagrees with logged probability product')
+        if total_log_weight >= math.log(sys.float_info.min):
+            raw_weight_status_counts['normal_range'] += 1
+            if raw_weight <= 0 or abs(math.log(raw_weight)-total_log_weight) > 1e-6:
+                failures.append(f'episode {episode_id}: raw weight disagrees with logged probability product')
+        elif raw_weight > 0:
+            # Below the minimum normal float, exp/log is no longer invertible:
+            # many exact values map to the same subnormal number. The per-step
+            # log ledger remains authoritative and is checked independently.
+            raw_weight_status_counts['subnormal_quantized'] += 1
+        else:
+            raw_weight_status_counts['underflowed_zero'] += 1
         if float(data.get('initial_weight', 1.0)) != 1.0:
             failures.append(f'episode {episode_id}: initial-state weight requires explicit handling')
         for time, step in data.get('online_policy_step_info', {}).items():
@@ -96,6 +107,7 @@ def summarize(root):
         'log_conditional_weighted_cav_collision_mean': weighted_log_mean if not failures else None,
         'crash_contribution_ess': ess if not failures else None,
         'online_step_status_counts': dict(status_counts), 'checked_sampled_bv_actions': checked_terms,
+        'raw_weight_status_counts': dict(raw_weight_status_counts),
         'max_q_reconstruction_error': max_q_error, 'max_weight_reconstruction_error': max_weight_error,
         'max_online_vs_logged_observation_error': max_obs_error,
         'audit_passed': not failures, 'failures': failures,
