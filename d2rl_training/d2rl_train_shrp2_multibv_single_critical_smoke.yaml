@@ -1,0 +1,15 @@
+# Interface-only K=2 PPO smoke run under the original one-decision D2RL
+# objective. Source episodes remain intact; the environment selects one joint
+# critical state in memory for each replayed crash.
+experiment_name: "SHRP2_MultiBV_K2_SingleCritical_Smoke"
+root_folder: "./data_analysis/raw_data/"
+data_folders: ["shrp2_multibv_ablation_factorized_train3_x50_epsilon0001"]
+data_folder_weights: [1]
+local_dir: "./ray_results/"
+num_workers: 1
+clip_reward_threshold: 100
+multi_bv_training: true
+multi_bv_num: 2
+multi_bv_decision_mode: "single_critical"
+training_iterations: 2
+seed: 7
