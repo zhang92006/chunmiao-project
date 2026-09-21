@@ -96,24 +96,37 @@ log 权重为有限值。短测试只验证接口和概率支持，不用于判�
 5. 用等仿真预算比较单 BV、双 BV 固定 proposal 和双 BV 学习 proposal；validation 规则冻结后，
    最后只运行一次保留 test。
 
-事件 `61385336` 的下一轮 100 次独立重采样为长命令，由用户终端运行：
+事件 `61385336` 的支持集掩码重采样已经完成：100/100 成功运行、0 个 training-ready
+碰撞、100 个 training-ready 安全 episode。结合旧数据 16/16 均包含 `p=0` 动作，可以
+判定旧冻结 proposal 的碰撞能力主要来自自然驾驶模型支持集以外的动作。该 proposal
+应停止使用，不能通过恢复旧索引或放宽概率审计保留第五个来源。
+
+搜索阶段也已增加支持约束：每个强制动作执行前检查当前 NDD 动作概率；`p=0` 时拒绝
+执行并记录，候选窗口只要存在无支持请求，其碰撞就不计为有效 CEM 命中。2-candidate
+真实 SUMO 冒烟通过：一个候选 20/20 次请求均有支持，另一个只有 5/25 次有支持；两者
+均未碰撞，审计计数符合预期。
+
+下一步对事件 `61385336` 运行 4 代 × 16 个候选，共 64 次支持约束 CEM：
 
 ```powershell
 Set-Location 'G:\chunmiao\d2rl\Dense-Deep-Reinforcement-Learning\scenario_reconstruction'
 $python = 'D:\Anaconda3\envs\D2RL\python.exe'
 New-Item -ItemType Directory -Force 'data_analysis\logs' | Out-Null
 
-& $python -m scenario_reconstruction.run_template_manifest `
-  'data_analysis\raw_data\shrp2_frozen_collision_proposals_v1\frozen_collision_proposal_manifest.json' `
-  --experiment_path 'data_analysis\raw_data\shrp2_frozen_collision_support_mask_61385336_train100_v2' `
-  --split train `
+& $python -m scenario_reconstruction.shrp2_collision_action_cem `
+  'data_analysis\raw_data\shrp2_collision_generator_pilot_v1\collision_generator_pilot_manifest.json' `
+  --output 'data_analysis\raw_data\shrp2_collision_action_cem_support_61385336_v2' `
   --source_event_id 61385336 `
-  --repeats 100 `
-  --proposal_mode factorized `
-  --epsilon 0.99 `
-  2>&1 | Tee-Object -FilePath 'data_analysis\logs\shrp2_frozen_collision_support_mask_61385336_train100_v2.log'
+  --generations 4 `
+  --population 16 `
+  --elite_fraction 0.25 `
+  --smoothing 0.25 `
+  --rollouts_per_candidate 1 `
+  --seed 20260921 `
+  2>&1 | Tee-Object -FilePath 'data_analysis\logs\shrp2_collision_action_cem_support_61385336_v2.log'
 ```
 
-验收顺序是：运行成功数、training-ready 碰撞数、零支持拒绝数、碰撞 log 权重和来源内
-ESS。若修正后碰撞降为 0，说明旧事件的碰撞主要依赖自然模型不支持的动作，应放弃该
-proposal 并重新进行受支持动作的 CEM 搜索，而不是放宽账本规则。
+验收首先看 `sources_with_target_collision`，然后核对最佳候选的
+`unsupported_search_action_count=0`。若仍为 0，应停止在该事件上增加重复次数，转向
+其他 1484 个候选事件扩大来源覆盖；若找到碰撞，才将新的 elite 分布冻结并用新随机数
+重采样，CEM 搜索轨迹本身仍禁止进入训练池。

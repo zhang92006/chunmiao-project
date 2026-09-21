@@ -250,6 +250,7 @@ def _search_event(
             **action,
             "action_id": int(action_id),
             "apply_once": False,
+            "require_ndd_support": True,
             "search_only": True,
             "not_for_d2rl_training": True,
             "collision_search_candidate_id": candidate_id,
@@ -312,11 +313,28 @@ def _read_episode_metrics(episode_root: Path, episode_id: int) -> dict:
         episode = json.load(stream)
     collision_ids = [str(value) for value in episode.get("collision_id") or []]
     collision = bool(episode.get("collision_result"))
+    search_events = [
+        item
+        for items in episode.get("collision_search_event_step_info", {}).values()
+        for item in items
+    ]
+    unsupported = [
+        item for item in search_events
+        if item.get("require_ndd_support") is True
+        and item.get("support_satisfied") is not True
+    ]
+    raw_target_collision = collision and "CAV" in collision_ids
     return {
         "logged_episode_path": str(path),
         "collision": collision,
-        "target_collision": collision and "CAV" in collision_ids,
+        "raw_target_collision": raw_target_collision,
+        "target_collision": raw_target_collision and not unsupported,
         "collision_ids": collision_ids,
+        "requested_search_action_count": len(search_events),
+        "applied_search_action_count": sum(
+            bool(item.get("applied")) for item in search_events
+        ),
+        "unsupported_search_action_count": len(unsupported),
         "minimum_ttc_s": _minimum_number(episode.get("ttc_step_info", {})),
         "minimum_distance_m": _minimum_number(
             episode.get("distance_step_info", {})
@@ -328,8 +346,12 @@ def _empty_metrics() -> dict:
     return {
         "logged_episode_path": None,
         "collision": False,
+        "raw_target_collision": False,
         "target_collision": False,
         "collision_ids": [],
+        "requested_search_action_count": 0,
+        "applied_search_action_count": 0,
+        "unsupported_search_action_count": 0,
         "minimum_ttc_s": None,
         "minimum_distance_m": None,
     }
@@ -345,6 +367,7 @@ def _score_metrics(metrics: dict) -> float:
         score += max(0.0, 10.0 - max(0.0, distance)) * 2.0
     if metrics["collision"] and not metrics["target_collision"]:
         score -= 25.0
+    score -= 5.0 * metrics.get("unsupported_search_action_count", 0)
     return float(score)
 
 

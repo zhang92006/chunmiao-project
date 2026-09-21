@@ -1,15 +1,19 @@
 import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
 from scenario_reconstruction.prepare_training_data import _is_training_ready_episode
+from scenario_reconstruction.environment import ScenarioNADE
 from scenario_reconstruction.shrp2_collision_action_cem import (
+    _read_episode_metrics,
     build_search_template,
     run_collision_action_cem,
 )
 from scenario_reconstruction.templates import load_template
+from scenario_reconstruction.templates import EventSpec
 
 
 def _source_template():
@@ -62,6 +66,9 @@ class CollisionActionCEMTests(unittest.TestCase):
             loaded = load_template(output)
             self.assertEqual(len(loaded.events), 2)
             self.assertTrue(candidate["events"][0]["params"]["search_only"])
+            self.assertTrue(
+                candidate["events"][0]["params"]["require_ndd_support"]
+            )
             self.assertTrue(candidate["bridge_metadata"]["not_for_d2rl_training"])
             episode = {
                 "scenario_metadata": {
@@ -129,6 +136,63 @@ class CollisionActionCEMTests(unittest.TestCase):
             self.assertEqual(result["sources_with_target_collision"], 1)
             self.assertTrue((output / "SEARCH_ONLY_DO_NOT_TRAIN.json").is_file())
             self.assertTrue((output / "cem_search_summary.json").is_file())
+
+    def test_unsupported_forced_action_cannot_count_as_target_collision(self):
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            crash = root / "crash"
+            crash.mkdir()
+            (crash / "0.json").write_text(json.dumps({
+                "collision_result": 1,
+                "collision_id": ["CAV", "BV_primary"],
+                "collision_search_event_step_info": {
+                    "1.0": [{
+                        "actor": "BV_primary",
+                        "action_id": 2,
+                        "applied": False,
+                        "require_ndd_support": True,
+                        "naturalistic_probability": 0.0,
+                        "support_satisfied": False,
+                    }]
+                },
+            }), encoding="utf-8")
+
+            metrics = _read_episode_metrics(root, 0)
+
+            self.assertTrue(metrics["raw_target_collision"])
+            self.assertFalse(metrics["target_collision"])
+            self.assertEqual(metrics["unsupported_search_action_count"], 1)
+
+    def test_forced_search_action_is_rejected_outside_ndd_support(self):
+        environment = ScenarioNADE.__new__(ScenarioNADE)
+        executed = []
+        controller = SimpleNamespace(
+            get_NDD_possi=lambda: [0.0, 1.0],
+            action=None,
+        )
+        vehicle = SimpleNamespace(
+            controller=controller,
+            is_action_legal=lambda _action: True,
+            act=lambda action: executed.append(action),
+        )
+        environment.vehicle_list = {"BV_primary": vehicle}
+        event = EventSpec(
+            type="forced_bv_action",
+            actor="BV_primary",
+            start_time=0.0,
+            duration=1.0,
+            params={
+                "action_id": 0,
+                "lateral": "left",
+                "longitudinal": 0.0,
+                "require_ndd_support": True,
+            },
+        )
+
+        applied = environment._apply_forced_bv_action(event)
+
+        self.assertFalse(applied)
+        self.assertEqual(executed, [])
 
 
 if __name__ == "__main__":

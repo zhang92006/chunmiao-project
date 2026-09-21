@@ -204,6 +204,18 @@ class ScenarioNADE(NADE):
             self._apply_calibration_longitudinal_action(event)
             return True
         vehicle = self.vehicle_list[event.actor]
+        if event.params.get("require_ndd_support") is True:
+            action_id = event.params.get("action_id")
+            if action_id is None:
+                return False
+            naturalistic_pdf = vehicle.controller.get_NDD_possi()
+            action_id = int(action_id)
+            if (
+                action_id < 0
+                or action_id >= len(naturalistic_pdf)
+                or float(naturalistic_pdf[action_id]) <= 0.0
+            ):
+                return False
         action = {
             "lateral": str(event.params.get("lateral", "central")),
             "longitudinal": float(event.params.get("longitudinal", 0.0)),
@@ -217,6 +229,14 @@ class ScenarioNADE(NADE):
     def _record_search_event(self, event: EventSpec, applied: bool) -> None:
         """Audit forced search actions without creating training probability labels."""
         time_step = f"{self.simulator.get_time():.6f}"
+        naturalistic_probability = None
+        if event.actor in self.vehicle_list and event.params.get("action_id") is not None:
+            naturalistic_pdf = self.vehicle_list[
+                event.actor
+            ].controller.get_NDD_possi()
+            action_id = int(event.params["action_id"])
+            if 0 <= action_id < len(naturalistic_pdf):
+                naturalistic_probability = float(naturalistic_pdf[action_id])
         self.info_extractor.episode_log.setdefault(
             "collision_search_event_step_info", {}
         ).setdefault(time_step, []).append({
@@ -225,6 +245,14 @@ class ScenarioNADE(NADE):
             "lateral": str(event.params.get("lateral", "central")),
             "longitudinal": float(event.params.get("longitudinal", 0.0)),
             "applied": bool(applied),
+            "require_ndd_support": bool(
+                event.params.get("require_ndd_support", False)
+            ),
+            "naturalistic_probability": naturalistic_probability,
+            "support_satisfied": (
+                naturalistic_probability is not None
+                and naturalistic_probability > 0.0
+            ),
             "search_only": True,
             "not_for_d2rl_training": True,
         })
