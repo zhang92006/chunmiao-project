@@ -139,3 +139,12 @@ completed calibration fidelity, split rules, and the user-run long task.
 Detailed implementation and experiment notes are under
 `scenario_reconstruction/`.
 
+## highD naturalistic calibration
+
+The opt-in native-highD runner keeps the default D2RL probability tables unchanged.
+It samples the calibrated highD candidate with an explicit original-NDD fallback,
+logs executed action probabilities, and separates evaluated vehicles from support
+traffic. These diagnostic episodes are not D2RL training data. Calibration results,
+scope limitations and the frozen-validation workflow are documented in
+[the highD closed-loop calibration report](docs/highD自然驾驶闭环校准结果.md).
+

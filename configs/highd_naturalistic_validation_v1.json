@@ -1,0 +1,17 @@
+{
+  "schema_version": 3,
+  "purpose": "frozen_model_validation",
+  "recordings": {"18": "validation", "19": "validation", "20": "validation"},
+  "scenes_per_recording": 20,
+  "seed": 7,
+  "duration_s": 4.0,
+  "frame_stride": 25,
+  "neighbor_range_m": 100.0,
+  "support_range_m": 220.0,
+  "observation_range_m": 115.0,
+  "speed_range_mps": [20.0, 40.0],
+  "minimum_bvs": 2,
+  "vehicle_length_mode": "source",
+  "vehicle_length_m": 5.0,
+  "scope": "Frozen-model two-lane closed-loop validation; recordings 10 and 14 have three lanes per direction and are excluded by topology, not by outcomes. No fitting and no test data."
+}

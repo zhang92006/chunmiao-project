@@ -1,0 +1,16 @@
+{
+  "schema_version": 3,
+  "recordings": {"01": "train", "03": "calibration"},
+  "scenes_per_recording": 10,
+  "seed": 7,
+  "duration_s": 4.0,
+  "frame_stride": 25,
+  "neighbor_range_m": 100.0,
+  "support_range_m": 220.0,
+  "observation_range_m": 115.0,
+  "speed_range_mps": [20.0, 40.0],
+  "minimum_bvs": 2,
+  "vehicle_length_mode": "source",
+  "vehicle_length_m": 5.0,
+  "scope": "Buffered native highD pilot with observed longitudinal vehicle lengths. Width, lane geometry and vehicle dynamics are not reproduced. Not for D2RL training."
+}

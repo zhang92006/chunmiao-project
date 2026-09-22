@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "source_model_sha256": "eade34afcc299aff8e7a82d7e6a5baa8ad777fd3e2d3d76e8ca7d0e6d3e9883e",
+  "train_recordings": ["01", "02", "04", "05", "07", "08", "11", "12", "15", "16"],
+  "source_frequency_hz": 25,
+  "target_frequency_hz": 10,
+  "chunk_size": 250000,
+  "parent_concentration": 100.0,
+  "prior_concentrations": [1.0, 10.0, 30.0, 100.0, 1000.0],
+  "selection": "Lowest calibration NLL on nonempty training states; original model is also a candidate."
+}
