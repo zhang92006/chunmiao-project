@@ -1,0 +1,13 @@
+{
+  "train_split": "train",
+  "evaluation_splits": ["train", "calibration", "validation"],
+  "source_frequency_hz": 25,
+  "target_frequency_hz": 10,
+  "decision_lead_s": 0.5,
+  "laplace_alpha": 0.5,
+  "grid": {
+    "speed": [20.0, 40.0, 1.0],
+    "gap": [0.0, 115.0, 1.0],
+    "range_rate": [-10.0, 8.0, 1.0]
+  }
+}

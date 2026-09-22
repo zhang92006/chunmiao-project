@@ -1,0 +1,10 @@
+{
+  "source_frequency_hz": 25,
+  "runtime_step_size_s": 0.1,
+  "runtime_action_step_size_s": 0.1,
+  "runtime_lane_change_duration_s": 1.0,
+  "lateral_velocity_thresholds_mps": [0.1, 0.2, 0.3],
+  "smoothing_window_s": 0.2,
+  "maximum_lookback_s": 4.0,
+  "endpoint_tolerance_s": 0.4
+}

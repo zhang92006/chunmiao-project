@@ -71,6 +71,27 @@ class HighDLaneChangeBaselineTests(unittest.TestCase):
                 summary["evaluation"]["validation"]["state_coverage"], 1.0
             )
 
+    def test_rejects_unknown_evaluation_split(self):
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self._write_recording(root, "01", direction=1)
+            manifest = root / "manifest.json"
+            manifest.write_text(json.dumps({"recordings": [
+                {"recording_id": "01", "split": "train"},
+            ]}), encoding="utf-8")
+            config = {
+                "train_split": "train", "evaluation_splits": ["test"],
+                "source_frequency_hz": 25, "target_frequency_hz": 10,
+                "decision_lead_s": 0.5, "laplace_alpha": 0.5,
+                "grid": {
+                    "speed": [20, 40, 1], "gap": [0, 115, 1],
+                    "range_rate": [-10, 8, 1],
+                },
+            }
+
+            with self.assertRaisesRegex(ValueError, "Unknown evaluation splits"):
+                fit_lane_change_baseline(root, manifest, root / "output", config)
+
 
 if __name__ == "__main__":
     unittest.main()

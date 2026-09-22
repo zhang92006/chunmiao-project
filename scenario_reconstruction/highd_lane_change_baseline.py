@@ -218,9 +218,13 @@ def fit_lane_change_baseline(
         counts=counts,
         probability=_probabilities(counts, float(config["laplace_alpha"])),
     )
+    evaluation_splits = config.get("evaluation_splits", list(splits))
+    unknown_splits = sorted(set(evaluation_splits) - set(splits))
+    if unknown_splits:
+        raise ValueError(f"Unknown evaluation splits: {unknown_splits}")
     evaluation = {
-        split: _evaluate(source_root, ids, axes, counts, config)
-        for split, ids in splits.items()
+        split: _evaluate(source_root, splits[split], axes, counts, config)
+        for split in evaluation_splits
     }
     summary = {
         "schema_version": 1,
@@ -228,6 +232,10 @@ def fit_lane_change_baseline(
         "dataset": "highD-v1.0",
         "target_domain": "highway_20_to_40_mps",
         "probability_semantics": "p_highD(left, stay, right | speed, gap, range_rate)",
+        "label_semantics": (
+            f"discrete action {float(config['decision_lead_s'])} seconds before "
+            "the observed lane-boundary crossing"
+        ),
         "manifest_path": str(manifest_path),
         "model_path": str(model_path),
         "recordings_by_split": splits,
@@ -235,6 +243,7 @@ def fit_lane_change_baseline(
         "target_frequency_hz": int(config["target_frequency_hz"]),
         "decision_lead_s": float(config["decision_lead_s"]),
         "laplace_alpha": float(config["laplace_alpha"]),
+        "evaluation_splits": evaluation_splits,
         "occupied_states": int(np.count_nonzero(counts.sum(axis=-1))),
         "possible_states": int(np.prod(counts.shape[:-1])),
         "evaluation": evaluation,
