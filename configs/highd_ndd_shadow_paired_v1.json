@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "purpose": "Paired read-only strict-D2RL versus free-flow highD NDD shadow audit",
+  "source_bridge": {
+    "name": "shrp2_multibv_sumo_templates_v4/bridge_summary.json",
+    "sha256": "aec0231649b2f4aef443f6982c3eda8df94b88af0676843cffde4d3efc5d50c5",
+    "template_count": 295
+  },
+  "simulation_seed": 7,
+  "proposal_mode": "naturalistic",
+  "repeats": 1,
+  "selection": {
+    "train": [
+      135947111,
+      10814071,
+      10814072,
+      29712181,
+      29714731,
+      29880073,
+      30880847,
+      30882467,
+      31297587,
+      31577996
+    ],
+    "validation": [
+      10639787,
+      29859063,
+      61432332,
+      135086117,
+      138077442,
+      138350559,
+      142005154,
+      142008161,
+      142401024,
+      143043193
+    ],
+    "test": []
+  },
+  "artifacts": {
+    "longitudinal_model_sha256": "eade34afcc299aff8e7a82d7e6a5baa8ad777fd3e2d3d76e8ca7d0e6d3e9883e",
+    "strict_context_model_sha256": "6db3c619cdfc415e966bde8d2587220141acfdd63346d2f7f3bbedfabcbcf876",
+    "free_flow_context_model_sha256": "11f2fe0a9d7b7355eccb9d3467a5c4749bbac68ea94eafa265d9ddf7813bbbde",
+    "strict_context_config_sha256": "fcfd17bfe563e5802ad060d0637fab674ad912a6fce0fc57518ada7397576651",
+    "free_flow_context_config_sha256": "239c0ec5be529bf1484684e83511c36b9292452897b67a6688537febcaa07645"
+  },
+  "acceptance": {
+    "maximum_shadow_fallback_rate": 0.05,
+    "maximum_paired_original_pdf_error": 1e-12,
+    "maximum_paired_weight_error": 1e-12
+  }
+}
