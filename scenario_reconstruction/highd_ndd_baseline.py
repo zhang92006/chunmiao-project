@@ -49,7 +49,9 @@ def _recording_rows(
     recording_id: str,
     *,
     chunk_size: int,
-    frame_stride: int,
+    frame_stride: int | None,
+    source_frequency_hz: int,
+    target_frequency_hz: int | None,
 ) -> Iterable[pd.DataFrame]:
     path = source_root / "data" / f"{recording_id}_tracks.csv"
     columns = [
@@ -61,7 +63,17 @@ def _recording_rows(
         "precedingId",
     ]
     for chunk in pd.read_csv(path, usecols=columns, chunksize=chunk_size):
-        if frame_stride > 1:
+        if target_frequency_hz is not None:
+            frames = chunk["frame"].to_numpy(dtype=np.int64)
+            # Select the last source frame before each target-rate boundary.
+            # For 25 -> 10 Hz this gives alternating 2/3-frame intervals while
+            # preserving a shared global clock for every vehicle.
+            selected = (
+                ((frames + 1) * target_frequency_hz) // source_frequency_hz
+                > (frames * target_frequency_hz) // source_frequency_hz
+            )
+            chunk = chunk.loc[selected]
+        elif frame_stride is not None and frame_stride > 1:
             chunk = chunk.loc[chunk["frame"] % frame_stride == 0]
         if not chunk.empty:
             yield chunk
@@ -146,7 +158,9 @@ def _evaluate(
     *,
     alpha: float,
     chunk_size: int,
-    frame_stride: int,
+    frame_stride: int | None,
+    source_frequency_hz: int,
+    target_frequency_hz: int | None,
     reference_probabilities: dict[str, np.ndarray] | None = None,
     reference_probability_floor: float = 1e-12,
 ) -> dict[str, Any]:
@@ -162,9 +176,16 @@ def _evaluate(
     log_likelihood = 0.0
     seen_log_likelihood = 0.0
     reference_log_likelihood = 0.0
+    brier_sum = 0.0
+    reference_brier_sum = 0.0
     for recording_id in recording_ids:
         for chunk in _recording_rows(
-            source_root, recording_id, chunk_size=chunk_size, frame_stride=frame_stride
+            source_root,
+            recording_id,
+            chunk_size=chunk_size,
+            frame_stride=frame_stride,
+            source_frequency_hz=source_frequency_hz,
+            target_frequency_hz=target_frequency_hz,
         ):
             obs = _observations(chunk, axes)
             metrics["sampled_rows"] += len(chunk)
@@ -182,7 +203,10 @@ def _evaluate(
                 action_indices = indices[-1]
                 state_counts = mode_totals[mode][state_indices]
                 seen = state_counts > 0
-                selected_probabilities = probabilities[mode][indices]
+                distribution = probabilities[mode][state_indices]
+                selected_probabilities = distribution[
+                    np.arange(len(action_indices)), action_indices
+                ]
                 n = int(mask.sum())
                 metrics[f"{mode}_rows"] += n
                 metrics[f"{mode}_seen_state_rows"] += int(seen.sum())
@@ -190,13 +214,36 @@ def _evaluate(
                 seen_log_likelihood += float(np.log(selected_probabilities[seen]).sum())
                 metrics["evaluated_rows"] += n
                 metrics["seen_state_rows"] += int(seen.sum())
+                metrics["top1_correct_rows"] += int(
+                    (np.argmax(distribution, axis=-1) == action_indices).sum()
+                )
+                brier_sum += float(
+                    (
+                        np.square(distribution).sum(axis=-1)
+                        - 2.0 * selected_probabilities
+                        + 1.0
+                    ).sum()
+                )
                 if reference_probabilities is not None:
-                    reference = reference_probabilities[mode][indices]
+                    reference_distribution = reference_probabilities[mode][state_indices]
+                    reference = reference_distribution[
+                        np.arange(len(action_indices)), action_indices
+                    ]
                     metrics["reference_zero_probability_rows"] += int(
                         (reference <= 0.0).sum()
                     )
                     reference_log_likelihood += float(
                         np.log(np.maximum(reference, reference_probability_floor)).sum()
+                    )
+                    metrics["reference_top1_correct_rows"] += int(
+                        (np.argmax(reference_distribution, axis=-1) == action_indices).sum()
+                    )
+                    reference_brier_sum += float(
+                        (
+                            np.square(reference_distribution).sum(axis=-1)
+                            - 2.0 * reference
+                            + 1.0
+                        ).sum()
                     )
     evaluated = metrics["evaluated_rows"]
     seen = metrics["seen_state_rows"]
@@ -205,6 +252,8 @@ def _evaluate(
         "state_coverage": seen / evaluated if evaluated else None,
         "mean_negative_log_likelihood": -log_likelihood / evaluated if evaluated else None,
         "seen_state_mean_negative_log_likelihood": -seen_log_likelihood / seen if seen else None,
+        "mean_brier_score": brier_sum / evaluated if evaluated else None,
+        "top1_action_accuracy": metrics["top1_correct_rows"] / evaluated if evaluated else None,
     }
     if reference_probabilities is not None:
         zero = metrics["reference_zero_probability_rows"]
@@ -214,6 +263,13 @@ def _evaluate(
             ),
             "reference_ndd_zero_probability_rate": zero / evaluated if evaluated else None,
             "reference_probability_floor": reference_probability_floor,
+            "reference_ndd_mean_brier_score": (
+                reference_brier_sum / evaluated if evaluated else None
+            ),
+            "reference_ndd_top1_action_accuracy": (
+                metrics["reference_top1_correct_rows"] / evaluated
+                if evaluated else None
+            ),
         })
     return result
 
@@ -234,7 +290,14 @@ def fit_highd_baseline(
     axes = {name: _axis(grid[name]) for name in DEFAULT_GRID}
     alpha = float(config.get("laplace_alpha", 0.5))
     chunk_size = int(config.get("chunk_size", 250_000))
-    frame_stride = int(config.get("frame_stride", 5))
+    frame_stride = (
+        int(config["frame_stride"]) if config.get("frame_stride") is not None else None
+    )
+    source_frequency_hz = int(config.get("source_frequency_hz", 25))
+    target_frequency_hz = (
+        int(config["target_frequency_hz"])
+        if config.get("target_frequency_hz") is not None else None
+    )
     train_split = str(config.get("train_split", "train"))
     train_ids = split_recordings[train_split]
 
@@ -254,7 +317,12 @@ def fit_highd_baseline(
     train_rows = 0
     for recording_id in train_ids:
         for chunk in _recording_rows(
-            source_root, recording_id, chunk_size=chunk_size, frame_stride=frame_stride
+            source_root,
+            recording_id,
+            chunk_size=chunk_size,
+            frame_stride=frame_stride,
+            source_frequency_hz=source_frequency_hz,
+            target_frequency_hz=target_frequency_hz,
         ):
             train_rows += len(chunk)
             _add_counts(cf_counts, ff_counts, _observations(chunk, axes), axes)
@@ -278,6 +346,8 @@ def fit_highd_baseline(
             alpha=alpha,
             chunk_size=chunk_size,
             frame_stride=frame_stride,
+            source_frequency_hz=source_frequency_hz,
+            target_frequency_hz=target_frequency_hz,
             reference_probabilities=reference_probabilities,
             reference_probability_floor=float(
                 config.get("reference_probability_floor", 1e-12)
@@ -297,6 +367,8 @@ def fit_highd_baseline(
         "recordings_by_split": split_recordings,
         "training_sampled_rows": train_rows,
         "frame_stride": frame_stride,
+        "source_frequency_hz": source_frequency_hz,
+        "target_frequency_hz": target_frequency_hz,
         "laplace_alpha": alpha,
         "reference_ndd_compared": reference_probabilities is not None,
         "grid": grid,

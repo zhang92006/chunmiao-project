@@ -1,15 +1,12 @@
 {
   "train_split": "train",
-  "frame_stride": null,
   "source_frequency_hz": 25,
   "target_frequency_hz": 10,
-  "chunk_size": 250000,
+  "decision_lead_s": 1.0,
   "laplace_alpha": 0.5,
-  "reference_probability_floor": 1e-12,
   "grid": {
     "speed": [20.0, 40.0, 1.0],
     "gap": [0.0, 115.0, 1.0],
-    "range_rate": [-10.0, 8.0, 1.0],
-    "acceleration": [-4.0, 2.0, 0.2]
+    "range_rate": [-10.0, 8.0, 1.0]
   }
 }
