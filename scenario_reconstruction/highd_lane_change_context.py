@@ -183,13 +183,17 @@ def _recording_arrays(
     speed_index = _bin(ego_speed, config["speed_boundaries_mps"])
     gap_index = _bin(current_gap, config["current_gap_boundaries_m"])
     rr_index = _bin(current_rr, config["relative_speed_boundaries_mps"])
+    base_components = (speed_index, gap_index, rr_index)
     base_shape = (
         len(config["speed_boundaries_mps"]) + 1,
         len(config["current_gap_boundaries_m"]) + 1,
         len(config["relative_speed_boundaries_mps"]) + 1,
     )
+    if config.get("include_current_leader_presence", False):
+        base_components += (has_leader[eligible].astype(np.int8),)
+        base_shape += (2,)
     base_index = np.ravel_multi_index(
-        (speed_index, gap_index, rr_index), base_shape
+        base_components, base_shape
     )
 
     side_data = {}
@@ -225,7 +229,7 @@ def _recording_arrays(
             config["relative_speed_boundaries_mps"],
         )
         context_index = np.ravel_multi_index(
-            (speed_index, gap_index, rr_index) + context, context_shape
+            base_components + context, context_shape
         )
         side_data[side] = {
             "available": available,
@@ -235,6 +239,7 @@ def _recording_arrays(
         }
     return {
         "actions": actions,
+        "has_current_leader": has_leader[eligible],
         "base_shape": base_shape,
         "context_shape": context_shape,
         "sides": side_data,
@@ -340,9 +345,57 @@ def _score_recordings(
         f"base_{base:g}_context_{context:g}": Counter()
         for base, context in candidates
     }
+    subgroup_accumulators = {
+        name: {"present": Counter(), "absent": Counter()}
+        for name in accumulators
+    }
+
+    def accumulate(
+        accumulator: Counter,
+        actions: np.ndarray,
+        left: np.ndarray,
+        right: np.ndarray,
+        mask: np.ndarray,
+    ) -> None:
+        masked_actions = actions[mask]
+        masked_left = left[mask]
+        masked_right = right[mask]
+        stay = 1.0 - masked_left - masked_right
+        selected = np.choose(masked_actions, [masked_left, stay, masked_right])
+        selected = np.maximum(selected, np.finfo(float).tiny)
+        accumulator["decision_count"] += len(masked_actions)
+        accumulator["observed_lane_changes"] += int((masked_actions != 1).sum())
+        accumulator["predicted_lane_changes"] += float(
+            (masked_left + masked_right).sum()
+        )
+        accumulator["negative_log_likelihood_sum"] += float(
+            -np.log(selected).sum()
+        )
+        distributions_square = masked_left**2 + stay**2 + masked_right**2
+        accumulator["brier_sum"] += float(
+            (distributions_square - 2 * selected + 1).sum()
+        )
+
+    def finalise(values: Counter) -> dict[str, Any]:
+        n = values["decision_count"]
+        observed = values["observed_lane_changes"]
+        return {
+            "decision_count": int(n),
+            "observed_lane_changes": int(observed),
+            "predicted_lane_changes": values["predicted_lane_changes"],
+            "predicted_to_observed_ratio": (
+                values["predicted_lane_changes"] / observed if observed else None
+            ),
+            "mean_nll": (
+                values["negative_log_likelihood_sum"] / n if n else None
+            ),
+            "mean_brier": values["brier_sum"] / n if n else None,
+        }
+
     for recording_id in recording_ids:
         data = _recording_arrays(source_root, recording_id, config)
         actions = data["actions"]
+        has_leader = data["has_current_leader"]
         for base, context in candidates:
             name = f"base_{base:g}_context_{context:g}"
             left, right = _candidate_probabilities(
@@ -353,31 +406,28 @@ def _score_recordings(
                 float(config["maximum_total_lane_change_probability"]),
                 probability_scale,
             )
-            stay = 1.0 - left - right
-            selected = np.choose(actions, [left, stay, right])
-            selected = np.maximum(selected, np.finfo(float).tiny)
             accumulator = accumulators[name]
-            accumulator["decision_count"] += len(actions)
-            accumulator["observed_lane_changes"] += int((actions != 1).sum())
-            accumulator["predicted_lane_changes"] += float((left + right).sum())
-            accumulator["negative_log_likelihood_sum"] += float(-np.log(selected).sum())
-            distributions_square = left * left + stay * stay + right * right
-            accumulator["brier_sum"] += float(
-                (distributions_square - 2 * selected + 1).sum()
+            accumulate(
+                accumulator,
+                actions,
+                left,
+                right,
+                np.ones(len(actions), dtype=bool),
+            )
+            accumulate(
+                subgroup_accumulators[name]["present"],
+                actions, left, right, has_leader,
+            )
+            accumulate(
+                subgroup_accumulators[name]["absent"],
+                actions, left, right, ~has_leader,
             )
     result = {}
     for name, values in accumulators.items():
-        n = values["decision_count"]
-        observed = values["observed_lane_changes"]
-        result[name] = {
-            "decision_count": int(n),
-            "observed_lane_changes": int(observed),
-            "predicted_lane_changes": values["predicted_lane_changes"],
-            "predicted_to_observed_ratio": (
-                values["predicted_lane_changes"] / observed if observed else None
-            ),
-            "mean_nll": values["negative_log_likelihood_sum"] / n,
-            "mean_brier": values["brier_sum"] / n,
+        result[name] = finalise(values)
+        result[name]["by_current_leader_presence"] = {
+            group: finalise(group_values)
+            for group, group_values in subgroup_accumulators[name].items()
         }
     return result
 
@@ -434,8 +484,12 @@ def fit_context_model(
         for recording_id in splits["validation"]
     }
     summary = {
-        "schema_version": 1,
-        "status": "offline_adjacent_lane_context_ablation_not_runtime_enabled",
+        "schema_version": 2,
+        "status": (
+            "offline_adjacent_lane_context_strict_d2rl_not_runtime_enabled"
+            if config.get("require_current_leader_for_lateral", False)
+            else "offline_free_flow_lane_change_extension_not_runtime_enabled"
+        ),
         "probability_semantics": (
             "Each side is estimated conditionally on ego/current leader and target-lane "
             "front/rear/alongside context, then combined into left/stay/right."
@@ -455,10 +509,23 @@ def fit_context_model(
         "runtime_enabled": False,
         "limitations": [
             (
-                "The primary model preserves the original D2RL rule that lateral "
+                "This configuration preserves the original D2RL rule that lateral "
                 "lane-change decisions require a current-lane leader."
+                if config.get("require_current_leader_for_lateral", False)
+                else (
+                    "This is an explicit extension beyond the original D2RL lateral "
+                    "support: observed free-flow lane changes are included."
+                )
             ),
-            "Observed highD free-flow lane changes are excluded and must be reported as unsupported coverage.",
+            (
+                "Observed highD free-flow lane changes are excluded and must be "
+                "reported as unsupported coverage."
+                if config.get("require_current_leader_for_lateral", False)
+                else (
+                    "Free-flow and car-following opportunities are separated by an "
+                    "explicit current-leader-presence state when configured."
+                )
+            ),
             "The side-invariant model pools left and right opportunities to reduce sparsity.",
             "Neighbor relations use highD tracker IDs and are not driver-intention labels.",
             "Target gaps and relative speeds are coarsely binned with hierarchical backoff.",

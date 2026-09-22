@@ -113,6 +113,9 @@ class HighDShadowNDD:
             len(config["current_gap_boundaries_m"]) + 1,
             len(config["relative_speed_boundaries_mps"]) + 1,
         )
+        if config.get("include_current_leader_presence", False):
+            base_tuple += (int(leader is not None),)
+            base_shape += (2,)
         context_values = []
         neighbors = []
         for relation in ("Lead", "Foll"):

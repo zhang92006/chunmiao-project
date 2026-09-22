@@ -9,7 +9,7 @@ from scenario_reconstruction.highd_ndd_shadow import HighDShadowNDD
 
 
 class HighDShadowNDDTests(unittest.TestCase):
-    def _model(self, root: Path):
+    def _model(self, root: Path, include_free_flow_lane_changes: bool = False):
         longitudinal = root / "long.npz"
         np.savez_compressed(
             longitudinal,
@@ -25,7 +25,8 @@ class HighDShadowNDDTests(unittest.TestCase):
         config = {
             "speed_range_mps": [20, 40], "relative_speed_range_mps": [-10, 8],
             "maximum_gap_m": 115, "speed_boundaries_mps": [25, 30, 35],
-            "require_current_leader_for_lateral": True,
+            "require_current_leader_for_lateral": not include_free_flow_lane_changes,
+            "include_current_leader_presence": include_free_flow_lane_changes,
             "current_gap_boundaries_m": [15, 30, 60],
             "target_gap_boundaries_m": [15, 30, 60],
             "relative_speed_boundaries_mps": [-2, 2],
@@ -33,12 +34,14 @@ class HighDShadowNDDTests(unittest.TestCase):
         }
         config_path = root / "context.json"
         config_path.write_text(json.dumps(config), encoding="utf-8")
-        context_shape_size = 4 * 4 * 3 * 5 * 4 * 5 * 4 * 2
+        leader_presence_size = 2 if include_free_flow_lane_changes else 1
+        base_shape_size = 4 * 4 * 3 * leader_presence_size
+        context_shape_size = base_shape_size * 5 * 4 * 5 * 4 * 2
         context = root / "context.npz"
         np.savez_compressed(
             context,
-            base_total=np.ones(4 * 4 * 3),
-            base_positive=np.zeros(4 * 4 * 3),
+            base_total=np.ones(base_shape_size),
+            base_positive=np.zeros(base_shape_size),
             context_total=np.ones(context_shape_size),
             context_positive=np.zeros(context_shape_size),
             selected_base_concentration=100,
@@ -90,6 +93,27 @@ class HighDShadowNDDTests(unittest.TestCase):
                 result["lateral_source"], "original_structure_no_current_leader"
             )
             np.testing.assert_array_equal(original, before)
+
+    def test_free_flow_extension_assigns_lane_change_probability_without_leader(self):
+        with TemporaryDirectory() as temporary:
+            model = self._model(
+                Path(temporary), include_free_flow_lane_changes=True
+            )
+            obs = {
+                "Ego": {
+                    "veh_id": "BV", "velocity": 20.5,
+                    "could_drive_adjacent_lane_left": True,
+                    "could_drive_adjacent_lane_right": False,
+                },
+                "Lead": None, "LeftLead": None, "LeftFoll": None,
+                "RightLead": None, "RightFoll": None,
+            }
+
+            result = model.compare(obs, np.full(33, 1 / 33))
+
+            self.assertFalse(result["fallback"])
+            self.assertEqual(result["lateral_source"], "highd_adjacent_context")
+            self.assertGreater(result["highd_lane_change_probability"], 0.0)
 
 
 if __name__ == "__main__":

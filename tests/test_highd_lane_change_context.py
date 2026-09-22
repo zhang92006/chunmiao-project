@@ -72,6 +72,24 @@ class HighDLaneChangeContextTests(unittest.TestCase):
 
         self.assertEqual([int(values[0]) for values in features], [1, 2, 1, 2, 0])
 
+    def test_leader_presence_can_separate_free_flow_from_large_gap(self):
+        speed = _bin(np.array([30.0, 30.0]), [25.0, 30.0, 35.0])
+        gap = _bin(np.array([115.0, 115.0]), [15.0, 30.0, 60.0])
+        rate = _bin(np.array([0.0, 0.0]), [-2.0, 2.0])
+        leader = np.array([0, 1], dtype=np.int8)
+        indices = np.ravel_multi_index(
+            (speed, gap, rate, leader), (4, 4, 3, 2)
+        )
+
+        self.assertNotEqual(int(indices[0]), int(indices[1]))
+
+        context = tuple(np.zeros(2, dtype=np.int8) for _ in range(5))
+        context_indices = np.ravel_multi_index(
+            (speed, gap, rate, leader) + context,
+            (4, 4, 3, 2, 5, 4, 5, 4, 2),
+        )
+        self.assertNotEqual(int(context_indices[0]), int(context_indices[1]))
+
 
 if __name__ == "__main__":
     unittest.main()
