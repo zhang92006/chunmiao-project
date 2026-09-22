@@ -4,6 +4,7 @@
   "source_frequency_hz": 25,
   "target_frequency_hz": 10,
   "decision_lead_s": 0.5,
+  "execution_tail_s": 0.5,
   "laplace_alpha": 0.5,
   "grid": {
     "speed": [20.0, 40.0, 1.0],

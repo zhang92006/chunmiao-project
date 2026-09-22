@@ -39,17 +39,29 @@ def _decision_rows(
     source_hz: int,
     target_hz: int,
     decision_lead_s: float,
+    execution_tail_s: float = 0.0,
 ) -> pd.DataFrame:
-    columns = [
+    required_columns = [
         "frame", "id", "xVelocity", "dhw", "precedingXVelocity",
         "precedingId", "laneId",
     ]
+    optional_columns = [
+        "x", "width", "leftPrecedingId", "leftAlongsideId",
+        "leftFollowingId", "rightPrecedingId", "rightAlongsideId",
+        "rightFollowingId",
+    ]
+    source_path = source_root / "data" / f"{recording_id}_tracks.csv"
+    available = set(pd.read_csv(source_path, nrows=0).columns)
+    columns = required_columns + [
+        name for name in optional_columns if name in available
+    ]
     tracks = pd.read_csv(
-        source_root / "data" / f"{recording_id}_tracks.csv", usecols=columns
+        source_path, usecols=columns
     )
     directions = _direction_map(source_root, recording_id)
     selected_groups: list[pd.DataFrame] = []
     lead_frames = int(round(decision_lead_s * source_hz))
+    tail_frames = int(round(execution_tail_s * source_hz))
     for vehicle_id, group in tracks.groupby("id", sort=False):
         group = group.sort_values("frame").copy()
         frames = group["frame"].to_numpy(dtype=np.int64)
@@ -71,7 +83,11 @@ def _decision_rows(
             keep[decision] = True
             # Once a lane-change decision has been made, intermediate frames
             # are execution states rather than fresh keep-lane decisions.
-            keep[decision + 1:transition + 1] = False
+            execution_end_frame = frames[transition] + tail_frames
+            execution_end = int(
+                np.searchsorted(frames, execution_end_frame, side="right") - 1
+            )
+            keep[decision + 1 : execution_end + 1] = False
         group = group.loc[keep].copy()
         group["action_index"] = actions[keep]
         selected_groups.append(group)
@@ -138,6 +154,7 @@ def _evaluate(
             source_hz=int(config["source_frequency_hz"]),
             target_hz=int(config["target_frequency_hz"]),
             decision_lead_s=float(config["decision_lead_s"]),
+            execution_tail_s=float(config.get("execution_tail_s", 0.0)),
         )
         indices, actions, eligible = _state_action(rows, axes)
         distribution = probabilities[indices]
@@ -206,6 +223,7 @@ def fit_lane_change_baseline(
             source_hz=int(config["source_frequency_hz"]),
             target_hz=int(config["target_frequency_hz"]),
             decision_lead_s=float(config["decision_lead_s"]),
+            execution_tail_s=float(config.get("execution_tail_s", 0.0)),
         )
         indices, actions, _ = _state_action(rows, axes)
         np.add.at(counts, indices + (actions,), 1)
@@ -242,6 +260,7 @@ def fit_lane_change_baseline(
         "source_frequency_hz": int(config["source_frequency_hz"]),
         "target_frequency_hz": int(config["target_frequency_hz"]),
         "decision_lead_s": float(config["decision_lead_s"]),
+        "execution_tail_s": float(config.get("execution_tail_s", 0.0)),
         "laplace_alpha": float(config["laplace_alpha"]),
         "evaluation_splits": evaluation_splits,
         "occupied_states": int(np.count_nonzero(counts.sum(axis=-1))),

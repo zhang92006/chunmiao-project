@@ -2,5 +2,6 @@
   "source_frequency_hz": 25,
   "target_frequency_hz": 10,
   "decision_lead_s": 0.5,
+  "execution_tail_s": 0.5,
   "prior_concentrations": [1, 10, 100, 1000]
 }

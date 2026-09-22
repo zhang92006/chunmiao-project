@@ -76,6 +76,8 @@ def calibrate(source_root, manifest, model, config, output):
     for key in ("decision_lead_s", "source_frequency_hz", "target_frequency_hz"):
         if provenance[key] != config[key]:
             raise ValueError("Model label configuration disagrees: " + key)
+    if provenance.get("execution_tail_s", 0.0) != config.get("execution_tail_s", 0.0):
+        raise ValueError("Model label configuration disagrees: execution_tail_s")
     prior = empirical_prior(train_counts)
     candidates = {
         "legacy_uniform_alpha05": (train_counts + 0.5) / (train_counts.sum(axis=-1, keepdims=True) + 1.5),
@@ -93,7 +95,8 @@ def calibrate(source_root, manifest, model, config, output):
         for rid in splits[split]:
             rows = _decision_rows(source_root, rid,
                 source_hz=config["source_frequency_hz"], target_hz=config["target_frequency_hz"],
-                decision_lead_s=config["decision_lead_s"])
+                decision_lead_s=config["decision_lead_s"],
+                execution_tail_s=config.get("execution_tail_s", 0.0))
             states, actions, _ = _state_action(rows, axes)
             counts = np.zeros_like(train_counts)
             np.add.at(counts, states + (actions,), 1)
@@ -119,7 +122,10 @@ def calibrate(source_root, manifest, model, config, output):
                 f"Labels are placed {config['decision_lead_s']} seconds before the "
                 "observed lane-boundary crossing and are not observed driver intentions."
             ),
-            "Execution-state censoring remains outcome-dependent.",
+            (
+                f"Execution states through {config.get('execution_tail_s', 0.0)} seconds "
+                "after boundary crossing are event-conditioned and excluded from decision opportunities."
+            ),
             "Average 10 Hz source-frame selection is not exact 100 ms interpolation or an action-horizon alignment.",
             "No adjacent-lane state or lane feasibility mask is modeled yet.",
             "No runtime or closed-loop calibration claim is made.",

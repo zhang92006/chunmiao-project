@@ -42,6 +42,23 @@ class HighDLaneChangeBaselineTests(unittest.TestCase):
             self.assertEqual(int((rows["action_index"] == 0).sum()), 1)
             self.assertEqual(int((rows["action_index"] == 2).sum()), 0)
 
+    def test_excludes_execution_tail_after_boundary_crossing(self):
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self._write_recording(root, "01", direction=1)
+
+            without_tail = _decision_rows(
+                root, "01", source_hz=25, target_hz=10,
+                decision_lead_s=0.5, execution_tail_s=0.0,
+            )
+            with_tail = _decision_rows(
+                root, "01", source_hz=25, target_hz=10,
+                decision_lead_s=0.5, execution_tail_s=0.5,
+            )
+
+            self.assertGreater(len(without_tail), len(with_tail))
+            self.assertEqual(int((with_tail["action_index"] == 0).sum()), 1)
+
     def test_fits_and_evaluates_recording_split(self):
         with TemporaryDirectory() as temporary:
             root = Path(temporary)
