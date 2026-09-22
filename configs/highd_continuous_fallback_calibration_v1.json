@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "source_model_sha256": "fb46d7c72ecd6424558bd4a80065305553e408939d10937455f9dce5119c16d1",
+  "source_frequency_hz": 25,
+  "target_frequency_hz": 10,
+  "chunk_size": 250000,
+  "tail_ttc_s": 3.0,
+  "tau_candidates": [1.0, 3.0, 10.0, 30.0, 100.0, 300.0, 1000.0],
+  "selection": "Calibration only. First minimize zero-probability observations in both overall and TTC<3s groups. Then require all-observation Brier no worse than the hard-fallback baseline and minimize overall Brier. Positive-support NLL is diagnostic only because candidates with different support are not comparable on that conditional subset."
+}

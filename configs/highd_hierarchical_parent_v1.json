@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "status": "calibration_selected_pending_validation",
+  "longitudinal_model": "data_analysis/raw_data/highd_longitudinal_tail_calibration_v1/highd_longitudinal_gap_candidate.npz",
+  "longitudinal_model_sha256": "fb46d7c72ecd6424558bd4a80065305553e408939d10937455f9dce5119c16d1",
+  "empty_state_mode": "hierarchical_parent",
+  "original_gap_mode": "measured_gap",
+  "domain_policy": "Use the highD hierarchical parent distribution for empty fine cells inside the fitted speed, gap and range-rate domain; preserve original-NDD fallback outside that domain.",
+  "selection_split": "calibration",
+  "validation_status": "not_run",
+  "runtime_default_changed": false
+}

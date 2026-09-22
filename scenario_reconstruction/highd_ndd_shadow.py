@@ -25,7 +25,10 @@ class HighDShadowNDD:
         longitudinal_model: str | Path,
         context_model: str | Path,
         context_config: str | Path,
+        empty_state_mode: str = "original_fallback",
     ) -> None:
+        if empty_state_mode not in {"original_fallback", "hierarchical_parent"}:
+            raise ValueError("Unknown empty-state mode")
         longitudinal_model = Path(longitudinal_model)
         context_model = Path(context_model)
         context_config = Path(context_config)
@@ -47,6 +50,7 @@ class HighDShadowNDD:
             self.context_concentration = float(artifact["selected_context_concentration"])
             self.probability_scale = float(artifact["probability_scale"])
         self.config = json.loads(context_config.read_text(encoding="utf-8"))
+        self.empty_state_mode = empty_state_mode
         self.metadata = {
             "mode": "read_only_shadow",
             "runtime_actions_changed": False,
@@ -58,6 +62,7 @@ class HighDShadowNDD:
             "context_config": context_config.name,
             "context_config_sha256": _sha256(context_config),
             "safety_filter_applied_to_highd": False,
+            "empty_state_mode": empty_state_mode,
         }
 
     @staticmethod
@@ -78,7 +83,9 @@ class HighDShadowNDD:
         leader = obs.get("Lead")
         if leader is None:
             if self.ff_counts[speed_index].sum() == 0:
-                return None, "original_fallback_unseen_free_flow_state"
+                if self.empty_state_mode == "original_fallback":
+                    return None, "original_fallback_unseen_free_flow_state"
+                return self.ff_probability[speed_index], "highd_hierarchical_empty_free_flow"
             return self.ff_probability[speed_index], "highd_free_flow"
         gap = float(leader["distance"])
         range_rate = float(leader["velocity"]) - speed
@@ -91,7 +98,12 @@ class HighDShadowNDD:
         gap_index = int(_nearest_index(np.array([gap]), self.gap_axis)[0])
         rr_index = int(_nearest_index(np.array([range_rate]), self.range_rate_axis)[0])
         if self.cf_counts[gap_index, rr_index, speed_index].sum() == 0:
-            return None, "original_fallback_unseen_car_following_state"
+            if self.empty_state_mode == "original_fallback":
+                return None, "original_fallback_unseen_car_following_state"
+            return (
+                self.cf_probability[gap_index, rr_index, speed_index],
+                "highd_hierarchical_empty_car_following",
+            )
         return (
             self.cf_probability[gap_index, rr_index, speed_index],
             "highd_car_following",

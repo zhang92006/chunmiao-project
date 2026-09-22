@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "status": "calibration_selected_pending_validation",
+  "candidate": "highd_hierarchical_parent_all_states",
+  "calibration_observations": 1685958,
+  "tail_observations": 610,
+  "hard_fallback": {
+    "zero_probability_observations": 16461,
+    "brier": 0.7638284491038607,
+    "tail_zero_probability_observations": 294,
+    "tail_brier": 1.3668002954911098
+  },
+  "hierarchical_parent": {
+    "zero_probability_observations": 0,
+    "brier": 0.7549059306325441,
+    "tail_zero_probability_observations": 0,
+    "tail_brier": 0.9113848113311007
+  },
+  "calibration_smoke": {
+    "scenario_count": 3,
+    "decision_count": 663,
+    "hard_fallback_count": 9,
+    "hierarchical_parent_fallback_count": 0,
+    "probability_audit_failures": 0
+  },
+  "scope": "Calibration selection and calibration-scene smoke only. No validation/test result, collision-rate claim, D2RL efficiency claim, or two-BV joint-NDD claim."
+}

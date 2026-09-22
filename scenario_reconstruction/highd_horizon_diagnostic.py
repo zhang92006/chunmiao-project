@@ -76,7 +76,8 @@ def diagnose(manifest_path, source_root, output, indices, duration, model):
         run_output = output / f'episode_{index:04d}'
         summary = run_naturalistic(template_path, model, run_output,
                                   seed=original['metadata']['seed'],
-                                  guard_config=original['metadata'].get('lane_change_guard_config'))
+                                  guard_config=original['metadata'].get('lane_change_guard_config'),
+                                  original_gap_mode=original['metadata'].get('original_gap_mode', 'legacy_position'))
         extended = json.loads((run_output / 'naturalistic_episode.json').read_text())
         prefix = check_prefix(original, extended)
         core = set(original['metadata']['evaluation_actor_ids'])
@@ -115,11 +116,15 @@ def main():
     parser.add_argument('--output', required=True)
     parser.add_argument('--episodes', type=int, nargs='+', required=True)
     parser.add_argument('--duration', type=float, default=8.0)
+    parser.add_argument('--empty_state_mode',
+                        choices=('original_fallback', 'hierarchical_parent'),
+                        default='original_fallback')
     parser.add_argument('--longitudinal_model', required=True)
     parser.add_argument('--context_model', required=True)
     parser.add_argument('--context_config', required=True)
     args = parser.parse_args()
-    model = HighDShadowNDD(args.longitudinal_model, args.context_model, args.context_config)
+    model = HighDShadowNDD(args.longitudinal_model, args.context_model,
+                           args.context_config, args.empty_state_mode)
     diagnose(args.manifest, args.source_root, args.output, args.episodes, args.duration, model)
 
 

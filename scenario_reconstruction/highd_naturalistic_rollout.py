@@ -18,6 +18,7 @@ import numpy as np
 
 from .highd_ndd_shadow import HighDShadowNDD
 from .highd_lane_change_guard import blocked_sides, validate_config as validate_guard
+from .highd_original_ndd import GAP_MODES, original_ndd_pdf, original_longitudinal_error
 from .templates import load_template
 
 
@@ -168,13 +169,19 @@ def audit_episode(path, model=None):
         if maximum_model_error > 1e-12:
             summary["failures"].append("model probability reconstruction mismatch")
     summary["model_reconstruction_checked"] = model is not None
+    if episode["metadata"].get("original_gap_mode") == "measured_gap":
+        original_check = original_longitudinal_error(episode["decisions"])
+        summary.update(original_check)
+        if original_check["maximum_original_longitudinal_reconstruction_error"] > 1e-12:
+            summary["failures"].append("original longitudinal reconstruction mismatch")
     summary["maximum_model_reconstruction_error"] = maximum_model_error if model else None
     summary["failures"] = sorted(set(summary["failures"]))
     summary["probability_audit_passed"] = not summary["failures"]
     return summary
 
 
-def run_naturalistic(template_path, model, output, seed=7, guard_config=None):
+def run_naturalistic(template_path, model, output, seed=7, guard_config=None,
+                     original_gap_mode="legacy_position"):
     # Keep runtime dependencies out of offline audit/test imports.
     from controller.nddcontroller import NDDController
     from envs.nde import NDE
@@ -186,6 +193,8 @@ def run_naturalistic(template_path, model, output, seed=7, guard_config=None):
 
     template = load_template(template_path)
     validate_template_for_ndd(template)
+    if original_gap_mode not in GAP_MODES:
+        raise ValueError("Unknown original gap mode")
     if guard_config is not None:
         validate_guard(guard_config)
         if guard_config["duration_s"] != 1.0:
@@ -206,7 +215,7 @@ def run_naturalistic(template_path, model, output, seed=7, guard_config=None):
             if self.vehicle.controlled_duration != 0 or self.vehicle.controlled_flag:
                 return
             obs = copy.deepcopy(self.vehicle.observation.information)
-            _, _, original = NDDController.static_get_ndd_pdf(obs=obs)
+            _, _, original = original_ndd_pdf(obs, original_gap_mode)
             candidate = model.compare(obs, np.asarray(original))
             pdf = execution_pdf(candidate["highd_shadow_pdf"], obs, guard_config)
             action_id = int(rngs[self.vehicle.id].choice(33, p=pdf))
@@ -333,6 +342,8 @@ def run_naturalistic(template_path, model, output, seed=7, guard_config=None):
         "weight_semantics": "p=q for this hybrid NDE, unit command-trajectory weight",
         "weight_episode": 1.0, "log_importance_weight": 0.0,
         "not_for_d2rl_training": True,
+        "original_gap_mode": original_gap_mode,
+        "original_gap_scope": "Only original longitudinal IDM position-to-gap conversion; lateral policy and logged observations unchanged. Opt-in mode changes hybrid target NDE.",
         "horizon_diagnostic": template.bridge_metadata.get("horizon_diagnostic"),
         "template_id": template.template_id,
         "template_sha256": hashlib.sha256(Path(template_path).read_bytes()).hexdigest(),
@@ -371,6 +382,10 @@ def main():
     parser.add_argument("--context_config", required=True)
     parser.add_argument("--output", required=True)
     parser.add_argument("--lane_change_guard", help="Opt-in candidate geometry constraint; changes target NDE")
+    parser.add_argument("--original_gap_mode", choices=GAP_MODES, default="legacy_position")
+    parser.add_argument("--empty_state_mode",
+                        choices=("original_fallback", "hierarchical_parent"),
+                        default="original_fallback")
     args = parser.parse_args()
     guard_config = json.loads(Path(args.lane_change_guard).read_text(encoding="utf-8")) if args.lane_change_guard else None
     if guard_config is not None:
@@ -389,13 +404,15 @@ def main():
         validate_template_for_ndd(load_template(r["template_path"]))
     output = Path(args.output)
     output.mkdir(parents=True, exist_ok=False)
-    model = HighDShadowNDD(args.longitudinal_model, args.context_model, args.context_config)
+    model = HighDShadowNDD(args.longitudinal_model, args.context_model,
+                           args.context_config, args.empty_state_mode)
     results = []
     for repeat in range(args.repeats):
         for i, record in enumerate(records):
             index = len(results)
             result = run_naturalistic(record["template_path"], model,
-                output / f"episode_{index:04d}", args.seed + repeat * len(records) + i, guard_config)
+                output / f"episode_{index:04d}", args.seed + repeat * len(records) + i, guard_config,
+                original_gap_mode=args.original_gap_mode)
             results.append(result)
             print(json.dumps({"completed": len(results), "decisions": result["decision_count"],
                               "lane_crossings": result["observed_lane_crossings"],

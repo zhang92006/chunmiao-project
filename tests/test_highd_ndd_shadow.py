@@ -9,7 +9,8 @@ from scenario_reconstruction.highd_ndd_shadow import HighDShadowNDD
 
 
 class HighDShadowNDDTests(unittest.TestCase):
-    def _model(self, root: Path, include_free_flow_lane_changes: bool = False):
+    def _model(self, root: Path, include_free_flow_lane_changes: bool = False,
+               empty_state_mode: str = "original_fallback"):
         longitudinal = root / "long.npz"
         np.savez_compressed(
             longitudinal,
@@ -48,7 +49,25 @@ class HighDShadowNDDTests(unittest.TestCase):
             selected_context_concentration=1000,
             probability_scale=1.0,
         )
-        return HighDShadowNDD(longitudinal, context, config_path)
+        return HighDShadowNDD(longitudinal, context, config_path, empty_state_mode)
+
+    def test_hierarchical_parent_mode_covers_empty_car_following_cell(self):
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            model = self._model(root, empty_state_mode="hierarchical_parent")
+            model.cf_counts[1, 1, 1] = 0
+            obs = {
+                "Ego": {"veh_id": "BV", "velocity": 21.0,
+                        "could_drive_adjacent_lane_left": False,
+                        "could_drive_adjacent_lane_right": False},
+                "Lead": {"velocity": 21.0, "distance": 1.0},
+                "LeftLead": None, "LeftFoll": None,
+                "RightLead": None, "RightFoll": None,
+            }
+            result = model.compare(obs, np.full(33, 1 / 33))
+            self.assertFalse(result["fallback"])
+            self.assertEqual(result["longitudinal_source"],
+                             "highd_hierarchical_empty_car_following")
 
     def test_falls_back_outside_longitudinal_domain(self):
         with TemporaryDirectory() as temporary:
