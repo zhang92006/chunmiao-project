@@ -24,6 +24,7 @@ def run_template(
     online_intervention_budget: int | None = None,
     online_max_proposal_likelihood_ratio: float | None = None,
     online_likelihood_ratio_guard_actor_ids=None,
+    highd_shadow_model=None,
 ) -> float:
     online_intervention_budget = _validated_online_intervention_budget(
         online_policy, online_intervention_budget
@@ -64,6 +65,7 @@ def run_template(
     from .environment import ScenarioNADE
 
     env = ScenarioNADE(template_path, multibv_proposal_mode=proposal_mode)
+    env.highd_shadow_model = highd_shadow_model
     env.online_epsilon_policy = online_policy
     env.online_intervention_budget = online_intervention_budget
     env.online_max_proposal_likelihood_ratio = online_max_proposal_likelihood_ratio
@@ -80,6 +82,9 @@ def run_template(
         "online_intervention_budget": online_intervention_budget,
         "online_max_proposal_likelihood_ratio": online_max_proposal_likelihood_ratio,
         "online_likelihood_ratio_guard_actor_ids": online_likelihood_ratio_guard_actor_ids,
+        "highd_ndd_shadow": (
+            highd_shadow_model.metadata if highd_shadow_model is not None else None
+        ),
     })
     sim = Simulator(
         sumo_net_file_path="./maps/2LaneHighway/2LaneHighway.net.xml",
@@ -214,6 +219,12 @@ def main() -> None:
         help="SUMO GUI delay in milliseconds per simulation step.",
     )
     parser.add_argument(
+        "--simulation_seed",
+        type=int,
+        default=None,
+        help="Optional deterministic SUMO/Python seed; also preserves safe-run logs.",
+    )
+    parser.add_argument(
         "--proposal_mode",
         choices=("naturalistic", "factorized", "joint_pair"),
         default="joint_pair",
@@ -237,6 +248,9 @@ def main() -> None:
         default=None,
         help="Optional fixed epsilon for BV_context; requires --epsilon_primary.",
     )
+    parser.add_argument("--highd_shadow_longitudinal_model")
+    parser.add_argument("--highd_shadow_context_model")
+    parser.add_argument("--highd_shadow_context_config")
     args = parser.parse_args()
 
     if (args.epsilon_primary is None) != (args.epsilon_context is None):
@@ -247,6 +261,17 @@ def main() -> None:
             "BV_primary": args.epsilon_primary,
             "BV_context": args.epsilon_context,
         }
+    shadow_values = (
+        args.highd_shadow_longitudinal_model,
+        args.highd_shadow_context_model,
+        args.highd_shadow_context_config,
+    )
+    if any(shadow_values) and not all(shadow_values):
+        parser.error("all three --highd_shadow_* paths must be supplied together")
+    highd_shadow_model = None
+    if all(shadow_values):
+        from .highd_ndd_shadow import HighDShadowNDD
+        highd_shadow_model = HighDShadowNDD(*shadow_values)
 
     weight = run_template(
         args.template,
@@ -256,6 +281,8 @@ def main() -> None:
         gui_delay=args.gui_delay,
         epsilon=epsilon,
         proposal_mode=args.proposal_mode,
+        simulation_seed=args.simulation_seed,
+        highd_shadow_model=highd_shadow_model,
     )
     print(f"Scenario finished. weight_result={weight}")
 

@@ -6,6 +6,7 @@
   "speed_range_mps": [20.0, 40.0],
   "relative_speed_range_mps": [-10.0, 8.0],
   "maximum_gap_m": 115.0,
+  "require_current_leader_for_lateral": true,
   "speed_boundaries_mps": [25.0, 30.0, 35.0],
   "current_gap_boundaries_m": [15.0, 30.0, 60.0],
   "target_gap_boundaries_m": [15.0, 30.0, 60.0],

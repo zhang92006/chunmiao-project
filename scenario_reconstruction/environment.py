@@ -153,12 +153,42 @@ class ScenarioNADE(NADE):
 
     def _step(self):
         control_info_list = super()._step()
+        self._record_highd_ndd_shadow()
         self.apply_template_events()
         if self.cav_fault_model.enabled:
             self.info_extractor.episode_log.setdefault("cav_fault_step_info", {})[
                 f"{self.simulator.get_time():.6f}"
             ] = self.cav_fault_model.last_audit
         return control_info_list
+
+    def _record_highd_ndd_shadow(self):
+        model = getattr(self, "highd_shadow_model", None)
+        if model is None:
+            return
+        time_step = f"{self.simulator.get_time():.6f}"
+        records = {}
+        skipped = {}
+        for vehicle in self.vehicle_list:
+            if vehicle.type != "BV" or vehicle.controlled_duration > 1:
+                continue
+            if not hasattr(vehicle.controller, "get_NDD_possi"):
+                skipped[vehicle.id] = {
+                    "reason": "controller_without_ndd_pdf",
+                    "controller_type": type(vehicle.controller).__name__,
+                }
+                continue
+            records[vehicle.id] = model.compare(
+                vehicle.observation.information,
+                vehicle.controller.get_NDD_possi(),
+            )
+        if records:
+            self.info_extractor.episode_log.setdefault(
+                "highd_ndd_shadow_step_info", {}
+            )[time_step] = records
+        if skipped:
+            self.info_extractor.episode_log.setdefault(
+                "highd_ndd_shadow_skipped_step_info", {}
+            )[time_step] = skipped
 
     def _terminate_check(self):
         """Preserve safety exits and also honor the template duration."""

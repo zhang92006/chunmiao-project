@@ -31,7 +31,23 @@ def run_template_manifest(
     online_max_proposal_likelihood_ratio: float | None = None,
     online_likelihood_ratio_guard_actor_ids: list[str] | None = None,
     stratified_allocation_path: str | Path | None = None,
+    highd_shadow_longitudinal_model: str | Path | None = None,
+    highd_shadow_context_model: str | Path | None = None,
+    highd_shadow_context_config: str | Path | None = None,
 ) -> dict:
+    shadow_paths = (
+        highd_shadow_longitudinal_model,
+        highd_shadow_context_model,
+        highd_shadow_context_config,
+    )
+    if any(shadow_paths) and not all(shadow_paths):
+        raise ValueError("All three highD shadow paths must be supplied together")
+    highd_shadow_model = None
+    if all(shadow_paths):
+        if split not in {"train", "validation"}:
+            raise ValueError("highD shadow development runs require train or validation")
+        from .highd_ndd_shadow import HighDShadowNDD
+        highd_shadow_model = HighDShadowNDD(*shadow_paths)
     if online_intervention_budget is not None:
         if online_policy_path is None:
             raise ValueError("online_intervention_budget requires --online_policy")
@@ -191,7 +207,8 @@ def run_template_manifest(
         if (online_policy is not None or frozen_epsilon_source != "template"
                 or simulation_seed is not None or online_intervention_budget is not None
                 or online_max_proposal_likelihood_ratio is not None
-                or online_likelihood_ratio_guard_actor_ids is not None):
+                or online_likelihood_ratio_guard_actor_ids is not None
+                or highd_shadow_model is not None):
             runtime_options = {
                 "online_policy": online_policy,
                 "frozen_epsilon_source": frozen_epsilon_source,
@@ -203,6 +220,7 @@ def run_template_manifest(
                 "online_likelihood_ratio_guard_actor_ids": (
                     online_likelihood_ratio_guard_actor_ids
                 ),
+                "highd_shadow_model": highd_shadow_model,
             }
             if any((experiment_path / folder / f"{episode_id}.json").exists()
                    for folder in ("crash", "tested_and_safe", "rejected")):
@@ -497,6 +515,9 @@ def main() -> None:
             "uses per-template rollout counts and requires --repeats 1."
         ),
     )
+    parser.add_argument("--highd_shadow_longitudinal_model")
+    parser.add_argument("--highd_shadow_context_model")
+    parser.add_argument("--highd_shadow_context_config")
     args = parser.parse_args()
 
     if (args.epsilon_primary is None) != (args.epsilon_context is None):
@@ -533,6 +554,9 @@ def main() -> None:
             args.online_likelihood_ratio_guard_actor
         ),
         stratified_allocation_path=args.stratified_allocation,
+        highd_shadow_longitudinal_model=args.highd_shadow_longitudinal_model,
+        highd_shadow_context_model=args.highd_shadow_context_model,
+        highd_shadow_context_config=args.highd_shadow_context_config,
     )
     print("Manifest run finished.")
     print(f"attempted={summary['attempted']}")

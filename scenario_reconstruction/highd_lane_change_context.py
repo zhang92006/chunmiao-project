@@ -164,6 +164,14 @@ def _recording_arrays(
         & (current_rr >= config["relative_speed_range_mps"][0])
         & (current_rr <= config["relative_speed_range_mps"][1])
     )
+    actions_before_filter = rows["action_index"].to_numpy(np.int8)
+    original_d2rl_unsupported = eligible & ~has_leader
+    if config.get("require_current_leader_for_lateral", False):
+        eligible &= has_leader
+    excluded_by_original_structure = int(original_d2rl_unsupported.sum())
+    positive_excluded_by_original_structure = int(
+        ((actions_before_filter != 1) & original_d2rl_unsupported).sum()
+    )
     rows = rows.loc[eligible].reset_index(drop=True)
     directions = directions[eligible]
     travel_sign = travel_sign[eligible]
@@ -231,6 +239,10 @@ def _recording_arrays(
         "context_shape": context_shape,
         "sides": side_data,
         "sampled_rows": len(rows),
+        "excluded_by_original_no_leader_structure": excluded_by_original_structure,
+        "positive_excluded_by_original_no_leader_structure": (
+            positive_excluded_by_original_structure
+        ),
     }
 
 
@@ -249,6 +261,12 @@ def _fit_counts(
             context_total = np.zeros(np.prod(data["context_shape"]), dtype=np.uint64)
             context_positive = np.zeros_like(context_total)
         diagnostics["decision_rows"] += data["sampled_rows"]
+        diagnostics["excluded_by_original_no_leader_structure"] += data[
+            "excluded_by_original_no_leader_structure"
+        ]
+        diagnostics["positive_excluded_by_original_no_leader_structure"] += data[
+            "positive_excluded_by_original_no_leader_structure"
+        ]
         for side in ("left", "right"):
             values = data["sides"][side]
             mask = values["available"]
@@ -436,6 +454,11 @@ def fit_context_model(
         "test_evaluated": False,
         "runtime_enabled": False,
         "limitations": [
+            (
+                "The primary model preserves the original D2RL rule that lateral "
+                "lane-change decisions require a current-lane leader."
+            ),
+            "Observed highD free-flow lane changes are excluded and must be reported as unsupported coverage.",
             "The side-invariant model pools left and right opportunities to reduce sparsity.",
             "Neighbor relations use highD tracker IDs and are not driver-intention labels.",
             "Target gaps and relative speeds are coarsely binned with hierarchical backoff.",
