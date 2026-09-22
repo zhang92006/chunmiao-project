@@ -2,6 +2,8 @@ param(
     [Parameter(Mandatory=$true)][string]$SourceRoot,
     [Parameter(Mandatory=$true)][string]$Python,
     [string]$OutputRoot = 'data_analysis/raw_data/highd_native_validation_frozen_v1',
+    [string]$TemplateManifest,
+    [string]$LaneChangeGuard,
     [ValidateRange(1,100)][int]$Repeats = 5
 )
 $ErrorActionPreference = 'Stop'
@@ -23,10 +25,20 @@ if ((Get-FileHash -LiteralPath $lateralConfig -Algorithm SHA256).Hash -ne '239c0
 }
 $templates = Join-Path $OutputRoot 'templates'
 $rollouts = Join-Path $OutputRoot 'rollouts'
-& $Python -m scenario_reconstruction.highd_naturalistic_reference --source_root $SourceRoot --split_manifest 'data/processed/highd_stratified_v2/manifest.json' --config 'configs/highd_naturalistic_validation_v1.json' --output $templates
-if ($LASTEXITCODE -ne 0) { throw 'Native validation export failed' }
-$manifest = Join-Path $templates 'native_manifest.json'
-& $Python -m scenario_reconstruction.highd_naturalistic_rollout $manifest --split validation --limit 60 --repeats $Repeats --seed 7 --longitudinal_model $longModel --context_model $lateralModel --context_config $lateralConfig --output $rollouts
+if ($TemplateManifest) {
+    if (-not (Test-Path -LiteralPath $TemplateManifest -PathType Leaf)) { throw 'Template manifest is missing' }
+    $manifest = $TemplateManifest
+} else {
+    & $Python -m scenario_reconstruction.highd_naturalistic_reference --source_root $SourceRoot --split_manifest 'data/processed/highd_stratified_v2/manifest.json' --config 'configs/highd_naturalistic_validation_v1.json' --output $templates
+    if ($LASTEXITCODE -ne 0) { throw 'Native validation export failed' }
+    $manifest = Join-Path $templates 'native_manifest.json'
+}
+$guardArguments = @()
+if ($LaneChangeGuard) {
+    if (-not (Test-Path -LiteralPath $LaneChangeGuard -PathType Leaf)) { throw 'Guard config is missing' }
+    $guardArguments = @('--lane_change_guard', $LaneChangeGuard)
+}
+& $Python -m scenario_reconstruction.highd_naturalistic_rollout $manifest --split validation --limit 60 --repeats $Repeats --seed 7 --longitudinal_model $longModel --context_model $lateralModel --context_config $lateralConfig --output $rollouts @guardArguments
 if ($LASTEXITCODE -ne 0) { throw 'Native closed-loop validation failed' }
 & $Python -m scenario_reconstruction.highd_naturalistic_compare $manifest $rollouts --output (Join-Path $OutputRoot 'native_comparison.json')
 if ($LASTEXITCODE -ne 0) { throw 'Native distribution comparison failed' }

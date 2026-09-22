@@ -17,6 +17,7 @@ import platform
 import numpy as np
 
 from .highd_ndd_shadow import HighDShadowNDD
+from .highd_lane_change_guard import blocked_sides, validate_config as validate_guard
 from .templates import load_template
 
 
@@ -26,7 +27,7 @@ def actor_rng(seed, actor_id):
     return np.random.default_rng(np.random.SeedSequence([seed, identity]))
 
 
-def execution_pdf(candidate, obs):
+def execution_pdf(candidate, obs, guard_config=None):
     """Apply road legality and renormalise BEFORE drawing an action."""
     pdf = np.asarray(candidate, dtype=float).copy()
     if pdf.shape != (33,) or not np.isfinite(pdf).all() or np.any(pdf < 0):
@@ -34,6 +35,11 @@ def execution_pdf(candidate, obs):
     for index, side in enumerate(("left", "right")):
         if not obs["Ego"][f"could_drive_adjacent_lane_{side}"]:
             pdf[index] = 0.0
+    if guard_config is not None:
+        rejected = blocked_sides(obs, guard_config)
+        for index, side in enumerate(("left", "right")):
+            if side in rejected:
+                pdf[index] = 0.0
     if pdf.sum() <= 0:
         raise ValueError("No legal probability mass")
     return pdf / pdf.sum()
@@ -58,7 +64,7 @@ def validate_template_for_ndd(template):
             raise ValueError("Explicit vehicle lengths must be positive and cover exactly all actors")
 
 
-def _summary(records, snapshots):
+def _summary(records, snapshots, guard_config=None):
     failures = []
     probability_error = 0.0
     for row in records:
@@ -73,9 +79,13 @@ def _summary(records, snapshots):
         if row["p_action"] != row["q_action"]:
             failures.append("naturalistic p != q")
         obs = row["observation"]
-        reconstructed = execution_pdf(row["candidate_pdf"], obs)
+        reconstructed = execution_pdf(row["candidate_pdf"], obs, guard_config)
         if not np.allclose(pdf, reconstructed, atol=1e-12, rtol=0):
             failures.append("executed PDF disagrees with legality transform")
+        if guard_config is not None:
+            expected = blocked_sides(obs, guard_config)
+            if row.get("lane_change_guard") != expected:
+                failures.append("lane-change guard diagnostics mismatch")
         if row["action_id"] < 2:
             side = ("left", "right")[row["action_id"]]
             if not obs["Ego"][f"could_drive_adjacent_lane_{side}"]:
@@ -113,6 +123,11 @@ def _summary(records, snapshots):
         "sampled_lane_changes": sum(r["action_id"] < 2 for r in records),
         "sampled_no_leader_lane_changes": sum(
             r["action_id"] < 2 and r["observation"].get("Lead") is None for r in records),
+        "guard_enabled": guard_config is not None,
+        "guard_adjusted_decisions": sum(any(
+            side in r.get("lane_change_guard", {}) and r["candidate_pdf"][i] > 0
+            and r["observation"]["Ego"][f"could_drive_adjacent_lane_{side}"]
+            for i, side in enumerate(("left", "right"))) for r in records),
         "observed_lane_crossings": lane_crossings,
         "bv_observed_seconds": observed_seconds,
         "lane_crossings_per_vehicle_hour": lane_crossings * 3600 / observed_seconds
@@ -132,7 +147,8 @@ def audit_episode(path, model=None):
     episode = json.loads(Path(path).read_text(encoding="utf-8"))
     if episode["metadata"]["mode"] != "highd_naturalistic_closed_loop":
         raise ValueError("Not a highD naturalistic episode")
-    summary = _summary(episode["decisions"], episode["snapshots"])
+    summary = _summary(episode["decisions"], episode["snapshots"],
+                       episode["metadata"].get("lane_change_guard_config"))
     lengths = episode["metadata"].get("vehicle_lengths_m", {})
     for row in episode["snapshots"]:
         if row["vehicle_id"] in lengths and not np.isclose(
@@ -158,7 +174,7 @@ def audit_episode(path, model=None):
     return summary
 
 
-def run_naturalistic(template_path, model, output, seed=7):
+def run_naturalistic(template_path, model, output, seed=7, guard_config=None):
     # Keep runtime dependencies out of offline audit/test imports.
     from controller.nddcontroller import NDDController
     from envs.nde import NDE
@@ -170,6 +186,10 @@ def run_naturalistic(template_path, model, output, seed=7):
 
     template = load_template(template_path)
     validate_template_for_ndd(template)
+    if guard_config is not None:
+        validate_guard(guard_config)
+        if guard_config["duration_s"] != 1.0:
+            raise ValueError("Guard duration must match the current 1s lane-change command")
     output = Path(output)
     output.mkdir(parents=True, exist_ok=False)
     random.seed(seed)
@@ -188,7 +208,7 @@ def run_naturalistic(template_path, model, output, seed=7):
             obs = copy.deepcopy(self.vehicle.observation.information)
             _, _, original = NDDController.static_get_ndd_pdf(obs=obs)
             candidate = model.compare(obs, np.asarray(original))
-            pdf = execution_pdf(candidate["highd_shadow_pdf"], obs)
+            pdf = execution_pdf(candidate["highd_shadow_pdf"], obs, guard_config)
             action_id = int(rngs[self.vehicle.id].choice(33, p=pdf))
             self.action = utils.action_id_to_action_command(action_id)
             speed = float(obs["Ego"]["velocity"])
@@ -208,6 +228,7 @@ def run_naturalistic(template_path, model, output, seed=7):
                 "fallback": candidate["fallback"],
                 "longitudinal_source": candidate["longitudinal_source"],
                 "lateral_source": candidate["lateral_source"], "applied": False,
+                "lane_change_guard": blocked_sides(obs, guard_config) if guard_config else {},
             }
             self.vehicle.simulator.env.decisions.append(row)
             self.pending_record = row
@@ -300,15 +321,19 @@ def run_naturalistic(template_path, model, output, seed=7):
         sim.run(0)
     finally:
         sim.stop()
-    summary = _summary(env.decisions, env.snapshots)
+    summary = _summary(env.decisions, env.snapshots, guard_config)
     metadata = {
         **model.metadata, "mode": "highd_naturalistic_closed_loop",
         "runtime_actions_changed": True,
         "controlled_vehicles": "all template BVs; CAV remains IDM",
         "target_distribution": "highD with logged original-NDD fallback",
+        "lane_change_guard_config": guard_config,
+        "execution_transform": "road_legality_only" if guard_config is None else "road_legality_and_gap_envelope",
+        "target_distribution_note": "If guarded, p=q refers ONLY to the guarded hybrid NDE, not the unguarded model. Target support changes; no unbiasedness claim for the old NDE.",
         "weight_semantics": "p=q for this hybrid NDE, unit command-trajectory weight",
         "weight_episode": 1.0, "log_importance_weight": 0.0,
         "not_for_d2rl_training": True,
+        "horizon_diagnostic": template.bridge_metadata.get("horizon_diagnostic"),
         "template_id": template.template_id,
         "template_sha256": hashlib.sha256(Path(template_path).read_bytes()).hexdigest(),
         "source_split": template.bridge_metadata.get("source_split"),
@@ -345,7 +370,13 @@ def main():
     parser.add_argument("--context_model", required=True)
     parser.add_argument("--context_config", required=True)
     parser.add_argument("--output", required=True)
+    parser.add_argument("--lane_change_guard", help="Opt-in candidate geometry constraint; changes target NDE")
     args = parser.parse_args()
+    guard_config = json.loads(Path(args.lane_change_guard).read_text(encoding="utf-8")) if args.lane_change_guard else None
+    if guard_config is not None:
+        validate_guard(guard_config)
+        if guard_config["duration_s"] != 1.0:
+            parser.error("Guard duration must match the current 1s lane-change command")
     if args.limit < 1 or args.repeats < 1:
         parser.error("limit and repeats must be positive")
     manifest = json.loads(Path(args.manifest).read_text(encoding="utf-8"))
@@ -364,7 +395,7 @@ def main():
         for i, record in enumerate(records):
             index = len(results)
             result = run_naturalistic(record["template_path"], model,
-                output / f"episode_{index:04d}", args.seed + repeat * len(records) + i)
+                output / f"episode_{index:04d}", args.seed + repeat * len(records) + i, guard_config)
             results.append(result)
             print(json.dumps({"completed": len(results), "decisions": result["decision_count"],
                               "lane_crossings": result["observed_lane_crossings"],

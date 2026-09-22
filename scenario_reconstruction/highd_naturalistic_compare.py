@@ -67,6 +67,8 @@ def compare_native(manifest_path, rollout_root, output):
     sampled_support_count = 0
     for path in sorted(Path(rollout_root).glob("episode_*/naturalistic_episode.json")):
         episode = json.loads(path.read_text(encoding="utf-8"))
+        if episode["metadata"].get("horizon_diagnostic"):
+            raise ValueError("Horizon extrapolation is not measured-reference validation")
         audit = json.loads((path.parent / "naturalistic_audit.json").read_text(encoding="utf-8"))
         if not audit.get("probability_audit_passed") or not audit.get("model_reconstruction_checked"):
             raise ValueError("Episode lacks a successful model-probability audit")
