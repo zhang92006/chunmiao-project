@@ -1,0 +1,16 @@
+{
+  "schema_version": 2,
+  "source_frequency_hz": 25,
+  "target_frequency_hz": 10,
+  "acceleration_range": [-4.0, 2.0],
+  "action_thresholds": [-0.5, 0.5],
+  "marginal_alpha": 0.5,
+  "concentration_candidates": [1.0, 3.0, 10.0, 30.0, 100.0, 300.0, 1000.0, 3000.0, 10000.0, 30000.0, 100000.0, 300000.0, 1000000.0],
+  "minimum_calibration_recordings_improved": 6,
+  "state_grid": {
+    "speed": [20.0, 40.0, 5.0],
+    "gap": [0.0, 120.0, 20.0],
+    "range_rate": [-10.0, 10.0, 4.0]
+  },
+  "scope": "Train fits synchronized same-lane follower/leader dependence; calibration selects shrinkage. Validation and test must not be read before freezing."
+}
