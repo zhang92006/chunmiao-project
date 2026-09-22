@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "recordings": {"01": "train", "03": "calibration"},
+  "scenes_per_recording": 10,
+  "seed": 7,
+  "duration_s": 4.0,
+  "frame_stride": 25,
+  "neighbor_range_m": 100.0,
+  "speed_range_mps": [20.0, 40.0],
+  "minimum_bvs": 2,
+  "vehicle_length_m": 5.0,
+  "scope": "Two-lane local-window pilot; uniform shuffled frame/ego candidates with complete observed futures, not an unbiased traffic population sample."
+}

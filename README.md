@@ -66,6 +66,85 @@ Automatic Qwen template generation reads `DASHSCOPE_API_KEY` or `QWEN_API_KEY`
 from the environment. Never commit either value. The pipeline can be exercised
 without an API key using `--no_llm`.
 
+## SHRP2 collision seeds
+
+The SHRP2 importer creates deterministic, impact-conditioned kinematic
+collision seeds from the public bird's-eye trajectory reconstruction. Keep the
+multi-gigabyte source data outside Git and pass its extracted root explicitly:
+
+```bash
+python -m scenario_reconstruction.shrp2_collision --source_root path/to/SHRP2_Public --config configs/shrp2_collision_pilot.json --output data_analysis/raw_data/shrp2_collision_pilot
+```
+
+The generated trajectories are collision seeds, not exact crash replays or
+closed-loop SUMO results. See
+[`docs/SHRP2碰撞数据处理.md`](docs/SHRP2碰撞数据处理.md) for provenance,
+quality tiers, limitations, and the SUMO integration plan.
+
+The first SUMO bridge maps only high-confidence same-direction rear-end seeds;
+it does not claim closed-loop crash reproduction. See
+[`docs/SHRP2到SUMO映射分析.md`](docs/SHRP2到SUMO映射分析.md) for the executed
+mapping result, blocked road topologies, and calibration requirements.
+
+The rear-end calibration interface deliberately generates candidates before it
+runs SUMO; see
+[`docs/SHRP2追尾碰撞校准协议.md`](docs/SHRP2追尾碰撞校准协议.md) for the
+train-only search protocol and user-run batch command.
+
+Export a quality-gated pre-impact trajectory for use as a soft reconstruction
+reference (the complete trajectory remains under the ignored raw-data tree):
+
+```bash
+python -m scenario_reconstruction.shrp2_reference_trajectory \
+  --source_root path/to/SHRP2_Public \
+  --seed data_analysis/raw_data/shrp2_collision_pilot/scenarios/SEED.json \
+  --output data_analysis/raw_data/shrp2_reference/REFERENCE.json \
+  --summary_output results/shrp2_reference_summary.json
+```
+
+Audit all train-split leading candidates before SUMO fitting:
+
+```bash
+python -m scenario_reconstruction.shrp2_reference_audit \
+  --source_root path/to/SHRP2_Public \
+  --output results/shrp2_leading_reference_audit_train.json
+```
+
+Convert a selected reference to an initial-state seed and a 2Lane bridge
+template before running the documented calibration grid:
+
+```bash
+python -m scenario_reconstruction.shrp2_reference_to_seed \
+  --reference data_analysis/raw_data/shrp2_reference/event_116591908_reference.json \
+  --output data_analysis/raw_data/shrp2_reference/event_116591908_seed.json \
+  --bridge_config configs/shrp2_sumo_bridge_pilot.json \
+  --bridge_output data_analysis/raw_data/shrp2_reference/sumo_event_116591908.json
+```
+
+Inventory all public SHRP2 categories before conditional diffusion training.
+The default scans metadata only; trajectory scanning needs pandas and PyTables:
+
+```bash
+python -m scenario_reconstruction.shrp2_diffusion_data_audit \
+  --source_root path/to/SHRP2_Public \
+  --output data_analysis/raw_data/shrp2_diffusion_windows_v1 \
+  --scan_trajectories --export_windows
+```
+
+Exports are measured pair references with explicit position conventions and
+heading masks, not simulator control labels or full multi-agent scenes. See
+[`docs/SHRP2条件扩散数据准备.md`](docs/SHRP2条件扩散数据准备.md) for inventory,
+completed calibration fidelity, split rules, and the user-run long task.
+
 Detailed implementation and experiment notes are under
 `scenario_reconstruction/`.
+
+## highD naturalistic calibration
+
+The opt-in native-highD runner keeps the default D2RL probability tables unchanged.
+It samples the calibrated highD candidate with an explicit original-NDD fallback,
+logs executed action probabilities, and separates evaluated vehicles from support
+traffic. These diagnostic episodes are not D2RL training data. Calibration results,
+scope limitations and the frozen-validation workflow are documented in
+[the highD closed-loop calibration report](docs/highD自然驾驶闭环校准结果.md).
 

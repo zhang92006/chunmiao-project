@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "status": "pilot_lane_change_baseline_not_runtime_enabled",
+  "decision_lead_s": 1.0,
+  "source_frequency_hz": 25,
+  "target_frequency_hz": 10,
+  "occupied_states": 30637,
+  "possible_states": 46284,
+  "evaluation": {
+    "train": {
+      "eligible_rows": 1459560,
+      "lane_change_actions": 1253,
+      "state_coverage": 1.0,
+      "lane_change_rate_per_1000_decisions": 0.8584778974485462,
+      "lane_change_mean_negative_log_likelihood": 3.867796706848875,
+      "mean_probability_of_observed_lane_change": 0.09822577851730066
+    },
+    "validation": {
+      "eligible_rows": 729459,
+      "lane_change_actions": 573,
+      "state_coverage": 0.9897910643367208,
+      "lane_change_rate_per_1000_decisions": 0.7855136477855507,
+      "lane_change_mean_negative_log_likelihood": 4.445339422575466,
+      "mean_probability_of_observed_lane_change": 0.05322842864257919
+    },
+    "test": {
+      "eligible_rows": 304867,
+      "lane_change_actions": 386,
+      "state_coverage": 0.9784627394896791,
+      "lane_change_rate_per_1000_decisions": 1.2661258844020506,
+      "lane_change_mean_negative_log_likelihood": 5.30469730357432,
+      "mean_probability_of_observed_lane_change": 0.047803285826055496
+    }
+  },
+  "runtime_gate_passed": false,
+  "runtime_gate_reason": "Adjacent-lane vehicle state is absent and held-out lane-change likelihood remains weak."
+}

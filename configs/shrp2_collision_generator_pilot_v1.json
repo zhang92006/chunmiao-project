@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "purpose": "search_only_not_training_data",
+  "pilot_scene_count": 10,
+  "positive_control_count": 3,
+  "proposal_mode": "factorized",
+  "epsilon_primary_grid": [0.000001, 0.0001, 0.01],
+  "epsilon_context_grid": [0.000001, 0.0001, 0.01],
+  "pilot_repeats_per_template": 10,
+  "formal_resampling_rule": "freeze one proposal, change output directory, and draw fresh RNG episodes"
+}

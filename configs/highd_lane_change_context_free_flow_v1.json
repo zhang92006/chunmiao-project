@@ -1,0 +1,18 @@
+{
+  "source_frequency_hz": 25,
+  "target_frequency_hz": 10,
+  "decision_lead_s": 0.5,
+  "execution_tail_s": 0.5,
+  "speed_range_mps": [20.0, 40.0],
+  "relative_speed_range_mps": [-10.0, 8.0],
+  "maximum_gap_m": 115.0,
+  "require_current_leader_for_lateral": false,
+  "include_current_leader_presence": true,
+  "speed_boundaries_mps": [25.0, 30.0, 35.0],
+  "current_gap_boundaries_m": [15.0, 30.0, 60.0],
+  "target_gap_boundaries_m": [15.0, 30.0, 60.0],
+  "relative_speed_boundaries_mps": [-2.0, 2.0],
+  "base_concentrations": [100, 1000, 10000],
+  "context_concentrations": [10, 100, 1000],
+  "maximum_total_lane_change_probability": 0.5
+}

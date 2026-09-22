@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "mode": "constant_velocity_gap_envelope_v1",
+  "duration_s": 1.0,
+  "minimum_gap_m": 0.0,
+  "status": "diagnostic_candidate_not_accepted",
+  "scope": "Conservative positive longitudinal gap throughout current 1s constant-speed LC command. Does not model lateral overlap timing, future acceleration or human lane-change preparation."
+}

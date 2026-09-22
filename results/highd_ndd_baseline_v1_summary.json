@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "status": "pilot_longitudinal_baseline_not_runtime_enabled",
+  "dataset": "highD-v1.0",
+  "target_domain": "highway_20_to_40_mps",
+  "source_frequency_hz": 25,
+  "target_frequency_hz": 10,
+  "training_recording_count": 10,
+  "car_following_observations": 1085535,
+  "free_flow_observations": 562107,
+  "occupied_car_following_states": 31096,
+  "possible_car_following_states": 46284,
+  "occupied_free_flow_states": 21,
+  "possible_free_flow_states": 21,
+  "evaluation": {
+    "train": {
+      "recording_count": 10,
+      "evaluated_rows": 1647642,
+      "state_coverage": 1.0,
+      "mean_negative_log_likelihood": 1.5660598815764533,
+      "mean_brier_score": 0.7063288129371375,
+      "reference_ndd_mean_negative_log_likelihood": 3.62981848050469,
+      "reference_ndd_zero_probability_rate": 0.06850395899109152
+    },
+    "calibration": {
+      "recording_count": 10,
+      "evaluated_rows": 2410186,
+      "state_coverage": 0.9879216790737312,
+      "mean_negative_log_likelihood": 1.8927278761651056,
+      "mean_brier_score": 0.7641792733154853,
+      "reference_ndd_mean_negative_log_likelihood": 3.3258179162516472,
+      "reference_ndd_zero_probability_rate": 0.058128293832924095
+    },
+    "validation": {
+      "recording_count": 5,
+      "evaluated_rows": 818743,
+      "state_coverage": 0.9910570227775993,
+      "mean_negative_log_likelihood": 2.0278206761910864,
+      "mean_brier_score": 0.8230586695605241,
+      "reference_ndd_mean_negative_log_likelihood": 3.8372830086320766,
+      "reference_ndd_zero_probability_rate": 0.07541316383773662
+    },
+    "test": {
+      "recording_count": 3,
+      "evaluated_rows": 357290,
+      "state_coverage": 0.9811217778275351,
+      "mean_negative_log_likelihood": 2.1457394295493617,
+      "mean_brier_score": 0.8447382585311497,
+      "reference_ndd_mean_negative_log_likelihood": 4.068744227604461,
+      "reference_ndd_zero_probability_rate": 0.08420050939013127
+    }
+  },
+  "limitations": [
+    "Longitudinal acceleration only; lane-change probabilities are evaluated separately.",
+    "The model represents the highD highway domain, not SHRP2 event probability.",
+    "The model is not enabled in SUMO/NADE."
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "status": "joint_dependency_audit_not_runtime_enabled",
+  "pair_definition": "same-lane vehicle and its recorded preceding vehicle",
+  "conditional_mutual_information_nats": 0.02457458657725666,
+  "material_nll_penalty_threshold": 0.01,
+  "factorized_assumption_supported": false,
+  "evaluation": {
+    "train": {
+      "eligible_pair_actions": 1080445,
+      "joint_mean_negative_log_likelihood": 0.6552307327323887,
+      "factorized_mean_negative_log_likelihood": 0.6796384478084839,
+      "factorization_nll_penalty": 0.024407715076095113,
+      "recordings_with_positive_factorization_penalty": 10,
+      "recording_count": 10
+    },
+    "validation": {
+      "eligible_pair_actions": 562083,
+      "joint_mean_negative_log_likelihood": 0.6712067819085356,
+      "factorized_mean_negative_log_likelihood": 0.6896014635403663,
+      "factorization_nll_penalty": 0.018394681631830744,
+      "recordings_with_positive_factorization_penalty": 5,
+      "recording_count": 5
+    },
+    "test": {
+      "eligible_pair_actions": 211995,
+      "joint_mean_negative_log_likelihood": 0.6263121590021625,
+      "factorized_mean_negative_log_likelihood": 0.6311975074886736,
+      "factorization_nll_penalty": 0.004885348486511176,
+      "recordings_with_positive_factorization_penalty": 2,
+      "recording_count": 3
+    }
+  },
+  "runtime_gate_passed": false,
+  "runtime_gate_reason": "The validation factorization penalty exceeds the configured materiality threshold."
+}

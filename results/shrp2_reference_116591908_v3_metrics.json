@@ -1,0 +1,149 @@
+{
+  "status": "SHRP2 measured reference vs SUMO; common pre-contact window; not full-window replay fidelity",
+  "source_event_id": 116591908,
+  "source_split": "train",
+  "executed_count": 48,
+  "target_collision_count": 47,
+  "selected_count": 3,
+  "reference_contact_time_s": 3.6,
+  "common_window_s": [
+    0.0,
+    3.2
+  ],
+  "common_sample_count": 33,
+  "mapping": {
+    "SUMO_position": "front bumper center",
+    "SUMO_vehicle_length_assumption_m": 5.0,
+    "lane_y_m": 46.0,
+    "alignment": "source initial CAV centroid and heading to declared template initial CAV center; no per-actor shift or time warping",
+    "time": "use logged timestamps as stored; t=0 may already contain initialization motion"
+  },
+  "outcomes": [
+    {
+      "candidate_index": 28,
+      "gap_offset_m": 1.0,
+      "collision_time_s": 3.3,
+      "collision_time_error_s": -0.30000000000000027,
+      "last_logged_observation_time_s": 3.1999999999999997,
+      "common_window_metrics": {
+        "CAV": {
+          "ade_m": 0.4086470901283301,
+          "fde_m": 0.2721939449492483,
+          "position_rmse_m": 0.45420375363625454,
+          "speed_mae_mps": 0.25895792250907657,
+          "speed_rmse_mps": 0.3393257156579802,
+          "heading_mae_rad": 0.003166779600892457,
+          "max_position_error_m": 0.6365391093864141,
+          "samples": 33
+        },
+        "BV_front": {
+          "ade_m": 2.8884698729851515,
+          "fde_m": 3.2642878736054426,
+          "position_rmse_m": 2.899646073328241,
+          "speed_mae_mps": 0.40266891545280414,
+          "speed_rmse_mps": 0.42532893158641416,
+          "heading_mae_rad": 0.21973745425853733,
+          "max_position_error_m": 3.2642878736054426,
+          "samples": 33
+        },
+        "BV_center": {
+          "ade_m": 3.0100914226151216,
+          "fde_m": 3.4509218283606904,
+          "position_rmse_m": 3.019185190343479,
+          "speed_mae_mps": 0.40266891545280414,
+          "speed_rmse_mps": 0.42532893158641416,
+          "heading_mae_rad": 0.21973745425853733,
+          "max_position_error_m": 3.4509218283606904,
+          "samples": 33
+        }
+      },
+      "logged_t0_cav_front_displacement_from_template_m": 0.6053174187969148
+    },
+    {
+      "candidate_index": 29,
+      "gap_offset_m": 1.0,
+      "collision_time_s": 3.3,
+      "collision_time_error_s": -0.30000000000000027,
+      "last_logged_observation_time_s": 3.1999999999999997,
+      "common_window_metrics": {
+        "CAV": {
+          "ade_m": 0.4086470901283301,
+          "fde_m": 0.2721939449492483,
+          "position_rmse_m": 0.45420375363625454,
+          "speed_mae_mps": 0.25895792250907657,
+          "speed_rmse_mps": 0.3393257156579802,
+          "heading_mae_rad": 0.003166779600892457,
+          "max_position_error_m": 0.6365391093864141,
+          "samples": 33
+        },
+        "BV_front": {
+          "ade_m": 2.8884698729851515,
+          "fde_m": 3.2642878736054426,
+          "position_rmse_m": 2.899646073328241,
+          "speed_mae_mps": 0.40266891545280414,
+          "speed_rmse_mps": 0.42532893158641416,
+          "heading_mae_rad": 0.21973745425853733,
+          "max_position_error_m": 3.2642878736054426,
+          "samples": 33
+        },
+        "BV_center": {
+          "ade_m": 3.0100914226151216,
+          "fde_m": 3.4509218283606904,
+          "position_rmse_m": 3.019185190343479,
+          "speed_mae_mps": 0.40266891545280414,
+          "speed_rmse_mps": 0.42532893158641416,
+          "heading_mae_rad": 0.21973745425853733,
+          "max_position_error_m": 3.4509218283606904,
+          "samples": 33
+        }
+      },
+      "logged_t0_cav_front_displacement_from_template_m": 0.6053174187969148
+    },
+    {
+      "candidate_index": 41,
+      "gap_offset_m": 2.0,
+      "collision_time_s": 3.9,
+      "collision_time_error_s": 0.2999999999999998,
+      "last_logged_observation_time_s": 3.8,
+      "common_window_metrics": {
+        "CAV": {
+          "ade_m": 0.42623098307131735,
+          "fde_m": 0.20993305148196342,
+          "position_rmse_m": 0.4714058391882683,
+          "speed_mae_mps": 0.249234799824866,
+          "speed_rmse_mps": 0.32709308772342155,
+          "heading_mae_rad": 0.003166779600892457,
+          "max_position_error_m": 0.6487708839603556,
+          "samples": 33
+        },
+        "BV_front": {
+          "ade_m": 3.6998471106898156,
+          "fde_m": 4.184506650387656,
+          "position_rmse_m": 3.7138147522752787,
+          "speed_mae_mps": 0.4026688966653348,
+          "speed_rmse_mps": 0.42532891379987453,
+          "heading_mae_rad": 0.21973745425853733,
+          "max_position_error_m": 4.184506650387656,
+          "samples": 33
+        },
+        "BV_center": {
+          "ade_m": 3.712294287878791,
+          "fde_m": 4.21997569436448,
+          "position_rmse_m": 3.72422167255676,
+          "speed_mae_mps": 0.4026688966653348,
+          "speed_rmse_mps": 0.42532891379987453,
+          "heading_mae_rad": 0.21973745425853733,
+          "max_position_error_m": 4.21997569436448,
+          "samples": 33
+        }
+      },
+      "logged_t0_cav_front_displacement_from_template_m": 0.6072048484944617
+    }
+  ],
+  "limitations": [
+    "BV_front is the primary position metric; BV_center remains diagnostic because conversion uses reported source heading.",
+    "FDE is at the end of the common observed window, not at 4 seconds or at the collision state.",
+    "No extrapolation of stopped episodes; no time alignment search to improve scores.",
+    "Vehicle dimensions and log/physics time alignment still need explicit runtime calibration."
+  ]
+}

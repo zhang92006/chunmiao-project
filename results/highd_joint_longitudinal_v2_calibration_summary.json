@@ -1,0 +1,18 @@
+{
+  "schema_version": 2,
+  "status": "calibration_selected_pending_validation",
+  "pair_definition": "directed same-lane follower and its recorded immediate leader",
+  "train_pair_actions": 1080445,
+  "calibration_pair_actions": 1680957,
+  "factorized_calibration_nll": 0.6256694342168828,
+  "selected_concentration": 3000.0,
+  "selected_calibration_nll": 0.6052040594831003,
+  "factorization_nll_penalty": 0.020465374733782515,
+  "calibration_recordings_improved": 10,
+  "calibration_recording_count": 10,
+  "model_sha256": "3367267d5f02860a05f7af1235d39dbc8159d1dd5c05938f18151ff07fb45167",
+  "validation_read": false,
+  "test_read": false,
+  "runtime_enabled": false,
+  "scope": "Calibration-selected longitudinal dependence correction. The 3x3 dependence is lifted to 33x33 while preserving both single-BV marginals. No lateral dependence or D2RL efficiency claim."
+}

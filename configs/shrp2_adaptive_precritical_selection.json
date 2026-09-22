@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "context_selection_mode": "all_time_aligned_contexts",
+  "candidate_offsets_before_critical_s": [1.0, 1.5, 2.0, 2.5, 3.0],
+  "same_lane_lateral_threshold_m": 1.6,
+  "minimum_closing_speed_mps": 0.5,
+  "minimum_ttc_s": 2.0,
+  "maximum_ttc_s": 5.0,
+  "target_ttc_s": 3.5,
+  "escape_blocking_longitudinal_distance_m": 10.0,
+  "nonblocking_context_penalty": 0.25
+}

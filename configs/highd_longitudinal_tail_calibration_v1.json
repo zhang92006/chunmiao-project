@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "source_model_sha256": "2a362c7d5ab9fc8d3c1ddc9b3669b4b9e762dd658699e225da403184e2b5b0dc",
+  "train_recordings": ["01", "02", "04", "05", "07", "08", "11", "12", "15", "16"],
+  "source_frequency_hz": 25,
+  "target_frequency_hz": 10,
+  "chunk_size": 250000,
+  "parent_concentration": 100.0,
+  "prior_concentrations": [1.0, 10.0, 30.0, 100.0, 1000.0],
+  "tail_ttc_s": 3.0,
+  "minimum_covered_tail_frames": 100,
+  "minimum_tail_recordings": 3,
+  "selection": "Retain baseline unless overall AND tail calibration NLL/Brier do not worsen. Among eligible candidates minimize overall NLL. Evidence thresholds are diagnostic minimums, not statistical significance. Never deploy automatically."
+}

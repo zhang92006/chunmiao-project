@@ -1,0 +1,6 @@
+{
+  "source_frequency_hz": 25,
+  "target_frequency_hz": 10,
+  "decision_lead_s": 1.0,
+  "prior_concentrations": [1, 10, 100, 1000]
+}

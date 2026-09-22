@@ -1,0 +1,74 @@
+{
+  "status": "SHRP2-conditioned kinematic collision pilot; not exact replay, closed-loop SUMO, D2RL, or a crash-rate estimate",
+  "dataset": "SHRP2 NDS public bird's-eye trajectory reconstruction",
+  "dataset_doi": "10.15787/VTT1/T7UUC1",
+  "license": "CC BY 4.0",
+  "source_category": "Crash",
+  "source_split": "train",
+  "test_split_used": false,
+  "source_file_sha256": {
+    "event_meta.csv": "5c064b48c4807a5c7a79735814c60fee35886585d3ffa1391b3b58ff6ea727d0",
+    "event_data.h5": "de6d83de850aedb52094de9960878f2dfdc21538c270d21f1bd854468e334662"
+  },
+  "implementation_sha256_normalized_lf": "6b6688db14f8fa2d2cf30d7ac9dd2bd806b03742dc7ba6da8b3d0409d7dfeea1",
+  "candidate_events_by_conflict": {
+    "leading": 56,
+    "adjacent_lane": 1,
+    "intersection_crossing": 1,
+    "turning_into_opposite": 3
+  },
+  "selected_source_events": [
+    {
+      "event_id": 131785457,
+      "target_id": 22038,
+      "simulation_type": "rear_end",
+      "impact_conditioning_shift_m": 0.7373192456804734,
+      "quality": "high"
+    },
+    {
+      "event_id": 151856529,
+      "target_id": 26006,
+      "simulation_type": "lateral_sideswipe",
+      "impact_conditioning_shift_m": 5.1873931386173915,
+      "quality": "low"
+    },
+    {
+      "event_id": 35258186,
+      "target_id": 17272,
+      "simulation_type": "crossing",
+      "impact_conditioning_shift_m": 2.9461998142427355,
+      "quality": "medium"
+    },
+    {
+      "event_id": 33575100,
+      "target_id": 16979,
+      "simulation_type": "opposing_turn",
+      "impact_conditioning_shift_m": 2.2100100000865073,
+      "quality": "medium"
+    }
+  ],
+  "scenario_count": 12,
+  "verified_collision_scenarios": 12,
+  "initially_colliding_scenarios": 0,
+  "first_collision_time_error_s": {
+    "minimum": -0.020000000000000018,
+    "maximum": 0.0
+  },
+  "conditioning_quality_counts": {
+    "high": 3,
+    "medium": 6,
+    "low": 3
+  },
+  "simulation_types": [
+    "crossing",
+    "lateral_sideswipe",
+    "opposing_turn",
+    "rear_end"
+  ],
+  "variant_names": [
+    "source_speed",
+    "ego_faster_10pct",
+    "target_slower_10pct"
+  ],
+  "reproducibility_check": "two independent output directories produced identical summaries"
+}
