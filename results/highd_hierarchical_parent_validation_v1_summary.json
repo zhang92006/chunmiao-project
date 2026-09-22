@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "status": "validation_failed_do_not_enable",
+  "episodes_per_mode": 300,
+  "hard_fallback": {
+    "decisions": 94556,
+    "fallbacks": 874,
+    "collisions": 7,
+    "probability_audit_failures": 0
+  },
+  "hierarchical_parent": {
+    "decisions": 94521,
+    "fallbacks": 345,
+    "hierarchical_empty_state_decisions": 908,
+    "collisions": 9,
+    "probability_audit_failures": 0
+  },
+  "paired_collision_difference": {
+    "hard_only": 0,
+    "hierarchical_parent_only": 2,
+    "shared": 7
+  },
+  "failure_reason": "Two candidate-only BV-BV collisions were traced to repeated mild actions from the hierarchical empty-cell distribution where the measured-gap original fallback applied emergency braking.",
+  "scope": "Paired conditional-template validation, not a population crash-rate estimate. The result is sufficient to reject runtime enablement under the predeclared collision-nonincreasing gate."
+}
