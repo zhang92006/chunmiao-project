@@ -1,0 +1,10 @@
+# Runtime used for the highD critical-sequence PPO integration.
+# Use Python 3.9 on Windows. The project-level SUMO environment is separate.
+setuptools==65.5.0
+wheel<0.38
+numpy==1.23.1
+PyYAML==6.0.1
+gym==0.21.0
+ray[rllib]==1.11.0
+torch==1.11.0
+protobuf==3.20.3
