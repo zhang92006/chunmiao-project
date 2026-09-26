@@ -1,0 +1,253 @@
+{
+  "schema_version": 1,
+  "date": "2026-09-26",
+  "status": "completed_200_iterations_not_promoted_over_fixed_baseline",
+  "policy_parameterization": "mean_precision",
+  "seed": 7,
+  "iterations": 200,
+  "timesteps_total": 121558,
+  "behavior_episode_count": 80,
+  "nonempty_sequence_count": 42,
+  "natural_target_sha256": "9aa669c4aad1f0702937d62b6da07346c1c50f435f0b7856319d3da023e628e4",
+  "experiment_target_sha256": "6bfa9f908f0fa30dca335e58fdd5d39c71a9ac2fd5fed7f5479748e7f0d5b83c",
+  "sequence_manifest_sha256": "3f4a531d24792330b08dbe735104cc6d8db9b065ec300a69ce31211a8b10de66",
+  "trainer_code_sha256": "0189cc238be1edc497ed9b39595bee7a72f30173d58ee7498c2f3c5392a2d8a1",
+  "policy_code_sha256": "e4d8858c599cc9a8681c3333f7f680b296788201ee6982a89cd9b6c954d6bfc8",
+  "checkpoint_sha256": "0f432001df6d2657e32f0c19e8683adcf0636ee07077dcb871b1b173554b3ad6",
+  "initialization": {
+    "fixed_behavior_empirical_scaled_second_moment": 0.06262043527758177,
+    "untrained_deterministic_empirical_scaled_second_moment": 0.06262043587472788,
+    "maximum_initial_epsilon_error": 7.450580596923828e-9,
+    "baseline_initialization_passed": true
+  },
+  "objective": "negative_offpolicy_path_second_moment_fixed_positive_scaling_no_reward_clip",
+  "log_reward_scale": -11.231398997603073,
+  "nonempty_sampling_correction": 0.525,
+  "fixed_empirical_scaled_second_moment": 0.06262043527758177,
+  "legacy_iter80_empirical_scaled_second_moment": 0.07419438989961692,
+  "revised_iter80_empirical_scaled_second_moment": 0.062170845829940716,
+  "final_empirical_scaled_second_moment": 0.06268816573932408,
+  "final_to_fixed_ratio": 1.0010816031770153,
+  "final_reduction_vs_legacy_iter80_fraction": 0.15508213189515363,
+  "best_logged_training_iteration": 55,
+  "best_logged_training_second_moment": 0.06081706673996712,
+  "best_logged_reduction_vs_fixed_fraction": 0.028798403103088233,
+  "best_logged_checkpoint_saved": false,
+  "last50_logged_minimum": 0.06220521759743845,
+  "last50_logged_maximum": 0.06326626347343729,
+  "final_relative_change_from_iter150": 0.009202675676391214,
+  "stable_improvement_over_fixed_demonstrated": false,
+  "convergence_established": false,
+  "restored_empirical_scaled_second_moment": 0.06268816573932413,
+  "actual_epsilon_all_steps": {
+    "decision_count": 1368,
+    "minimum": [
+      0.09757161140441895,
+      0.11317025125026703
+    ],
+    "median": [
+      0.10399840027093887,
+      0.120368592441082
+    ],
+    "maximum": [
+      0.10477890819311142,
+      0.19094596803188324
+    ],
+    "mean": [
+      0.10280506761080166,
+      0.13194855084719018
+    ]
+  },
+  "diagnostics_best_constant": {
+    "epsilon": [
+      0.05,
+      0.05
+    ],
+    "empirical_scaled_second_moment": 0.059456780805884624,
+    "representable_by_legacy_deterministic_mean": false,
+    "representable_by_policy_deterministic_mean": false
+  },
+  "diagnostics_best_current_mean_constant": {
+    "epsilon": [
+      0.050095000744983555,
+      0.050095000744983555
+    ],
+    "empirical_scaled_second_moment": 0.05946247581551334,
+    "representable_by_legacy_deterministic_mean": false,
+    "representable_by_policy_deterministic_mean": true
+  },
+  "deterministic_epsilon_mean_bounds": [
+    0.050095000744983555,
+    0.9999050000000745
+  ],
+  "tests_passed": 29,
+  "smoke_iterations": 2,
+  "immutable_freeze_pins_unchanged": 8,
+  "formal_performance_evidence": false,
+  "scope": "Resubstitution on tiny diagnostic collection; not held-out or online risk/efficiency evidence",
+  "training_output": "data_analysis/raw_data/highd_cav_first_ppo_meanprecision_seed7_iter200_v1",
+  "diagnostic_output": "data_analysis/raw_data/highd_cav_first_policy_diagnostic_meanprecision_iter200_v1/policy_diagnostic.json",
+  "next_step": "Diagnose episodic PPO credit/advantage signal and retention of improvements without changing NDD or the exact second-moment reward. Fixed epsilon 0.1 remains the main control. No automatic additional training or deployment.",
+  "curve": [
+    {
+      "iteration": 5,
+      "value": 0.062455370770160855
+    },
+    {
+      "iteration": 10,
+      "value": 0.061824585509671445
+    },
+    {
+      "iteration": 15,
+      "value": 0.062184906615691406
+    },
+    {
+      "iteration": 20,
+      "value": 0.06201161117461559
+    },
+    {
+      "iteration": 25,
+      "value": 0.06145139537367984
+    },
+    {
+      "iteration": 30,
+      "value": 0.06130231793141357
+    },
+    {
+      "iteration": 35,
+      "value": 0.062014207912227726
+    },
+    {
+      "iteration": 40,
+      "value": 0.061017435674364864
+    },
+    {
+      "iteration": 45,
+      "value": 0.06114153902400292
+    },
+    {
+      "iteration": 50,
+      "value": 0.06099425294821631
+    },
+    {
+      "iteration": 55,
+      "value": 0.06081706673996712
+    },
+    {
+      "iteration": 60,
+      "value": 0.06088123536227813
+    },
+    {
+      "iteration": 65,
+      "value": 0.06123302602223664
+    },
+    {
+      "iteration": 70,
+      "value": 0.06135123925118632
+    },
+    {
+      "iteration": 75,
+      "value": 0.06189902072375766
+    },
+    {
+      "iteration": 80,
+      "value": 0.062170845829940716
+    },
+    {
+      "iteration": 85,
+      "value": 0.06208823517191432
+    },
+    {
+      "iteration": 90,
+      "value": 0.06213158993209418
+    },
+    {
+      "iteration": 95,
+      "value": 0.06257903572368949
+    },
+    {
+      "iteration": 100,
+      "value": 0.062043109335019477
+    },
+    {
+      "iteration": 105,
+      "value": 0.06225950542780625
+    },
+    {
+      "iteration": 110,
+      "value": 0.06263773909626492
+    },
+    {
+      "iteration": 115,
+      "value": 0.061979109079938824
+    },
+    {
+      "iteration": 120,
+      "value": 0.061684823473662484
+    },
+    {
+      "iteration": 125,
+      "value": 0.06184059375602101
+    },
+    {
+      "iteration": 130,
+      "value": 0.061515713262861725
+    },
+    {
+      "iteration": 135,
+      "value": 0.06140070372743256
+    },
+    {
+      "iteration": 140,
+      "value": 0.06166270293502678
+    },
+    {
+      "iteration": 145,
+      "value": 0.061857966233610596
+    },
+    {
+      "iteration": 150,
+      "value": 0.062116527482756624
+    },
+    {
+      "iteration": 155,
+      "value": 0.06220521759743845
+    },
+    {
+      "iteration": 160,
+      "value": 0.06224961209623718
+    },
+    {
+      "iteration": 165,
+      "value": 0.06264346537962824
+    },
+    {
+      "iteration": 170,
+      "value": 0.0627375884211698
+    },
+    {
+      "iteration": 175,
+      "value": 0.06297429344566019
+    },
+    {
+      "iteration": 180,
+      "value": 0.06261535720591711
+    },
+    {
+      "iteration": 185,
+      "value": 0.06286247446002505
+    },
+    {
+      "iteration": 190,
+      "value": 0.06325841508274921
+    },
+    {
+      "iteration": 195,
+      "value": 0.06326626347343729
+    },
+    {
+      "iteration": 200,
+      "value": 0.06268816573932408
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "data_path": "REPLACE_WITH_LOCAL_PATH_TO_sequences.json",
+  "sha256": "08ba49fc06262f9bb969fa234158f1468ff827f3e61113f32bf5a276a15ad56f",
+  "summary": {
+    "contract": "highd_first_collision_critical_sequence_v1",
+    "behavior_episode_count": 80,
+    "nonempty_sequence_count": 42
+  }
+}
