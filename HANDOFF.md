@@ -1,4 +1,8 @@
-# 当前 highD 双 BV D2RL 交接入口
+# 当前 highD 动态多对 NDD / 双 BV D2RL 交接入口
+
+本版本请先读 [动态多对版本交接](docs/highD动态多对版本交接.md)。新的统一入口为 highd_dynamic_handoff；需要源码、原冻结资产包和新增动态数据包。Windows 与 Mac 均提供操作脚本。当前附带的新 checkpoint 只有两轮训练，仅作接口冒烟。
+
+下面保留旧单对版本说明，旧 highd_portable 入口不应代替新的动态入口。
 
 请优先阅读 [完整闭环交接说明](docs/highD双BV完整闭环交接.md)，不要按仓库历史 README 的旧 NDD/Autoware 环境重新安装。
 

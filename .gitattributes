@@ -17,4 +17,6 @@ maps/2LaneHighway/2LaneHighwayHighSpeed.sumocfg -text
 tests/test_highd_dual_ndd_criticality.py -text
 tests/test_highd_critical_sequences.py -text
 configs/*.sh text eol=lf
+configs/highd_dynamic_pairs_v1.json -text
+configs/highd_dynamic_pairs_freeze_v1.json -text
 
