@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "status": "opt_in_research_candidate_not_behavior_accepted",
+  "base_collection_config": "configs/highd_dual_ndd_behavior_v1.json",
+  "partition_version": "dynamic_disjoint_relation_continuity_v1",
+  "maximum_pairs": null,
+  "maximum_intervened_pairs": 1,
+  "intervention_version": "maximum_critical_mass_one_natural_unit_v1",
+  "scope": "Unchanged two-lane highway and fitted local kernels; new scene-level natural target and fresh behavior pool"
+}

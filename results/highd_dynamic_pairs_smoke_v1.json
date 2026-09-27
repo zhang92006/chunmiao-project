@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "date": "2026-09-27",
+  "status": "technical_smoke_not_behavior_acceptance",
+  "python": "3.9.25",
+  "sumo": "1.27.0",
+  "seed": 7,
+  "repeats_per_scene_and_mode": 1,
+  "related_unit_tests_passed": 35,
+  "new_tests_passed": 11,
+  "frozen_source_files_unchanged": 29,
+  "private_assets_verified": 222,
+  "natural_target_sha256": "c2942781b96d901823fd291f7167bfc1ba8f6d0129eff47404f963f7c876cb64",
+  "partition_version": "dynamic_disjoint_relation_continuity_v1",
+  "by_mode": {
+    "natural": {
+      "attempted": 4,
+      "raw_cav_crashes": 0,
+      "termination_counts": {
+        "collision": 1,
+        "duration_reached": 3
+      },
+      "pair_count_histogram": {
+        "1": 132,
+        "2": 140
+      },
+      "intervention_count_histogram": {
+        "0": 272
+      },
+      "reconfiguration_decisions": 6,
+      "max_probability_error": 4.440892098500626e-16
+    },
+    "behavior": {
+      "attempted": 4,
+      "raw_cav_crashes": 2,
+      "termination_counts": {
+        "collision": 3,
+        "duration_reached": 1
+      },
+      "pair_count_histogram": {
+        "1": 106,
+        "2": 101
+      },
+      "intervention_count_histogram": {
+        "0": 137,
+        "1": 70
+      },
+      "reconfiguration_decisions": 4,
+      "max_probability_error": 7.771561172376096e-16
+    }
+  },
+  "audit_passed": true,
+  "maximum_probability_error": 7.771561172376096e-16,
+  "maximum_sequence_log_weight_error": 2.842170943040401e-14,
+  "behavior_critical_decisions": 70,
+  "behavior_nonempty_sequences": 2,
+  "behavior_empty_sequences_retained": 2,
+  "behavior_crash_contribution_ess": 1,
+  "runs": [
+    {
+      "scenario_id": "spaced_reference",
+      "mode": "natural",
+      "termination": "collision",
+      "raw_cav_collision": false,
+      "critical_steps": 0,
+      "pair_count_histogram": {
+        "1": 14,
+        "2": 18
+      },
+      "reconfiguration_decisions": 3
+    },
+    {
+      "scenario_id": "spaced_reference",
+      "mode": "behavior",
+      "termination": "collision",
+      "raw_cav_collision": false,
+      "critical_steps": 0,
+      "pair_count_histogram": {
+        "1": 14,
+        "2": 18
+      },
+      "reconfiguration_decisions": 3
+    },
+    {
+      "scenario_id": "rear_closing_pair",
+      "mode": "natural",
+      "termination": "duration_reached",
+      "raw_cav_collision": false,
+      "critical_steps": 0,
+      "pair_count_histogram": {
+        "1": 80
+      },
+      "reconfiguration_decisions": 0
+    },
+    {
+      "scenario_id": "rear_closing_pair",
+      "mode": "behavior",
+      "termination": "collision",
+      "raw_cav_collision": true,
+      "critical_steps": 63,
+      "pair_count_histogram": {
+        "1": 67
+      },
+      "reconfiguration_decisions": 0
+    },
+    {
+      "scenario_id": "front_closing_pair",
+      "mode": "natural",
+      "termination": "duration_reached",
+      "raw_cav_collision": false,
+      "critical_steps": 0,
+      "pair_count_histogram": {
+        "2": 80
+      },
+      "reconfiguration_decisions": 0
+    },
+    {
+      "scenario_id": "front_closing_pair",
+      "mode": "behavior",
+      "termination": "duration_reached",
+      "raw_cav_collision": false,
+      "critical_steps": 0,
+      "pair_count_histogram": {
+        "2": 80
+      },
+      "reconfiguration_decisions": 0
+    },
+    {
+      "scenario_id": "adjacent_approach_pair",
+      "mode": "natural",
+      "termination": "duration_reached",
+      "raw_cav_collision": false,
+      "critical_steps": 0,
+      "pair_count_histogram": {
+        "1": 38,
+        "2": 42
+      },
+      "reconfiguration_decisions": 3
+    },
+    {
+      "scenario_id": "adjacent_approach_pair",
+      "mode": "behavior",
+      "termination": "collision",
+      "raw_cav_collision": true,
+      "critical_steps": 7,
+      "pair_count_histogram": {
+        "1": 25,
+        "2": 3
+      },
+      "reconfiguration_decisions": 1
+    }
+  ],
+  "limitations": [
+    "New scene natural target; old frozen training target remains unchanged",
+    "Sparse configured diagnostic scenes, no generalization/efficiency evidence",
+    "Target front/alongside and unmatched historical rear roles retain explicit independent fallback",
+    "BV-only collisions remain competing events, not CAV collisions or full-horizon safe"
+  ]
+}
