@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "date": "2026-09-27",
+  "platform_tested": "Windows x86_64",
+  "python": "3.9.25",
+  "sumo": "1.27.0",
+  "macos_m4_tested": false,
+  "focused_unit_tests_passed": 24,
+  "new_ppo_smoke_iterations": 2,
+  "baseline_initialization_passed": true,
+  "private_asset_files_verified": 222,
+  "frozen_source_files_verified": 29,
+  "staged_git_blob_hashes_match_private_manifest": true,
+  "isolated_source_zip_imports_and_frozen_model_loading_passed": true,
+  "isolated_source_zip_unit_tests_passed": 24,
+  "restored_iteration_200_empirical_second_moment": 0.06268816573932408,
+  "restored_checkpoint_sha256": "0f432001df6d2657e32f0c19e8683adcf0636ee07077dcb871b1b173554b3ad6",
+  "explicit_checkpoint_source_migration_required": true,
+  "natural_target_sha256": "9aa669c4aad1f0702937d62b6da07346c1c50f435f0b7856319d3da023e628e4",
+  "fixed_and_natural_smoke": {
+    "scenario": "adjacent_approach_pair",
+    "seed": 7,
+    "natural_episodes": 1,
+    "fixed_behavior_episodes": 1,
+    "max_probability_reconstruction_error": 1.5543122344752192e-15
+  },
+  "learned_policy_closed_loop_smoke": {
+    "scenario": "adjacent_approach_pair",
+    "seed": 7,
+    "attempted": 1,
+    "cav_first_crashes": 1,
+    "checked_policy_decisions": 8,
+    "max_policy_reconstruction_error": 0.0,
+    "probability_audit_passed": true,
+    "repeated_in_isolated_source_zip": true
+  },
+  "formal_performance_evidence": false,
+  "scope": "Portable handoff and inference integration only. Smoke repeats are not independent performance evidence. No NDD behavior acceptance or D2RL efficiency improvement claim."
+}

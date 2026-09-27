@@ -60,7 +60,7 @@ def main():
     register_env("highd_full_critical_sequence", lambda cfg: HighDCriticalSequenceEnv(cfg))
     register_legacy_action_distribution()
     model_config = {"custom_action_dist": "d2rl_bounded_beta", "fcnet_hiddens": [64, 64]}
-    policy_code = Path(__file__).with_name("d2rl_bounded_action_dist.py")
+    policy_code = Path(__file__).with_name("highd_mean_precision_policy.py")
     if policy_parameterization == "mean_precision":
         from .highd_mean_precision_policy import register_mean_precision_policy, policy_model_config
         register_mean_precision_policy()
