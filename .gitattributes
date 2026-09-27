@@ -3,3 +3,20 @@ source_data/**/*.npy filter=lfs diff=lfs merge=lfs -text
 source_data/**/*.npz filter=lfs diff=lfs merge=lfs -text
 source_data/**/*.mat filter=lfs diff=lfs merge=lfs -text
 
+# Frozen research artifacts pin raw source bytes; preserve CRLF/LF on all OSes.
+scenario_reconstruction/highd_*.py -text
+scenario_reconstruction/__init__.py -text
+scenario_reconstruction/templates.py -text
+d2rl_training/conditional_chain.py -text
+d2rl_training/highd_event_contract.py -text
+configs/highd_dual_ndd_behavior_v1.json -text
+configs/highd_dual_ndd_research_freeze_v1.json -text
+maps/2LaneHighway/2LaneHighway.net.xml -text
+maps/2LaneHighway/2LaneHighwayHighSpeed.rou.xml -text
+maps/2LaneHighway/2LaneHighwayHighSpeed.sumocfg -text
+tests/test_highd_dual_ndd_criticality.py -text
+tests/test_highd_critical_sequences.py -text
+configs/*.sh text eol=lf
+configs/highd_dynamic_pairs_v1.json -text
+configs/highd_dynamic_pairs_freeze_v1.json -text
+

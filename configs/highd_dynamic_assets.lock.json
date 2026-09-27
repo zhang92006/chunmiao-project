@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "archive": "highd_dynamic_assets.zip",
+  "sha256": "31e14f0c8a0c6233c26f7cd2a207ad15083c6dbc45421a6fbcf4c10d9e56b5cf",
+  "private_manifest_sha256": "0e53e07460469ee233819c56fb730c56cc9a480e88bbb676cd72c381b2536866",
+  "file_count": 94,
+  "uncompressed_bytes": 350840051,
+  "natural_target_sha256": "c2942781b96d901823fd291f7167bfc1ba8f6d0129eff47404f963f7c876cb64",
+  "requires": "Unchanged highd_frozen_assets.zip / configs/highd_portable_assets.lock.json"
+}

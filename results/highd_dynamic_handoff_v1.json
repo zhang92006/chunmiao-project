@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "status": "portable_research_handoff_not_behavior_acceptance",
+  "natural_target_sha256": "c2942781b96d901823fd291f7167bfc1ba8f6d0129eff47404f963f7c876cb64",
+  "unchanged_base_assets": 222,
+  "unchanged_base_frozen_sources": 29,
+  "dynamic_asset_files": 94,
+  "related_tests_passed": 38,
+  "platform_tested": "Windows Python 3.9.25 SUMO 1.27.0",
+  "macos_tested": false,
+  "online_smoke": {
+    "scenario": "adjacent_approach_pair",
+    "seed": 2000,
+    "natural_runs": 1,
+    "fixed_runs": 1,
+    "ppo_runs": 1,
+    "all_horizon_no_collision": true,
+    "checked_ppo_decisions": 2,
+    "max_policy_reconstruction_error": 0.0,
+    "probability_audit_passed": true,
+    "formal_performance_evidence": false
+  },
+  "old_target_checkpoint_rejected": true,
+  "subset_requires_explicit_smoke": true,
+  "isolated_extraction_test": {
+    "related_tests_passed": 38,
+    "fresh_two_iteration_training_passed": true,
+    "restored_local_training_online_passed": true,
+    "checked_policy_decisions": 2,
+    "max_policy_reconstruction_error": 0.0,
+    "probability_audit_passed": true
+  },
+  "private_data_not_in_git": true
+}
