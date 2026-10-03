@@ -4,6 +4,7 @@ source_data/**/*.npz filter=lfs diff=lfs merge=lfs -text
 source_data/**/*.mat filter=lfs diff=lfs merge=lfs -text
 source_data/highd_paper_v46/*.zip filter=lfs diff=lfs merge=lfs -text
 configs/highd_paper_v46_freeze.json -text
+configs/highd_paper_discrete_dual_v46.json -text
 
 # Frozen research artifacts pin raw source bytes; preserve CRLF/LF on all OSes.
 scenario_reconstruction/highd_*.py -text
