@@ -5,7 +5,7 @@ from unittest.mock import patch
 import numpy as np
 
 from scenario_reconstruction.highd_v46_d2rl import NativeExperiment
-from d2rl_training.highd_v46_sequence_env import log_weight
+from d2rl_training.highd_v46_sequence_env import V46SequenceEnv, log_weight
 
 
 class ProposalTests(unittest.TestCase):
@@ -48,6 +48,26 @@ class ProposalTests(unittest.TestCase):
         for mode in ('single','dual'):
             _,_,road,_=self.draw(mode,1.,7)
             self.assertEqual(road.log_weight,0.)
+
+    def test_stratified_reward_preserves_full_collection_objective(self):
+        # Five collected episodes: one positive, three trainable negatives and
+        # one noncritical negative. Oversampling the positive must not change
+        # the denominator or the exact empirical second-moment objective.
+        env=V46SequenceEnv.__new__(V46SequenceEnv)
+        step={'p_factors':[.5],'h_factors':[1.], 'observation':[0.]*14}
+        weight=log_weight(step,[.1])
+        env.sequences=[{'steps':[step], 'event_result':i==0,
+                        'generation_log_weight':weight} for i in range(4)]
+        env.sequences.append({'steps':[], 'event_result':False,'generation_log_weight':0.})
+        env.eligible=list(range(4));env.positive=[0];env.negative=[1,2,3]
+        env.positive_fraction=.5;env.rng=np.random.default_rng(7);env.log_scale=0.
+        rewards={}
+        for _ in range(20):
+            env.reset();_,reward,done,_=env.step([.1])
+            self.assertTrue(done);rewards[env.sequence['event_result']]=reward
+        self.assertEqual(set(rewards),{True,False})
+        expectation=.5*rewards[True]+.5*rewards[False]
+        self.assertAlmostEqual(expectation,-env.empirical_objective(lambda obs:[.1]))
 
 
 if __name__=='__main__':unittest.main()

@@ -35,12 +35,22 @@ class V46SequenceEnv(Env):
             if not np.isclose(total,seq['generation_log_weight'],rtol=1e-10,atol=1e-9):raise ValueError('Densification lost likelihood factors')
         self.log_scale=max(2*s['generation_log_weight'] for s in self.sequences if s['event_result'])
         self.sampling_correction=len(self.eligible)/len(self.sequences)
+        self.positive=[i for i in self.eligible if self.sequences[i]['event_result']]
+        self.negative=[i for i in self.eligible if not self.sequences[i]['event_result']]
+        self.positive_fraction=config.get('replay_positive_fraction')
+        if self.positive_fraction is not None and not 0<self.positive_fraction<1:raise ValueError('Replay positive fraction must be inside (0,1)')
         self.action_space=spaces.Box(low=.05,high=1.,shape=(self.dimension,),dtype=np.float32)
         self.observation_space=spaces.Box(low=-5.,high=5.,shape=(14,),dtype=np.float32)
         self.rng=np.random.default_rng(config.get('seed',7));self.done=True
 
     def reset(self):
-        self.sequence=self.sequences[int(self.rng.choice(self.eligible))]
+        group=self.eligible;probability=1.
+        if self.positive_fraction is not None and self.positive and self.negative:
+            positive=self.rng.random()<self.positive_fraction
+            group=self.positive if positive else self.negative
+            probability=self.positive_fraction if positive else 1-self.positive_fraction
+        self.episode_correction=len(group)/(len(self.sequences)*probability)
+        self.sequence=self.sequences[int(self.rng.choice(group))]
         self.position=0;self.log_weight=0.;self.done=False
         return np.asarray(self.sequence['steps'][0]['observation'],np.float32)
 
@@ -55,7 +65,7 @@ class V46SequenceEnv(Env):
         if np.any(np.asarray(action)<.05-1e-7):raise ValueError('Epsilon below support floor')
         self.log_weight+=log_weight(self.sequence['steps'][self.position],action)
         self.position+=1;self.done=self.position==len(self.sequence['steps'])
-        reward=-self.sampling_correction*self.loss(self.sequence,self.log_weight) if self.done else 0.
+        reward=-self.episode_correction*self.loss(self.sequence,self.log_weight) if self.done else 0.
         obs=self.sequence['steps'][min(self.position,len(self.sequence['steps'])-1)]['observation']
         return np.asarray(obs,np.float32),reward,self.done,{}
 

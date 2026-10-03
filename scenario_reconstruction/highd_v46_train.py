@@ -17,7 +17,8 @@ def main():
     output=Path(a.output).resolve();output.mkdir(parents=True,exist_ok=False)
     cfg=read(a.config);iterations=a.iterations or cfg['iterations']
     from d2rl_training.highd_v46_sequence_env import V46SequenceEnv
-    env_config={'sequence_manifest':str(Path(a.sequence_manifest).resolve()),'seed':a.seed}
+    env_config={'sequence_manifest':str(Path(a.sequence_manifest).resolve()),'seed':a.seed,
+                'replay_positive_fraction':cfg.get('replay_positive_fraction')}
     check=V46SequenceEnv(env_config)
     import numpy as np
     import torch
@@ -58,6 +59,7 @@ def main():
             'intervention_mode':check.dataset['intervention_mode'],'iterations':iterations,'seed':a.seed,'config':cfg,
             'trainer_sha256':digest(__file__),'environment_sha256':digest(Path(__file__).parents[1]/'d2rl_training/highd_v46_sequence_env.py'),
             'objective':'E_Qb[I_first_CAV_collision * P/Qb * P/Q_epsilon], full critical sequences, fixed positive scaling, no reward clipping',
+            'replay_sampling':'Stratified positive/nonpositive replay with exact 1/(N*q_episode) correction; same full-collection objective',
             'episodes':len(check.sequences),'positive_episodes':sum(s['event_result'] for s in check.sequences),'log_reward_scale':check.log_scale}
         save(output/'training_protocol.json',provenance);records=[]
         print(json.dumps({'initial_scaled_second_moment':initial,'fixed_epsilon_scaled_second_moment':baseline}),flush=True)

@@ -29,7 +29,7 @@ def main():
     merge=sub.add_parser('merge');merge.add_argument('--sources',nargs='+',required=True);merge.add_argument('--output',required=True)
     for command in ('start','evaluate'):
         p=sub.add_parser(command);p.add_argument('--output',required=True);p.add_argument('--seed',type=int,default=20000 if command=='evaluate' else 1000)
-        p.add_argument('--episodes',type=int,default=128);p.add_argument('--config',default=str(ROOT/'configs/highd_v46_d2rl_experiment.json'))
+        p.add_argument('--episodes',type=int,default=128 if command=='evaluate' else 512);p.add_argument('--config',default=str(ROOT/'configs/highd_v46_d2rl_experiment.json'))
         if command=='start':
             p.add_argument('--mode',choices=['single','dual'],default='single');p.add_argument('--iterations',type=int,default=100)
             p.add_argument('--sequence-manifest');p.add_argument('--training-seed',type=int,default=7)
@@ -39,14 +39,15 @@ def main():
     assets,lock=ensure_assets()
     if args.command=='verify':print({'verified':True,'natural_target_sha256':lock['natural_target_sha256'],'assets':str(assets)});return
     from .highd_v46_d2rl import collect,identity
+    from . import highd_v46_d2rl as runtime
+    expected={'natural_target_sha256':lock['natural_target_sha256'],'experiment':read(args.config),
+        'cav_role':'uniform_initialized_actor_with_observed_current_leader',
+        'event':'CAV_in_first_any_actor_collision_by_horizon; BV_only_is_competing_negative','runtime_sha256':digest(runtime.__file__)}
+    expected_hash=identity(expected)
     if args.command=='evaluate':
         from .highd_v46_policy import NumpyPolicy
-        from . import highd_v46_d2rl as runtime
-        policy=NumpyPolicy(args.policy);cfg=read(args.config)
-        expected={'natural_target_sha256':lock['natural_target_sha256'],'experiment':cfg,
-            'cav_role':'uniform_initialized_actor_with_observed_current_leader',
-            'event':'CAV_in_first_any_actor_collision_by_horizon; BV_only_is_competing_negative','runtime_sha256':digest(runtime.__file__)}
-        if policy.metadata['experiment_target_sha256']!=identity(expected):raise ValueError('Policy belongs to another CAV/initial/event/runtime target')
+        policy=NumpyPolicy(args.policy)
+        if policy.metadata['experiment_target_sha256']!=expected_hash:raise ValueError('Policy belongs to another CAV/initial/event/runtime target')
         print(collect(args.config,args.output,policy.metadata['intervention_mode'],args.episodes,args.seed,assets,policy));return
     out=Path(args.output).resolve();out.mkdir(parents=True,exist_ok=False)
     manifest=args.sequence_manifest
@@ -56,6 +57,8 @@ def main():
     m=read(manifest)
     if m['natural_target_sha256']!=lock['natural_target_sha256'] or m['intervention_mode']!=args.mode:
         raise ValueError('Training data belongs to another mode or frozen NDE')
+    if m['experiment_target_sha256']!=expected_hash:
+        raise ValueError('Training data belongs to another CAV/initial/event/runtime target')
     from .highd_v46_train import main as train
     sys.argv=[sys.argv[0],'--sequence-manifest',manifest,'--output',str(out/'training'),'--iterations',str(args.iterations),'--seed',str(args.training_seed)]
     train()

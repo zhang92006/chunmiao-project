@@ -1,6 +1,7 @@
 {
   "schema_version": 1,
   "iterations": 100,
+  "replay_positive_fraction": 0.5,
   "initial_epsilon": 0.1,
   "initial_precision": 80.0,
   "ppo": {"train_batch_size": 1024, "sgd_minibatch_size": 128, "num_sgd_iter": 5,

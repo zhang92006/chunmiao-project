@@ -12,6 +12,7 @@ scenario_reconstruction/__init__.py -text
 scenario_reconstruction/templates.py -text
 d2rl_training/conditional_chain.py -text
 d2rl_training/highd_event_contract.py -text
+d2rl_training/highd_v46_sequence_env.py -text
 configs/highd_dual_ndd_behavior_v1.json -text
 configs/highd_dual_ndd_research_freeze_v1.json -text
 maps/2LaneHighway/2LaneHighway.net.xml -text
