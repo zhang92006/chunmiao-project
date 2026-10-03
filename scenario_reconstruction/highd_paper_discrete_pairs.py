@@ -15,6 +15,7 @@ from .highd_paper_pairs import joint33,following_group,update_histories
 from .highd_paper_pair_calibration import samples,select_strength
 from .highd_dual_ndd import observed_components,rank_fractions,rank_kernel
 from .highd_dynamic_pairs import partition,pair_key,PARTITION_VERSION
+from .highd_paper_pair_matching import maximum_weight_following
 
 
 SINGLE_OPTIONS={'empirical_backoff':True,'pooled_lateral':True,'weighted_lateral':True,
@@ -53,20 +54,25 @@ def fit_balanced(chunks):
     w=np.maximum(result.x,0);return w/w.sum()
 
 
-def fit(model_root,lateral_root,source,output):
+def joint_group(gap,rate,leader_free,speed,speed_edges=()):
+    return following_group(gap,rate,leader_free)+12*np.searchsorted(speed_edges,speed,side='right')
+
+
+def fit(model_root,lateral_root,source,output,speed_context=False,one_second_actions=False):
     m=PairModelQueries(model_root,lateral_root,**SINGLE_OPTIONS);root=Path(output);root.mkdir(parents=True,exist_ok=False)
     splits=read(Path(__file__).parents[1]/'configs/highd_paper_nde_protocol_v1.json')['splits']
     train=m.summary['train_recordings'];cal=splits['calibration']
     if set(train)&set(cal) or set(train+cal)&set(splits['validation']+splits['test']):raise ValueError('Overlapping splits')
-    data={};counts={}
+    data={};counts={};speed_edges=[27.,33.] if speed_context else []
     for rec in train+cal:
-        d,info=samples(m,source,rec,return_data=True,decision_hz=1);mask=d['direct']&d['support']
-        components=observed_components(d['first'][mask],d['second'][mask],d['a'][mask],d['b'][mask]);groups=d['groups'][mask]
+        d,info=samples(m,source,rec,return_data=True,decision_hz=1,one_second_actions=one_second_actions);mask=d['direct']&d['support']
+        components=observed_components(d['first'][mask],d['second'][mask],d['a'][mask],d['b'][mask])
+        groups=d['groups'][mask]+12*np.searchsorted(speed_edges,d['states'][mask,0],side='right')
         counts[rec]={**info,'direct_supported_pairs':int(mask.sum())};data[rec]=(components,groups)
         np.savez_compressed(root/f'components_{rec}.npz',components=components,groups=groups)
         print({'recording':rec,'pairs':len(components)},flush=True)
     cells={}
-    for group in range(12):
+    for group in range(12*(len(speed_edges)+1)):
         chunks=[data[r][0][data[r][1]==group] for r in train]
         selected=[data[r][0][data[r][1]==group] for r in cal];selected=[c for c in selected if len(c)>=20]
         info={'train_pairs':sum(len(c) for c in chunks),'train_records':sum(len(c)>=20 for c in chunks),'calibration_records':len(selected)}
@@ -77,7 +83,9 @@ def fit(model_root,lateral_root,source,output):
             'reason':'calibrated' if strength else 'calibration_prefers_independence'}
     result={'schema_version':2,'single_contract':contract(m,lateral_root),'train_recordings':train,'calibration_recordings':cal,
         'base_model_sha256':m.summary['model_sha256'],'decision_hz':1,'history_s':3.,'direct_support_required':True,
-        'cells':cells,'by_recording':counts,'partition_version':PARTITION_VERSION,'implementation_sha256':sha(__file__),
+        'cells':cells,'speed_edges':speed_edges,'one_second_actions':one_second_actions,
+        'action_label':'forward_1s_velocity_increment_stable_interval' if one_second_actions else 'instantaneous_acceleration',
+        'by_recording':counts,'partition_version':PARTITION_VERSION,'implementation_sha256':sha(__file__),
         'scope':'Fresh 1 Hz synchronized highD fit against accepted V34 query laws; equal-record training and calibration shrinkage. Both actors need direct empirical support and 3 s past-only stable leader/lane history. Dynamic disjoint following pairs, many pairs per road. Only the 31x31 both-stay block has fitted dependence; all 33-action marginals and lane-change cross-block independence retained. No imported 10 Hz weights, new safety mask, marginal fit or execution change.'}
     write(root/'pair_model.json',result);print({'independent_mass':{k:v['independent_mass'] for k,v in cells.items()}},flush=True)
 
@@ -87,8 +95,47 @@ def inverse_cdf(p,u):
     return int(np.searchsorted(cdf,u,side='right'))
 
 
+def refine_speed_context(fine_root,parent_root,output,one_standard_error=False):
+    """Calibrate speed refinement against its supported coarse parent law."""
+    fine_root=Path(fine_root);parent_root=Path(parent_root)
+    fine=read(fine_root/'pair_model.json');parent=read(parent_root/'pair_model.json')
+    for key in ('single_contract','train_recordings','calibration_recordings'):
+        if fine[key]!=parent[key]:raise ValueError('Incompatible hierarchical fits')
+    if fine.get('one_second_actions',False)!=parent.get('one_second_actions',False):raise ValueError('Incompatible action-label horizons')
+    if not fine.get('speed_edges') or parent.get('speed_edges'):raise ValueError('Expected speed child and coarse parent')
+    root=Path(output);root.mkdir(parents=True,exist_ok=False)
+    data={}
+    for rec in fine['calibration_recordings']:
+        with np.load(fine_root/f'components_{rec}.npz') as d:data[rec]=(d['components'],d['groups'])
+    cells={};grid=np.array([0.,.25,.5,.75,1.])
+    for key,child in fine['cells'].items():
+        group=int(key);base=parent['cells'][str(group%12)]
+        chunks=[c[g==group] for c,g in data.values()];chunks=[c for c in chunks if len(c)>=20]
+        mix=0.;scores=[];standard_error=0.
+        if child['reason']!='insufficient_recording_support' and len(chunks)>=3:
+            ratios=[(base['independent_mass']+(1-base['independent_mass'])*(c@base['weights']),
+                child['independent_mass']+(1-child['independent_mass'])*(c@child['weights'])) for c in chunks]
+            scores=[float(np.mean([np.log((1-a)*p+a*q).mean() for p,q in ratios])) for a in grid]
+            best=int(np.argmax(scores));chosen=best
+            if one_standard_error:
+                gains=np.array([np.log((1-grid[best])*p+grid[best]*q).mean()-np.log(p).mean() for p,q in ratios])
+                standard_error=float(gains.std(ddof=1)/np.sqrt(len(gains)))
+                chosen=int(np.flatnonzero(np.asarray(scores)>=scores[best]-standard_error-1e-12)[0])
+            mix=float(grid[chosen])
+        mass=(1-mix)*base['independent_mass']+mix*child['independent_mass']
+        weighted=(1-mix)*(1-base['independent_mass'])*np.array(base['weights'])+mix*(1-child['independent_mass'])*np.array(child['weights'])
+        weights=weighted/(1-mass) if mass<1 else np.full(6,1/6)
+        cells[key]={**child,'independent_mass':float(mass),'weights':weights.tolist(),
+            'reason':'speed_refinement' if mix else 'coarse_parent_backoff','child_fraction':mix,'parent_mix_calibration_scores':scores,'calibration_gain_standard_error':standard_error}
+    fine.update({'cells':cells,'parent_model_sha256':sha(parent_root/'pair_model.json'),'child_model_sha256':sha(fine_root/'pair_model.json'),
+        'one_standard_error_selection':one_standard_error,'implementation_sha256':sha(__file__),
+        'scope':fine['scope']+' Speed cells use calibration-selected convex shrinkage to their coarse parent; insufficient cells retain the parent law.'})
+    write(root/'pair_model.json',fine)
+    print({'child_fraction':{k:c['child_fraction'] for k,c in cells.items()}},flush=True)
+
+
 class DiscretePairs:
-    def __init__(self,pair_root,model,lateral_root,mode='fitted',dependence_scale=1.,gap_taper=False,supported_pairs_only=False):
+    def __init__(self,pair_root,model,lateral_root,mode='fitted',dependence_scale=1.,gap_taper=False,supported_pairs_only=False,pair_selection='continuity'):
         self.model=read(Path(pair_root)/'pair_model.json');self.empirical=model
         if self.model['single_contract']!=contract(model,lateral_root):raise ValueError('Pair model has a different single baseline')
         if mode not in ('fitted','independent_control'):raise ValueError('Unknown dependence mode')
@@ -96,6 +143,9 @@ class DiscretePairs:
         self.dependence_scale=float(dependence_scale)
         self.gap_taper=gap_taper
         self.supported_pairs_only=supported_pairs_only
+        if pair_selection not in ('continuity','nearest','covariance'):raise ValueError('Unknown pair selection')
+        if pair_selection=='covariance' and not supported_pairs_only:raise ValueError('Covariance matching requires supported pairs')
+        self.pair_selection=pair_selection
         self.mode=mode;self.previous=set();self.histories={};self.records=[];self.maximum_marginal_error=0.
 
     def direct(self,car,front):
@@ -116,12 +166,27 @@ class DiscretePairs:
             if front is not None and 0<front.x-front.length-car.x<=115:
                 if self.supported_pairs_only and (min(self.histories[i][1] for i in (car.id,front.id))<3. or
                         not self.direct(car,front) or not self.direct(front,fronts[front.id])):continue
+                if self.supported_pairs_only:
+                    next_front=fronts[front.id]
+                    group=int(joint_group(front.x-front.length-car.x,front.v-car.v,
+                        next_front is None or next_front.x-next_front.length-front.x>115,car.v,self.model.get('speed_edges',())))
+                    if self.model['cells'][str(group)]['independent_mass']>=1.:continue
                 candidates.append({'actor_ids':(car.id,front.id),'relation':'following','priority':(1,0.,front.x-front.length-car.x,car.id,front.id)})
-        selected,_=partition(candidates,self.previous)
+        if self.pair_selection=='covariance':
+            acceleration=np.r_[0.,self.empirical.a,0.]
+            for item in candidates:
+                first,second=item['actor_ids'];a,b=actors[first],actors[second];front=fronts[second]
+                group=int(joint_group(b.x-b.length-a.x,b.v-a.v,front is None or front.x-front.length-b.x>115,a.v,self.model.get('speed_edges',())))
+                cell=self.model['cells'][str(group)];mass=1-self.dependence_scale*(1-cell['independent_mass'])
+                if self.gap_taper:mass=1-float(np.clip((115-(b.x-b.length-a.x))/85,0,1))*(1-mass)
+                joint=joint33(pmfs[first],pmfs[second],cell['weights'],mass)
+                item['weight']=max(0.,float(acceleration@joint@acceleration-(pmfs[first]@acceleration)*(pmfs[second]@acceleration)))
+            selected=maximum_weight_following(candidates,self.previous)
+        else:selected,_=partition(candidates,self.previous if self.pair_selection=='continuity' else ())
         uniforms={v.id:float(rng.random()) for v in vehicles};decisions={};units=[]
         for item in selected:
             first,second=item['actor_ids'];a,b=actors[first],actors[second];front=fronts[second]
-            group=int(following_group(b.x-b.length-a.x,b.v-a.v,front is None or front.x-front.length-b.x>115))
+            group=int(joint_group(b.x-b.length-a.x,b.v-a.v,front is None or front.x-front.length-b.x>115,a.v,self.model.get('speed_edges',())))
             cell=self.model['cells'][str(group)];w=cell['weights'];mass=cell['independent_mass'];reason=cell['reason']
             mass=1-self.dependence_scale*(1-mass)
             if self.gap_taper:mass=1-float(np.clip((115-(b.x-b.length-a.x))/85,0,1))*(1-mass)
@@ -149,10 +214,10 @@ class DiscretePairs:
         self.previous=current;return decisions
 
 
-def run(model_root,lateral_root,pair_root,bank,output,mode='fitted',seeds=(7,19,29),duration=60.,dependence_scale=1.,gap_taper=False,supported_pairs_only=False):
+def run(model_root,lateral_root,pair_root,bank,output,mode='fitted',seeds=(7,19,29),duration=60.,dependence_scale=1.,gap_taper=False,supported_pairs_only=False,pair_selection='continuity'):
     root=Path(output);root.mkdir(parents=True,exist_ok=False);m=PairModelQueries(model_root,lateral_root,**SINGLE_OPTIONS);runs=[]
     for seed in seeds:
-        sampler=DiscretePairs(pair_root,m,lateral_root,mode,dependence_scale,gap_taper,supported_pairs_only);initial=Path(bank)/f'initial_seed{seed}.json'
+        sampler=DiscretePairs(pair_root,m,lateral_root,mode,dependence_scale,gap_taper,supported_pairs_only,pair_selection);initial=Path(bank)/f'initial_seed{seed}.json'
         road=DiscreteRoad(m,seed,read(initial),sampler);road.decisions=[]
         while road.time<duration-1e-9:
             if not road.step():break
@@ -168,7 +233,7 @@ def run(model_root,lateral_root,pair_root,bank,output,mode='fitted',seeds=(7,19,
         print({k:row[k] for k in ('seed','elapsed_s','complete','collision_pairs','pair_statistics')},flush=True)
     write(root/'collision_summary.json',{'runs':[{k:v for k,v in r.items() if k!='decisions'} for r in runs],
         'complete_run_count':sum(r['complete'] for r in runs),'model_sha256':m.summary['model_sha256'],'joint_model':sha(Path(pair_root)/'pair_model.json'),
-        'pair_mode':mode,'dependence_scale':dependence_scale,'gap_taper':gap_taper,'supported_pairs_only':supported_pairs_only,
+        'pair_mode':mode,'dependence_scale':dependence_scale,'gap_taper':gap_taper,'supported_pairs_only':supported_pairs_only,'pair_selection':pair_selection,
         'single_contract':contract(m,lateral_root),'implementation_sha256':sha(__file__),
         'scope':'V34 single laws/execution unchanged. Many dynamic disjoint following pairs; rank dependence only in both-stay actions. Independent arm uses exactly the original single per-actor RNG draws. Collision-first screen, no acceptance by likelihood.'})
 
@@ -180,6 +245,12 @@ if __name__=='__main__':
     p.add_argument('--dependence-scale',type=float,default=1.)
     p.add_argument('--gap-taper',action='store_true')
     p.add_argument('--supported-pairs-only',action='store_true')
+    p.add_argument('--pair-selection',choices=['continuity','nearest','covariance'],default='continuity')
+    p.add_argument('--speed-context',action='store_true',help='Fit separate dependence by follower speeds <27, 27-33, >=33 m/s')
+    p.add_argument('--refine-speed-model');p.add_argument('--parent-pair-model')
+    p.add_argument('--one-second-actions',action='store_true',help='Fit dependence using forward one-second velocity increments on fully observed stable intervals')
+    p.add_argument('--one-standard-error',action='store_true',help='Prefer simpler parent mixture within one recording-level standard error of best calibration gain')
     a=p.parse_args()
-    if a.source_root:fit(a.model,a.lateral_model,a.source_root,a.output)
-    else:run(a.model,a.lateral_model,a.pair_model,a.initial_bank,a.output,a.mode,dependence_scale=a.dependence_scale,gap_taper=a.gap_taper,supported_pairs_only=a.supported_pairs_only)
+    if a.refine_speed_model:refine_speed_context(a.refine_speed_model,a.parent_pair_model,a.output,a.one_standard_error)
+    elif a.source_root:fit(a.model,a.lateral_model,a.source_root,a.output,a.speed_context,a.one_second_actions)
+    else:run(a.model,a.lateral_model,a.pair_model,a.initial_bank,a.output,a.mode,dependence_scale=a.dependence_scale,gap_taper=a.gap_taper,supported_pairs_only=a.supported_pairs_only,pair_selection=a.pair_selection)

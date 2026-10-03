@@ -24,7 +24,7 @@ def causal_age(rows,hz):
     return rows.groupby(segment).cumcount().to_numpy()/hz
 
 
-def samples(model,source_root,rec,return_data=False,decision_hz=10):
+def samples(model,source_root,rec,return_data=False,decision_hz=10,one_second_actions=False):
     base=Path(source_root)/'data'
     hashes={kind:sha(base/f'{rec}_{kind}.csv') for kind in ('tracks','tracksMeta')}
     if rec in model.summary['train_recordings'] and any(value!=model.summary['source_sha256'][rec][kind] for kind,value in hashes.items()):
@@ -41,7 +41,8 @@ def samples(model,source_root,rec,return_data=False,decision_hz=10):
     cf=has&(gap>0)&(gap<=115)&(np.abs(rr)<=20)
     ff=(has&(gap>115))|(~has&(rows.frontSightDistance.to_numpy()>=115))
     classes=meta.loc[meta['class'].isin(model.config['vehicle_classes']),'id']
-    eligible=(rows.id.isin(classes).to_numpy()&(causal_age(rows,25)>=3.)&(speed>=20)&(speed<=40)&
+    age=causal_age(rows,25)
+    eligible=(rows.id.isin(classes).to_numpy()&(age>=3.)&(speed>=20)&(speed<=40)&
               (acc>=-4)&(acc<=2)&(rows.yVelocity.abs().to_numpy()<.2)&(cf|ff))
     positions=np.flatnonzero(eligible&cf&clock(rows.frame.to_numpy(),25,decision_hz))
     lookup=pd.MultiIndex.from_frame(rows[['frame','id']])
@@ -49,6 +50,21 @@ def samples(model,source_root,rec,return_data=False,decision_hz=10):
     keep=leaders>=0;positions=positions[keep];leaders=leaders[keep]
     keep=eligible[leaders]&(rows.laneId.to_numpy()[positions]==rows.laneId.to_numpy()[leaders])&(direction[positions]==direction[leaders])
     positions=positions[keep];leaders=leaders[keep]
+    future_excluded=0
+    if one_second_actions:
+        before=len(positions)
+        def endpoints(ids):
+            return lookup.get_indexer(pd.MultiIndex.from_arrays([rows.frame.to_numpy()[ids]+25,rows.id.to_numpy()[ids]]))
+        end_a=endpoints(positions);end_b=endpoints(leaders)
+        keep=(end_a>=0)&(end_b>=0)
+        positions=positions[keep];leaders=leaders[keep];end_a=end_a[keep];end_b=end_b[keep]
+        # Future velocities are training targets only; stable interval selection
+        # defines the both-stay action block and excludes truncated tracks.
+        aa=speed[end_a]-speed[positions];bb=speed[end_b]-speed[leaders]
+        keep=(age[end_a]>=1.)&(age[end_b]>=1.)&(aa>=-4)&(aa<=2)&(bb>=-4)&(bb<=2)
+        positions=positions[keep];leaders=leaders[keep]
+        acc[positions]=aa[keep];acc[leaders]=bb[keep]
+        future_excluded=before-len(positions)
     first=query_rows(model,rows.iloc[positions]);second=query_rows(model,rows.iloc[leaders])
     a=index(acc[positions],model.a);b=index(acc[leaders],model.a)
     support=(first[np.arange(len(a)),a]>0)&(second[np.arange(len(b)),b]>0)
@@ -64,7 +80,8 @@ def samples(model,source_root,rec,return_data=False,decision_hz=10):
         return {'first':first,'second':second,'a':a,'b':b,'states':states,
             'groups':following_group(gap[positions],rr[positions],ff[leaders]),
             'direct':direct[positions]&direct[leaders],'support':support}, {'source_sha256':hashes,
-            'eligible_pairs':len(a),'support_excluded':int((~support).sum()),'fit_pairs':int(support.sum())}
+            'eligible_pairs':len(a),'support_excluded':int((~support).sum()),'fit_pairs':int(support.sum()),
+            'one_second_actions':one_second_actions,'future_interval_excluded':future_excluded}
     components=observed_components(first[support],second[support],a[support],b[support])
     groups=following_group(gap[positions],rr[positions],ff[leaders])[support]
     return components,groups,{'source_sha256':hashes,'eligible_pairs':len(a),

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "experiment_id": "highd_paper_nde_baseline_v1",
-  "status": "v38_supported_matching_selected_after_collision_first_development",
+  "status": "v46_interval_aligned_hierarchical_dual_selected",
   "current_decision": {
     "single_reference": "configs/highd_paper_discrete_v34.json",
     "reference_metric_scale": {
@@ -19,8 +19,9 @@
     "target_front_pilot": "V25 actual target-front mixture fitted and evaluated: fitted 0/3, independent 1/3. 110 tests, 2315 exactly resampled steps and all probability audits pass, but candidate fails collision gate. Original single reference unchanged. All failures retained",
     "context_pilot": "On user instruction, joint-PMF fitting stopped. V26 binds (A, target front, target rear) at onset and preserves identity through completion, separately from dynamic pairs. Explicit progress-weighted incoming-leader PMF gives 1690 pre-center responses and 1069 outside-pair responses. Both arms complete 1/3. Broad resampling stopped when user requested collision-first iteration; independent review partial, fitted review not run. 117 tests were run before that instruction",
     "discrete_baseline": "Current user-requested direction: 1 s simultaneous 33-action decisions; 1 s LC at a=0; adjacency rebuilt every second. 15 Hz direct/linear execution, not the Nature paper bicycle model. Separate 1 Hz highD lateral count artifact; frozen original reference retained. V27-V33 collision failures all preserved. V34 uses direct-count longitudinal backoff, distance-weighted same-context empirical lateral frequencies and EXPLICIT extra projected-1s feasibility support. It completes seeds 7/19/29 for 60 s, with 10/10/8 lane changes. Only after this collision pass, original 10 Hz/bin scoring gives H(v,g,rr)=0.16305/0.21005/0.12486, above required speed/gap targets. Binned train coverage suggests feasibility excludes 19/680 true onsets; exact raw coverage unresolved. This is a restricted development baseline, not accepted full highD law or exact paper replication",
-    "next": "V38 checks direct empirical support and 3 s causal history before matching, so independent-only pairs cannot block supported neighbors. Same single laws and fitted 1 Hz joint weights. Fixed seeds 7/19/29 all complete 60 s, H(v,g,rr)=0.16400/0.22306/0.11069, versus V35=0.16852/0.23607/0.10974. Speed/gap improve, rr worsens slightly. V36 uniform half dependence collides; V37 distance taper and V39 supported-half retained but not selected. No additional broad experiment batch planned. Full highD/long-run/D2RL claims remain outside this stage.",
-    "dual_discrete": "configs/highd_paper_discrete_dual_v38.json"
+    "next": "V46 aligns pair labels to held 1 s actions and uses speed-context shrinkage toward a coarse parent, with one-standard-error recording-balanced calibration. Same V34 single marginals/LC execution and supported continuity pairing. Seeds 7/19/29 all complete 60 s; H(v,g,rr)=0.15716/0.21796/0.11598. Speed/gap improve versus V38; rr worsens. V45 retained as gap-priority alternative H=0.16633/0.20696/0.11576. V40/V41/V42 collide and are not scored; V43/V44 preserved. All seven candidates use reused development seeds, with no full highD, long-run or D2RL acceptance claim.",
+    "dual_discrete": "configs/highd_paper_discrete_dual_v46.json",
+    "gap_priority_dual": "configs/highd_paper_discrete_dual_v45.json"
   },
   "paper": {
     "title": "Distributionally Consistent Simulation of Naturalistic Driving Environment for Autonomous Vehicle Testing",
