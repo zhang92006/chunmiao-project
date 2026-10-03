@@ -1,0 +1,241 @@
+{
+  "schema_version": 1,
+  "experiment_id": "highd_paper_nde_baseline_v1",
+  "status": "v34_single_stage_user_accepted_v35_dual_following_collision_screen_passed",
+  "current_decision": {
+    "single_reference": "configs/highd_paper_discrete_v34.json",
+    "reference_metric_scale": {
+      "speed_hellinger": 0.147,
+      "gap_hellinger": 0.197
+    },
+    "priority": "Preserve the accepted single reference and develop explicit opt-in joint/history natural-law candidates; do not resume optimization of the accepted single model",
+    "following_pair_pilot": "V2 uses 12 coarse contexts, causal 3 s history and recording-balanced calibration of strength. Five validation recordings show positive supported-action log-likelihood gains; 0/3 rollouts complete 60 s. Research candidate only",
+    "lane_extension": "Opt-in conditional P(d|a,s), crossing-backed onset supervision with common 8 s label follow-up and causal geometry projections. Train median maneuver duration 5.8 s. Center-lane control observations fix phantom old-lane leaders. Both lane-pair marginal tilts and optional potential-leader mixture are trained/calibrated, with coupling refitted afterward. Single reference untouched",
+    "lane_pilot": "V8-V16 implemented and evaluated, none accepted. Feedback regressions depart road; damped mixtures can cancel too many onsets; startup-law and mode-memory candidates still collide. V15 restricted alongside support completes 3/3 with full H(v,g)=0.13760/0.27887 but excludes 75/381 train and 92/564 calibration true onsets. V16 tree onset lowers calibration NLL but completes 0/3. All 18 arm probability audits pass. Full candidate review and frozen-single regression retained",
+    "temporal_pilot": "State-matched V7 residual correlation 0.0032 versus highD 0.9870 at 95.43% overlap. V17 own-action-history candidate wrongly reweights fallback and completes 0/3. V18 retains fallback/empty-state laws and completes 2/3, but pooled diagnostic H(v,g)=0.16980/0.28836. V19 adds lagged leader action and completes 2/3 with failure-censored H=0.12349/0.25953; calibration likelihood does not improve over V18. Six arms/18 runs retained. History and scene probability audits pass, 82 tests pass, exact frozen-single regression unchanged. No accepted candidate",
+    "surface_pilot": "Response audit completed on all train/calibration records. Geometry check in record 01: 262461 same-lane leader pairs agree with dhw within about 0.01 m. Matched frozen-query fallback occupancy is far higher in simulation, but coarse-state/selection limitations prevent causal attribution. V20 trilinear probability interpolation with refitted following kernel completes only 1/3 in both arms; all failures retained. 63931 selected surface probabilities and full scene audits pass; 86 tests and exact original-single regression pass. Not accepted",
+    "following_response_pilot": "V21 fits two role marginals on both current states with exactly preserved action support, direct empirical state support and 3 s causal history. Equal-record train likelihood and calibration-selected shrinkage, followed by coupling refit. Five validation recordings improve supported marginal likelihood and relative acceleration mean, but fitted completes 2/3 and independent 1/3. Failure-censored H(v,g) 0.15603/0.22460 and 0.19465/0.18868 are not acceptance. All 51584 adjusted actions and physical replay contexts audited, 94 tests and exact original-single regression pass. Sparse provenance exactly reconstructs critical smoothed cells from only 1-3 neighboring source rows. Not accepted",
+    "censoring_pilot": "All train/calibration motion-risk rows audited: original 8 s follow-up retains about half the risk exposure and 381/804 train confirmed crossings. New motion initiation times competing crossing/return hazards retain visible intervals from censored motions; conditional independent censoring remains assumed. V22 fitted/independent complete 1/3 and 0/3. V23 deterministic conditional mean crossing-time duration completes 1/3 each. V24 adds existing direct-state phase/interaction support backoff, completes 2/3 each but failure-censored H(v,g) is 0.12580/0.30468 and 0.16711/0.23809. All 18 runs retained, 171790 scene units audited, 7625 decision steps exactly re-sampled, 158 maneuver durations reconstructed. 102 tests and final exact original-single regression pass. No accepted candidate",
+    "target_front_pilot": "V25 actual target-front mixture fitted and evaluated: fitted 0/3, independent 1/3. 110 tests, 2315 exactly resampled steps and all probability audits pass, but candidate fails collision gate. Original single reference unchanged. All failures retained",
+    "context_pilot": "On user instruction, joint-PMF fitting stopped. V26 binds (A, target front, target rear) at onset and preserves identity through completion, separately from dynamic pairs. Explicit progress-weighted incoming-leader PMF gives 1690 pre-center responses and 1069 outside-pair responses. Both arms complete 1/3. Broad resampling stopped when user requested collision-first iteration; independent review partial, fitted review not run. 117 tests were run before that instruction",
+    "discrete_baseline": "Current user-requested direction: 1 s simultaneous 33-action decisions; 1 s LC at a=0; adjacency rebuilt every second. 15 Hz direct/linear execution, not the Nature paper bicycle model. Separate 1 Hz highD lateral count artifact; frozen original reference retained. V27-V33 collision failures all preserved. V34 uses direct-count longitudinal backoff, distance-weighted same-context empirical lateral frequencies and EXPLICIT extra projected-1s feasibility support. It completes seeds 7/19/29 for 60 s, with 10/10/8 lane changes. Only after this collision pass, original 10 Hz/bin scoring gives H(v,g,rr)=0.16305/0.21005/0.12486, above required speed/gap targets. Binned train coverage suggests feasibility excludes 19/680 true onsets; exact raw coverage unresolved. This is a restricted development baseline, not accepted full highD law or exact paper replication",
+    "next": "Latest user instruction accepts the V34 development stage and authorizes dual extension. V35 fresh 1 Hz following dependence now completes 3/3 fixed 60 s scenes without collisions; independent control exactly reproduces V34. Preserve accepted single marginals and 1 s LC execution. LC residual dependence and D2RL remain outside this extension. Evaluate collisions first, then distributions; no broad repeated audits. H(v,g,rr)=0.16852/0.23607/0.10974: relative speed improves while speed/gap worsen versus V34.",
+    "dual_discrete": "configs/highd_paper_discrete_dual_v35.json"
+  },
+  "paper": {
+    "title": "Distributionally Consistent Simulation of Naturalistic Driving Environment for Autonomous Vehicle Testing",
+    "url": "https://arxiv.org/pdf/2101.02828",
+    "version": "2101.02828v2",
+    "method_sections": [
+      "III",
+      "IV-B",
+      "Appendix A",
+      "Appendix B",
+      "Appendix C"
+    ],
+    "original_data": [
+      "SPMD",
+      "IVBSS"
+    ],
+    "original_proposed_simulator": "highway-env with bicycle dynamics",
+    "original_sumo_role": "comparison baseline",
+    "original_lane_count": 3
+  },
+  "local_variant": {
+    "dataset": "highD-v1.0",
+    "simulator": "self-written direct longitudinal dynamics and prescribed lateral path",
+    "lane_count": 2,
+    "map": "unbounded two-lane straight road; no SUMO map loaded",
+    "claim": "method-aligned highD two-lane native adaptation; not exact bicycle-dynamics numerical replication",
+    "trajectory_replay": false,
+    "donor_retrieval": false,
+    "boundary_completion": false,
+    "joint_bv_actions": "optional_dynamic_disjoint_following_and_lane_interaction_pairs",
+    "continuous_correction": false,
+    "rl": false
+  },
+  "splits": {
+    "train": [
+      "01",
+      "02",
+      "04",
+      "05",
+      "07",
+      "08",
+      "11",
+      "12",
+      "15",
+      "16"
+    ],
+    "calibration": [
+      "03",
+      "06",
+      "09",
+      "13",
+      "17",
+      "25",
+      "26",
+      "27",
+      "28",
+      "29"
+    ],
+    "validation": [
+      "10",
+      "14",
+      "18",
+      "19",
+      "20"
+    ],
+    "test": [
+      "58",
+      "59",
+      "60"
+    ]
+  },
+  "training": {
+    "source": "complete train recordings, not selected scenarios or the 72-packet bank",
+    "initialization_and_behavior_same_source": true,
+    "observed_samples_are_correlated": true,
+    "longitudinal": [
+      "P(a|v)",
+      "P(a|v,r,rr)"
+    ],
+    "speed_mps": [
+      20.0,
+      40.0
+    ],
+    "paper_longitudinal_speed_resolution_mps": 0.2,
+    "acceleration_mps2": [
+      -4.0,
+      2.0,
+      0.2
+    ],
+    "spacing_resolution_m": 1.0,
+    "moving_average_smoothing": "width-3 frequency smoothing before normalization, with declared inevitable-state mask",
+    "laplace_or_hierarchical_model_is_paper_exact": false,
+    "lateral": "four neighbor-context empirical models with maneuver-onset labels",
+    "lane_change_acceleration_mps2": 0.0,
+    "allow_lane_change_without_current_lane_leader": false,
+    "fallback": "IDM fitted on train highD instantaneous actions and stochastic MOBIL-inspired incentive hazard; not the complete MOBIL equation. Fit-at-boundary identifiability warnings and fallback usage recorded separately",
+    "open_details": [
+      "range versus bumper-gap geometry and vehicle-length conversion",
+      "relative-speed grid resolution and support",
+      "lane-change onset detection and exposure denominator",
+      "three-lane training context projection into the two-lane runtime",
+      "MA smoothing neighborhood and inevitable-crash exclusion definition"
+    ]
+  },
+  "initialization": {
+    "method": "Appendix C full-road sequential generation",
+    "first_position": "Uniform(0,d0)",
+    "d0_m": 50.0,
+    "first_speed": "train empirical speed marginal",
+    "following_probability": "estimate from train highD, with observation-censoring accounting",
+    "following_state": "joint P(r,rr|v); upstream vehicle is the following vehicle",
+    "downstream_speed": "v_next=v_current+rr",
+    "position_update": "x_next=x_current+bumper_gap+next_vehicle_length in front-bumper coordinates",
+    "free_position_increment": "d_obs+Uniform(0,d0), with the selected distance convention",
+    "d_obs_m": 115.0,
+    "free_speed": "train empirical speed marginal",
+    "trivial_collision_handling": "reject and resample, count rejections; no hidden speed clipping",
+    "following_probability_from_legacy_tables": false,
+    "population_speed_stationarity_guaranteed_by_initialization": false
+  },
+  "basic_empirical_evaluation": {
+    "optimize_before_basic_evaluation": false,
+    "diagnostic_times_s": [
+      0.0,
+      1.0,
+      3.0,
+      5.0,
+      10.0,
+      30.0,
+      60.0
+    ],
+    "paper_full_horizon_s": 900.0,
+    "paper_warmup_s": 600.0,
+    "paper_collection_s": 300.0,
+    "paper_repetitions": 100,
+    "pilot_seeds": [
+      7,
+      19,
+      29
+    ],
+    "metrics": [
+      "speed Hellinger(t)",
+      "gap Hellinger(t)",
+      "rr Hellinger(t)",
+      "speed probability MAE",
+      "gap probability MAE",
+      "rr probability MAE",
+      "lane-change rate",
+      "fallback fraction",
+      "sampled versus executed actions"
+    ],
+    "finite_road_replenishment": "unbounded road with a finite initialized fleet; no deletion or arrival process. Full stationary traffic-stream claim not supported",
+    "reference_distributions": "train empirical for stationarity development; existing heldout recordings for grouped generalization with usage history disclosed",
+    "new_independent_holdout_claim": false
+  },
+  "stationary_optimization": {
+    "status": "open_v3_empirical_leader_motion_bands_solved_short_survival_improved_rollout_fidelity_not_accepted",
+    "order": "after basic empirical baseline is measured",
+    "target_feature": "speed",
+    "empirical_lateral_unchanged": true,
+    "free_driving_constraint": "pi_v^T P(F)=pi_v^T",
+    "car_following": "Closed joint target audit retained. Open-flow variant jointly optimizes fine FF and CF PMFs using full joint CF finite-volume balance and measured train-only context exchanges. Continuous subcell dynamics assume constant predecessor speed. Finite-trajectory balance bands are not an exact stationary proof",
+    "objective": "minimal deviation from empirical F under the paper's Frobenius-norm formulation",
+    "solver_contract": "Convex-dual simplex projection minimizes squared Frobenius. Open-flow policies retain full joint CF balance, not a speed-only surrogate. Explicit diagnostic candidate mode never denotes stationarity acceptance. Frozen FF-only table is retained separately from the jointly adjusted FF table. Offline balance acceptance does not open the long-run gate",
+    "open_flow_config": "configs/highd_paper_open_joint_v3.json",
+    "additional_speed_constraint_diagnostic": "configs/highd_paper_open_joint_v4.json",
+    "default_development_candidate": "historical_v3_only_current_dual_extension_uses_frozen_empirical_reference",
+    "predecessor_motion": "Observed train-only stable-leader endpoint velocity increment estimates offline disturbances; no runtime future input and no subject-trajectory replay. Does not identify causal leader response to modified follower actions",
+    "empirical_flow_pairs": 1346484,
+    "cf_to_ff_pairs": 1146,
+    "ff_to_cf_pairs": 1119,
+    "context_changed_pairs": 133512,
+    "joint_balance_grid": [
+      20,
+      23,
+      40
+    ],
+    "behavior_control_resolution_unchanged": true,
+    "score_bins_unchanged": true,
+    "balance_tolerance": "Each cell: abs(observed next occupancy minus source occupancy) plus 2/source_pair_count. Invalid/collision destination has zero allowance. This is a declared finite-sample development budget, not a confidence interval",
+    "short_run_result": "V3 completes 3/3 fixed seeds versus 2/3 Basic and FF-only, and 1/3 v2. At full-cohort 10 s V3 H(v,g,rr)=0.25595,0.45386,0.22278. Equal-exposure 10-30 s V3=0.22753,0.17515,0.15188 versus Basic=0.20391,0.21077,0.14022: gap improves but speed/rr worsen. V4 added-speed residual 4.268e-7 exceeds 1e-8 allowance and only 1/3 rollouts completes. No production acceptance",
+    "matched_window_contract": "Half-open 0-10,10-30,30-60 s intervals; identical complete-exposure seed intersection across arms; disclose excluded seeds and temporal correlation. Original endpoint scoring retained",
+    "next_priority": "Stationary variants retained as historical experiments; current priority is dual extension on the user-accepted empirical reference",
+    "open_details": [
+      "steady preceding-vehicle dynamics",
+      "finite-grid boundaries",
+      "support feasibility",
+      "objective solver representation"
+    ]
+  },
+  "milestones": [
+    {
+      "id": "M0",
+      "deliverable": "source and implementation audit; isolated experiment protocol",
+      "status": "done"
+    },
+    {
+      "id": "M1",
+      "deliverable": "train-only empirical longitudinal, lateral, initialization tables and declared highD fallback",
+      "status": "implemented_full_train_fitted_fallback_validity_not_accepted"
+    },
+    {
+      "id": "M2",
+      "deliverable": "whole-road initialization and natural-only native pilot with H(t)",
+      "status": "implemented_three_seed_60s_pilot_run"
+    },
+    {
+      "id": "M3",
+      "deliverable": "stationary optimization plus matched before/after rollout",
+      "status": "v3_offline_bands_pass_3_of_3_short_runs_complete_equal_exposure_gap_improves_speed_tradeoff_unresolved_v4_not_accepted"
+    },
+    {
+      "id": "M4",
+      "deliverable": "joint BV action extensions, then D2RL",
+      "status": "dynamic_following_pairs_implemented_and_refitted_first_rollout_candidate_not_accepted_lane_and_D2RL_pending"
+    }
+  ]
+}

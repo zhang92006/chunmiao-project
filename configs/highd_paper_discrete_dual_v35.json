@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "status": "dual_following_implemented_three_seed_collision_screen_passed",
+  "module": "scenario_reconstruction.highd_paper_discrete_pairs",
+  "single_baseline": "configs/highd_paper_discrete_v34.json",
+  "single_contract": {
+    "single_version": "user_accepted_v34",
+    "model_sha256": "906c1a33d26b03a1ec75bf42bd3f6e2fc0bc0faf3dee6563ba2615a7a2934368",
+    "lateral_sha256": "ed4e5bcf8307727c591db175dda3cd4ac8f71be867da404b881c8812b95a6358",
+    "options": {
+      "empirical_backoff": true,
+      "pooled_lateral": true,
+      "weighted_lateral": true,
+      "reference_lateral": false,
+      "train_headway": false,
+      "one_second_feasibility": true
+    },
+    "decision_interval_s": 1.0,
+    "lane_change_duration_s": 1.0,
+    "physics_hz": 15,
+    "action_count": 33
+  },
+  "joint_artifact": "highd_paper_discrete_pair_fit_v1_20261003",
+  "joint_sha256": "fb7b7a8facc7d9d77ce1c8c007df07c274981a6a7d7a3e889b8a3af88a310a5f",
+  "rollout_artifact": "highd_paper_discrete_dual_v35_verified_20261003",
+  "initial_fleet_artifact": "highd_paper_native_matched_v2_20261001/initial_fleets",
+  "reference_artifact": "highd_paper_native_reference_v2_20261001",
+  "reference_sha256": "5e050658ab1a36bc829b0ab4f430679da1569bbe28a9fa3c78238515bb2229cf",
+  "seeds": [
+    7,
+    19,
+    29
+  ],
+  "duration_s": 60,
+  "completed_runs": 3,
+  "lane_change_counts": [
+    5,
+    6,
+    7
+  ],
+  "pair_statistics": [
+    {
+      "paired_decisions": 920,
+      "correlated_pair_decisions": 660,
+      "maximum_simultaneous_pairs": 17,
+      "pair_additions": 22,
+      "pair_removals": 6,
+      "maximum_marginal_error": 2.7755575615628914e-16
+    },
+    {
+      "paired_decisions": 965,
+      "correlated_pair_decisions": 602,
+      "maximum_simultaneous_pairs": 17,
+      "pair_additions": 25,
+      "pair_removals": 10,
+      "maximum_marginal_error": 3.3306690738754696e-16
+    },
+    {
+      "paired_decisions": 929,
+      "correlated_pair_decisions": 669,
+      "maximum_simultaneous_pairs": 16,
+      "pair_additions": 20,
+      "pair_removals": 4,
+      "maximum_marginal_error": 3.3306690738754696e-16
+    }
+  ],
+  "full_exposure_hellinger": {
+    "speed": 0.16852435527323087,
+    "gap": 0.23607447227717007,
+    "rr": 0.10973949663082053
+  },
+  "independent_control_exact_v34_actions_and_diagnostics": true,
+  "validation": "Collision-first 3/3 fitted and independent; corrected acceleration actor-ID logs; 3 focused tests pass; all recorded independent actions/execution diagnostics match V34. Earlier highd_paper_discrete_dual_v35_20261003 logs have misassigned acceleration IDs; its fidelity scores are invalid and retained only for diagnosis.",
+  "scope": "Dynamic disjoint same-lane following pairs; fitted dependence in both-stay 31x31 acceleration block of full 33x33 joint. Both single marginals and all LC blocks preserved. User accepted V34 development stage; explicit V34 feasibility restrictions inherited. No LC residual coupling or D2RL. Three fixed development seeds are not a safety guarantee or generalization acceptance.",
+  "environment": {
+    "python": "3.12.7",
+    "numpy": "1.26.4",
+    "scipy": "1.13.1",
+    "pandas": "2.2.2"
+  }
+}
