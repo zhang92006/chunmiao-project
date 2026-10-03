@@ -15,6 +15,9 @@ license.
 
 For the current native highD experiment, start with the
 [V46 single-BV baseline and dual-following training guide](docs/highd_v46_d2rl_handoff.md).
+For the dual extension with single fallback, causal context observations,
+independent checkpoint selection and paper-style statistics, use the
+[V46 dual validation experiment](docs/highd_v46_dual_validation.md).
 The frozen NDE tag is `nde-v46-frozen-20261003`; training code is on
 `feature/highd-v46-d2rl-handoff`. This path needs Python 3.9 and the V46 LFS
 archive, with no SUMO or raw highD tracks. The fixed IDM CAV does not change lanes.
@@ -85,4 +88,3 @@ without an API key using `--no_llm`.
 
 Detailed implementation and experiment notes are under
 `scenario_reconstruction/`.
-

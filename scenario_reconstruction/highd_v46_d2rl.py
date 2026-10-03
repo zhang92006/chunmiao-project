@@ -8,6 +8,7 @@ from collections import Counter
 from pathlib import Path
 import hashlib
 import json
+import time
 import numpy as np
 
 from .highd_v46_assets import ensure_assets, read, save, digest, ROOT
@@ -16,10 +17,39 @@ from .highd_paper_discrete import DiscreteRoad
 from .highd_paper_dynamics import advance, collisions
 from .highd_paper_pairs import update_histories, joint33
 from .highd_dynamic_pairs import partition, pair_key
+from .highd_v46_contract import LEGACY_OBSERVATION, CONTEXT_OBSERVATION, OBSERVATION_DIMENSIONS, enrich_observation
 
 
 def identity(value):
     return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(',', ':'), allow_nan=False).encode()).hexdigest()
+
+
+def experiment_target(lock, config):
+    # The natural risk target excludes the proposal's epsilon, risk proxy and
+    # observation choices. All comparison arms retain the same physical P.
+    return {'schema_version': 2, 'natural_target_sha256': lock['natural_target_sha256'],
+            'experiment': {k: config[k] for k in ('horizon_s', 'cav')},
+            'cav_role': 'uniform_initialized_actor_with_observed_current_leader',
+            'event': 'CAV_in_first_any_actor_collision_by_horizon; BV_only_is_competing_negative',
+            'runtime_sha256': digest(__file__)}
+
+
+def proposal_structure(config, mode):
+    return {'mode':mode,'criticality':config['criticality'],
+            'observation_contract':config.get('observation_contract',LEGACY_OBSERVATION),
+            'dual_single_fallback':config.get('dual_single_fallback',False),
+            'epsilon_min':config['epsilon_min']}
+
+
+def factor_influence(p, h):
+    """Total variation of the first and conditional second proposal factors."""
+    if p.ndim == 1:
+        return [float(.5*np.abs(p-h).sum()), 0.]
+    p1, h1 = p.sum(axis=1), h.sum(axis=1)
+    first = float(.5*np.abs(p1-h1).sum())
+    rows = (p1 > 0) & (h1 > 0)
+    second = float(np.sum(h1[rows]*.5*np.abs(h[rows]/h1[rows, None]-p[rows]/p1[rows, None]).sum(axis=1)))
+    return [first, second]
 
 
 def idm_acceleration(speed, gap, lead_speed, cfg):
@@ -90,6 +120,8 @@ class NativeExperiment(DiscreteRoad):
         self.cav=candidates[int(self.rng.integers(len(candidates)))]
         self.natural=DiscretePairs(pair_root,model,lateral_root,supported_pairs_only=True)
         self.steps=[];self.log_weight=0.;self.max_intervened=0
+        self.minimum_ttc=np.inf;self.minimum_gap=np.inf;self.collision_context=[]
+        self.physics_trace=[]
 
     def prepare(self,pmfs):
         sampler=self.natural
@@ -119,21 +151,43 @@ class NativeExperiment(DiscreteRoad):
     def choose(self,units,actors,pmfs,mode):
         if mode=='natural':return None
         cfg=self.config['criticality'];candidates=[]
+        fallback=mode=='dual' and self.config.get('dual_single_fallback',False)
+        nearby=sorted((abs(c.x-self.cav.x),c.id) for c in actors.values()
+                      if c.id!=self.cav.id and abs(c.x-self.cav.x)<=cfg['observation_m'])
+        anchors={i for _,i in nearby[:cfg['max_candidates']]}
         for unit in units:
-            choices=[[i] for i in unit['ids']] if mode=='single' else [unit['ids']] if len(unit['ids'])==2 else []
+            choices=[[i] for i in unit['ids']] if mode=='single' or fallback else []
+            if mode=='dual' and len(unit['ids'])==2:choices.append(unit['ids'])
             for ids in choices:
                 distance=min(abs(actors[i].x-self.cav.x) for i in ids)
-                if distance<=cfg['observation_m']:candidates.append((distance,tuple(ids),unit))
-        best=None
-        for _,ids,unit in sorted(candidates,key=lambda c:(c[0],c[1]))[:cfg['max_candidates']]:
+                if distance<=cfg['observation_m'] and (not fallback or any(i in anchors for i in ids)):
+                    candidates.append((distance,tuple(ids),unit))
+        candidates=sorted(candidates,key=lambda c:(c[0],c[1]))
+        if not fallback:candidates=candidates[:cfg['max_candidates']]
+        self.selection_diagnostics={'nearby_actors':len(nearby),'evaluated_candidates':len(candidates),
+            'pair_candidates':sum(len(ids)==2 for _,ids,_ in candidates),'eligible_candidates':0,'eligible_pair_candidates':0}
+        best=None;best_pair=None
+        for _,ids,unit in candidates:
             p=unit['p']
             if len(ids)==1 and p.ndim==2:p=p.sum(axis=1 if ids[0]==unit['ids'][0] else 0)
             score=challenge(self,list(ids),pmfs,cfg)
             mass=float(np.sum(p*score));support=p>0
-            if mass<cfg['minimum_critical_mass'] or np.ptp(score[support])<cfg['minimum_action_contrast']:continue
-            if best is None or mass>best['mass']:
-                best={'unit':unit,'ids':list(ids),'h':p*score/mass,'mass':mass}
-        return best
+            contrast=float(np.ptp(score[support]))
+            relative=contrast/max(float(np.max(score[support])),1e-30)
+            if (mass<cfg['minimum_critical_mass'] or contrast<cfg['minimum_action_contrast']
+                    or relative<cfg.get('minimum_relative_action_contrast',0.)):continue
+            self.selection_diagnostics['eligible_candidates']+=1
+            h=p*score/mass
+            item={'unit':unit,'ids':list(ids),'h':h,'mass':mass,
+                  'relative_contrast':relative,'factor_influence':factor_influence(p,h)}
+            if best is None or mass>best['mass']:best=item
+            if len(ids)==2:
+                self.selection_diagnostics['eligible_pair_candidates']+=1
+                if best_pair is None or mass>best_pair['mass']:best_pair=item
+        # Preserve a genuine two-factor experiment whenever an actionable pair
+        # exists. A single candidate supplies coverage only when no pair passes
+        # the same pre-draw risk/action-contrast tests.
+        return best_pair if fallback and best_pair is not None else best
 
     def sample(self,pmfs,mode,epsilon,policy=None):
         units,actors=self.prepare(pmfs);chosen=self.choose(units,actors,pmfs,mode)
@@ -141,30 +195,50 @@ class NativeExperiment(DiscreteRoad):
         actions={};training=None
         for unit in units:
             ids=unit['ids'];p=unit['p'];active=chosen is not None and chosen['unit'] is unit
-            if active and mode=='single' and ids[0]!=chosen['ids'][0]:ids=ids[::-1];p=p.T
+            one_factor=active and len(chosen['ids'])==1
+            if one_factor and ids[0]!=chosen['ids'][0]:ids=ids[::-1];p=p.T
             p1=p if p.ndim==1 else p.sum(axis=1)
             eps=np.ones(1 if mode!='dual' else 2)
             if active:
                 obs=observation(self,chosen['ids'])
-                eps=np.asarray(policy(obs) if policy is not None else [epsilon]*len(chosen['ids']),float)
-                if eps.shape!=(len(chosen['ids']),) or not np.isfinite(eps).all() or np.any(eps<self.config['epsilon_min']) or np.any(eps>1):raise ValueError('Invalid policy epsilon')
-                h1=chosen['h'] if mode=='single' else chosen['h'].sum(axis=1)
+                mask=[1,int(len(chosen['ids'])==2)]
+                if self.config.get('observation_contract',LEGACY_OBSERVATION)==CONTEXT_OBSERVATION:
+                    pair=[actors[i] for i in chosen['ids']]
+                    gap=pair[1].x-pair[1].length-pair[0].x if len(pair)==2 else 0.
+                    rate=pair[1].v-pair[0].v if len(pair)==2 else 0.
+                    obs=enrich_observation(obs,chosen['mass'],chosen.get('relative_contrast',0.),
+                        self.log_weight,self.time,self.config['horizon_s'],mask,gap,rate)
+                dimension=2 if mode=='dual' else 1
+                eps=np.asarray(policy(obs) if policy is not None else np.broadcast_to(epsilon,(dimension,)),float)
+                if eps.shape!=(dimension,) or not np.isfinite(eps).all() or np.any(eps<self.config['epsilon_min']) or np.any(eps>1):raise ValueError('Invalid policy epsilon')
+                h1=chosen['h'] if one_factor else chosen['h'].sum(axis=1)
                 q1=eps[0]*p1+(1-eps[0])*h1
             else:h1=p1;q1=p1
             a=inverse_cdf(q1,uniforms[ids[0]]);actions[ids[0]]=a
             pf=[float(p1[a])];hf=[float(h1[a])];qf=[float(q1[a])]
             if len(ids)==2:
                 p2=p[a]/p1[a];h2=p2
-                if active and mode=='dual':h2=chosen['h'][a]/h1[a] if h1[a]>0 else p2
-                q2=eps[1]*p2+(1-eps[1])*h2 if active and mode=='dual' else p2
+                if active and not one_factor:h2=chosen['h'][a]/h1[a] if h1[a]>0 else p2
+                q2=eps[1]*p2+(1-eps[1])*h2 if active and not one_factor else p2
                 b=inverse_cdf(q2,uniforms[ids[1]]);actions[ids[1]]=b
-                if active and mode=='dual':pf.append(float(p2[b]));hf.append(float(h2[b]));qf.append(float(q2[b]))
+                if active and not one_factor:pf.append(float(p2[b]));hf.append(float(h2[b]));qf.append(float(q2[b]))
             if active:
+                if mode=='dual' and one_factor:pf.append(1.);hf.append(1.);qf.append(1.)
                 weight=float(np.log(np.asarray(pf)/qf).sum());self.log_weight+=weight
                 training={'time_s':self.time,'observation':obs,'actor_ids':chosen['ids'],'natural_unit_ids':ids,
                     'action_indices':[actions[i] for i in chosen['ids']],'p_factors':pf,'h_factors':hf,'q_factors':qf,
-                    'generation_epsilon':eps.tolist(),'log_weight':weight,'critical_mass':chosen['mass']}
+                    'generation_epsilon':eps.tolist(),'log_weight':weight,'critical_mass':chosen['mass'],
+                    'factor_mask':mask[:dimension],'relative_action_contrast':chosen.get('relative_contrast'),
+                    'factor_influence_tv':chosen.get('factor_influence'),
+                    'selection_diagnostics':getattr(self,'selection_diagnostics',{})}
                 self.max_intervened=max(self.max_intervened,len(chosen['ids']))
+        if hasattr(self,'diagnostics'):
+            self.diagnostics['decision_steps']+=1
+            self.diagnostics['pair_available_steps']+=int(any(len(u['ids'])==2 for u in units))
+            self.diagnostics['critical_steps']+=int(chosen is not None)
+            self.diagnostics['dual_steps']+=int(chosen is not None and len(chosen['ids'])==2)
+            self.diagnostics['single_steps']+=int(chosen is not None and len(chosen['ids'])==1)
+            for key,value in getattr(self,'selection_diagnostics',{}).items():self.diagnostics[key]+=value
         if len(actions)!=len(self.vehicles)-1:raise ValueError('Duplicate or missing BV decision')
         if training:self.steps.append(training)
         return actions
@@ -193,44 +267,87 @@ class NativeExperiment(DiscreteRoad):
                 if car.id in changes:
                     old,target=changes[car.id];car.y=(old+(target-old)*(k+1)/15)*4
             self.time=start+(k+1)/15;self.crashes=collisions(self.vehicles)
+            for car in bvs:
+                if abs(car.y-cav.y)>=(car.width+cav.width)/2:continue
+                dx=(car.x-car.length/2)-(cav.x-cav.length/2)
+                gap=abs(dx)-(car.length+cav.length)/2
+                self.minimum_gap=min(self.minimum_gap,gap)
+                closing=np.sign(dx)*(cav.v-car.v)
+                if closing>0 and gap>0:self.minimum_ttc=min(self.minimum_ttc,gap/closing)
+            if self.config.get('record_physics_trace',False):
+                self.physics_trace.append({'time_s':self.time,'actors':[vars(c).copy() for c in self.vehicles]})
+            if self.crashes:
+                self.collision_context=[{'actor_ids':pair,'actors':[vars(c).copy() for c in self.vehicles if c.id in pair],
+                    'longitudinal_speed_difference_mps':abs(next(c.v for c in self.vehicles if c.id==pair[0])-next(c.v for c in self.vehicles if c.id==pair[1]))}
+                    for pair in self.crashes]
             if self.crashes:break
         self.last_acceleration={c.id:a for c,a in zip(bvs,acc)}
         return not self.crashes
 
 
-def collect(config_path,output,mode,episodes,seed,assets=None,policy=None):
+def collect(config_path,output,mode,episodes,seed,assets=None,policy=None,epsilon=None):
     destination,lock=ensure_assets(assets);config=read(config_path)
     if mode not in ('single','dual','natural'):raise ValueError('Invalid intervention mode')
+    if episodes<1:raise ValueError('Episodes must be positive')
+    contract=config.get('observation_contract',LEGACY_OBSERVATION)
+    if contract not in OBSERVATION_DIMENSIONS:raise ValueError('Unknown observation contract')
+    if config['epsilon_min']!=.05:raise ValueError('Current PPO epsilon head requires support floor 0.05')
+    if config.get('dual_single_fallback') and contract!=CONTEXT_OBSERVATION:raise ValueError('Fallback requires the context observation and active-factor mask')
+    generation_epsilon=config['generation_epsilon'] if epsilon is None else epsilon
+    if not np.isfinite(generation_epsilon).all() or np.any(np.asarray(generation_epsilon)<config['epsilon_min']) or np.any(np.asarray(generation_epsilon)>1):
+        raise ValueError('Invalid fixed proposal epsilon')
+    if policy is not None:
+        metadata=getattr(policy,'metadata',{})
+        if metadata.get('observation_contract',contract)!=contract:raise ValueError('Policy observation differs from collection')
+        if metadata.get('proposal_structure_sha256',identity(proposal_structure(config,mode)))!=identity(proposal_structure(config,mode)):
+            raise ValueError('Policy candidate/risk-proxy structure differs from collection')
+        excluded=set(metadata.get('training_seeds',[]))|set(metadata.get('validation_seeds',[]))
+        if excluded & set(range(seed,seed+episodes)):raise ValueError('Evaluation seeds overlap training/validation')
     output=Path(output);output.mkdir(parents=True,exist_ok=False)
     model=PairModelQueries(destination/'model',destination/'lateral',**SINGLE_OPTIONS)
-    target={'natural_target_sha256':lock['natural_target_sha256'],'experiment':config,
-            'cav_role':'uniform_initialized_actor_with_observed_current_leader',
-            'event':'CAV_in_first_any_actor_collision_by_horizon; BV_only_is_competing_negative',
-            'runtime_sha256':digest(__file__)}
+    target=experiment_target(lock,config)
+    proposal={'mode':mode,'config':config,'generation_epsilon':generation_epsilon,
+              'policy_weights_sha256':getattr(policy,'metadata',{}).get('weights_sha256')}
     target_hash=identity(target);sequences=[]
+    started=time.perf_counter()
     for k in range(episodes):
+        episode_started=time.perf_counter()
         road=NativeExperiment(model,destination/'pair',destination/'lateral',seed+k,config)
         initial=[vars(c).copy() for c in road.vehicles]
         while road.time<config['horizon_s']-1e-9:
-            if not road.step_policy(mode,config['generation_epsilon'],policy):break
+            if not road.step_policy(mode,generation_epsilon,policy):break
         positive=any(road.cav.id in pair for pair in road.crashes)
         event='cav_first_collision' if positive else 'bv_only_competing_collision' if road.crashes else 'horizon_no_collision'
         seq={'seed':seed+k,'cav_id':road.cav.id,'event_result':positive,'event_type':event,'elapsed_s':road.time,
              'collision_pairs':road.crashes,'generation_log_weight':road.log_weight,'steps':road.steps,
-             'maximum_intervened_bvs':road.max_intervened,'lane_changes':road.diagnostics.get('lane_change_onsets',0)}
-        save(output/f'episode_{k:05d}.json',dict(seq,initial_fleet=initial));sequences.append(seq)
+             'maximum_intervened_bvs':road.max_intervened,'lane_changes':road.diagnostics.get('lane_change_onsets',0),
+             'diagnostics':dict(road.diagnostics),'wall_time_s':time.perf_counter()-episode_started,
+             'minimum_ttc_s':float(road.minimum_ttc) if np.isfinite(road.minimum_ttc) else None,
+             'minimum_bumper_gap_m':float(road.minimum_gap) if np.isfinite(road.minimum_gap) else None,
+             'collision_context':road.collision_context}
+        details=dict(seq,initial_fleet=initial)
+        if config.get('record_physics_trace',False):details['physics_trace']=road.physics_trace
+        save(output/f'episode_{k:05d}.json',details);sequences.append(seq)
         print(json.dumps({'episode':k+1,'seed':seed+k,'event':event,'critical_steps':len(road.steps),'log_weight':road.log_weight}),flush=True)
-    dataset={'contract':'highd_v46_native_d2rl_sequence_v1','observation_contract':'native_cav6_bv4x2_v1',
+    dataset={'contract':'highd_v46_native_d2rl_sequence_v2' if contract==CONTEXT_OBSERVATION else 'highd_v46_native_d2rl_sequence_v1','observation_contract':contract,
         'action_dimension':1 if mode!='dual' else 2,'intervention_mode':mode,'natural_target_sha256':lock['natural_target_sha256'],
-        'experiment_target':target,'experiment_target_sha256':target_hash,'sequences':sequences}
+        'experiment_target':target,'experiment_target_sha256':target_hash,'proposal':proposal,
+        'proposal_sha256':identity(proposal),'proposal_structure_sha256':identity(proposal_structure(config,mode)),
+        'sequences':sequences}
     save(output/'sequences.json',dataset)
     save(output/'sequence_manifest.json',{'data_path':'sequences.json','sha256':digest(output/'sequences.json'),
-          'natural_target_sha256':lock['natural_target_sha256'],'experiment_target_sha256':target_hash,'intervention_mode':mode})
-    weights=np.array([np.exp(s['generation_log_weight']) if s['event_result'] else 0. for s in sequences])
+          'natural_target_sha256':lock['natural_target_sha256'],'experiment_target_sha256':target_hash,'intervention_mode':mode,
+          'proposal_sha256':dataset['proposal_sha256'],'proposal_structure_sha256':dataset['proposal_structure_sha256']})
+    from .highd_v46_statistics import summarize_sequences
+    statistics=summarize_sequences(sequences)
+    totals=Counter()
+    for seq in sequences:totals.update(seq['diagnostics'])
     summary={'episodes':episodes,'event_counts':dict(Counter(s['event_type'] for s in sequences)),
-        'critical_steps':sum(len(s['steps']) for s in sequences),'weighted_first_collision_mean':float(weights.mean()),
-        'weighted_second_moment':float(np.mean(weights**2)),'weighted_standard_error':float(weights.std(ddof=1)/np.sqrt(episodes)) if episodes>1 else None,
-        'mode':mode,'experiment_target_sha256':target_hash,'natural_target_sha256':lock['natural_target_sha256']}
+        'critical_steps':sum(len(s['steps']) for s in sequences),
+        'mode':mode,'experiment_target_sha256':target_hash,'natural_target_sha256':lock['natural_target_sha256'],
+        'proposal_sha256':dataset['proposal_sha256'],'wall_time_s':time.perf_counter()-started,
+        'diagnostics':dict(totals),'critical_step_fraction':totals['critical_steps']/max(totals['decision_steps'],1),
+        'pair_available_fraction':totals['pair_available_steps']/max(totals['decision_steps'],1),**statistics}
     save(output/'collection_summary.json',summary);return summary
 
 
@@ -239,4 +356,5 @@ if __name__=='__main__':
     p.add_argument('--config',default='configs/highd_v46_d2rl_experiment.json');p.add_argument('--output',required=True)
     p.add_argument('--mode',choices=['natural','single','dual'],default='single')
     p.add_argument('--episodes',type=int,default=128);p.add_argument('--seed',type=int,default=1000);p.add_argument('--assets')
-    a=p.parse_args();print(json.dumps(collect(a.config,a.output,a.mode,a.episodes,a.seed,a.assets),indent=2))
+    p.add_argument('--epsilon',type=float,help='Override fixed proposal epsilon; physical P is unchanged')
+    a=p.parse_args();print(json.dumps(collect(a.config,a.output,a.mode,a.episodes,a.seed,a.assets,epsilon=a.epsilon),indent=2))

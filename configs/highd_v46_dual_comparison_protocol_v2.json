@@ -1,0 +1,21 @@
+{
+  "schema_version": 2,
+  "status": "predeclared_pilot_protocol_not_a_significance_claim",
+  "natural_freeze_tag": "nde-v46-frozen-20261003",
+  "natural_target_sha256": "106a9fbc795c75c9d4f60a880da7264cb626f9163e5ec073b720e6b48c6f9db5",
+  "experiment_config": "configs/highd_v46_dual_context_v2.json",
+  "training_config": "configs/highd_v46_validation_ppo_v2.json",
+  "training": {"seed_start": 1000, "episodes": 1024},
+  "validation": {"seed_start": 50000, "episodes": 1024},
+  "test": {"seed_start": 100000, "episodes": 1024},
+  "training_seeds": [7, 19, 29],
+  "fixed_epsilon_grid": [0.0501, 0.1, 0.5, 0.99],
+  "arms": ["natural", "fixed_single", "learned_single", "fixed_dual", "learned_dual"],
+  "statistics": {"confidence": 0.9, "relative_half_width_target": 0.3, "minimum_events": 20, "bootstrap_repeats": 1000, "bootstrap_seed": 41},
+  "event": "CAV_in_first_any_actor_collision_by_60s; BV_only_is_competing_negative",
+  "collection_rule": "Retain every positive and negative attempted episode; predeclare any additional nonoverlapping seed cohort before collection. Do not cherry-pick collisions.",
+  "selection_rule": "Use validation only to select fixed epsilon and PPO checkpoint. One validation event permits exploratory selection, not significance; final precision still requires sufficient independent test events.",
+  "comparability": "All arms use the same physical P, fixed CAV, initialization and collision event. Single and dual share nearest-actor anchors, observation information and backbone. The dual arm additionally evaluates associated following pairs.",
+  "environment": {"python": "3.9", "ray": "1.11.0", "torch": "1.11.0", "gym": "0.21.0", "numpy": "1.23.1", "scipy": "1.13.1", "threadpoolctl": "3.5.0", "num_cpus": 1, "num_gpus": 0},
+  "paper_alignment": "Report weighted risk, 90% CI, RHW, observed required tests and acceleration. Native 60s highD results are not a literal replication of the paper's 400m SUMO experiment or its 2100x number."
+}
