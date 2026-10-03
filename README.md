@@ -11,6 +11,23 @@ at commit `087921a994b3f5176fb0d75667a0a11fa357cd2b`, with the local integration
 changes required by scenario reconstruction. See `LICENSE` for the upstream
 license.
 
+## Frozen V46 NDE and D2RL handoff
+
+For the current native highD experiment, start with the
+[V46 single-BV baseline and dual-following training guide](docs/highd_v46_d2rl_handoff.md).
+The frozen NDE tag is `nde-v46-frozen-20261003`; training code is on
+`feature/highd-v46-d2rl-handoff`. This path needs Python 3.9 and the V46 LFS
+archive, with no SUMO or raw highD tracks. The fixed IDM CAV does not change lanes.
+
+```bash
+python -m scenario_reconstruction.highd_v46_workflow start --mode dual --episodes 512 --seed 1000 --iterations 100 --training-seed 7 --output outputs/v46_dual_seed7
+```
+
+Single-BV PPO has completed 100 iterations on 512 collected scenarios (two CAV
+first collisions). See the [run record](configs/highd_v46_single_baseline_run.json)
+for configuration, results and the limited statistical scope. The guide includes
+installation, exact intervention/event definitions and fresh-seed evaluation.
+
 ## Clone and install
 
 Git LFS is required for the runtime probability tables, and the Autoware message

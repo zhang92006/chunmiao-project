@@ -1,0 +1,6 @@
+-r requirements-highd-sequence-ppo.txt
+pandas==2.3.3
+scipy==1.13.1
+traci==1.27.0
+sumolib==1.27.0
+# SUMO executable 1.27.0 must be installed separately for the target OS.

@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "status": "user_accepted_single_development_baseline",
+  "module": "scenario_reconstruction.highd_paper_discrete",
+  "source_paper": "https://www.nature.com/articles/s41467-021-21007-8",
+  "model_artifact": "highd_paper_native_train_v1_20261001",
+  "lateral_artifact": "highd_paper_discrete_lateral_v1_20261003",
+  "initial_fleet_artifact": "highd_paper_native_matched_v2_20261001/initial_fleets",
+  "decision_interval_s": 1.0,
+  "physics_hz": 15,
+  "lane_change_duration_s": 1.0,
+  "lane_change_acceleration_mps2": 0.0,
+  "empirical_backoff": true,
+  "pooled_lateral": true,
+  "weighted_lateral": true,
+  "reference_lateral": false,
+  "train_headway": false,
+  "one_second_feasibility": true,
+  "joint_model": null,
+  "seeds": [
+    7,
+    19,
+    29
+  ],
+  "duration_s": 60,
+  "completed_runs": 3,
+  "lane_change_counts": [
+    10,
+    10,
+    8
+  ],
+  "full_exposure_hellinger": {
+    "speed": 0.16305072465493922,
+    "gap": 0.21004716738370924,
+    "rr": 0.12486213271681021
+  },
+  "extra_constraint": "Before drawing LC, each target front/rear must satisfy gap+rr*1s > min(rr,0)^2/(2*4), assuming unchanged neighboring speeds. This is an explicit extra support restriction, not a paper-established rule or safety proof.",
+  "source_support_limit": "Stored 1 m / 1 m/s context-center approximation excludes 19 of 680 train onset labels and 16753 of 111505 exposures; exact source-row coverage remains unverified.",
+  "executor_limit": "Direct longitudinal kinematics and linear lateral path, not the paper bicycle model.",
+  "development_limit": "Repeated fixed-seed tuning; neither independent validation nor full natural-law acceptance. Original reference artifacts unchanged. No long-run or D2RL gate opened.",
+  "user_acceptance": "User accepted this stage and requested a dual extension. Original full-law and fixed-seed limitations remain documented."
+}
