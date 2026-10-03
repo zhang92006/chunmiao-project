@@ -88,10 +88,14 @@ def inverse_cdf(p,u):
 
 
 class DiscretePairs:
-    def __init__(self,pair_root,model,lateral_root,mode='fitted'):
+    def __init__(self,pair_root,model,lateral_root,mode='fitted',dependence_scale=1.,gap_taper=False,supported_pairs_only=False):
         self.model=read(Path(pair_root)/'pair_model.json');self.empirical=model
         if self.model['single_contract']!=contract(model,lateral_root):raise ValueError('Pair model has a different single baseline')
         if mode not in ('fitted','independent_control'):raise ValueError('Unknown dependence mode')
+        if not np.isfinite(dependence_scale) or not 0<=dependence_scale<=1:raise ValueError('Dependence scale must be in [0,1]')
+        self.dependence_scale=float(dependence_scale)
+        self.gap_taper=gap_taper
+        self.supported_pairs_only=supported_pairs_only
         self.mode=mode;self.previous=set();self.histories={};self.records=[];self.maximum_marginal_error=0.
 
     def direct(self,car,front):
@@ -110,6 +114,8 @@ class DiscretePairs:
         for car in vehicles:
             front=fronts[car.id]
             if front is not None and 0<front.x-front.length-car.x<=115:
+                if self.supported_pairs_only and (min(self.histories[i][1] for i in (car.id,front.id))<3. or
+                        not self.direct(car,front) or not self.direct(front,fronts[front.id])):continue
                 candidates.append({'actor_ids':(car.id,front.id),'relation':'following','priority':(1,0.,front.x-front.length-car.x,car.id,front.id)})
         selected,_=partition(candidates,self.previous)
         uniforms={v.id:float(rng.random()) for v in vehicles};decisions={};units=[]
@@ -117,6 +123,8 @@ class DiscretePairs:
             first,second=item['actor_ids'];a,b=actors[first],actors[second];front=fronts[second]
             group=int(following_group(b.x-b.length-a.x,b.v-a.v,front is None or front.x-front.length-b.x>115))
             cell=self.model['cells'][str(group)];w=cell['weights'];mass=cell['independent_mass'];reason=cell['reason']
+            mass=1-self.dependence_scale*(1-mass)
+            if self.gap_taper:mass=1-float(np.clip((115-(b.x-b.length-a.x))/85,0,1))*(1-mass)
             if min(self.histories[i][1] for i in (first,second))<3.:mass=1.;reason='insufficient_past_history'
             elif not self.direct(a,b) or not self.direct(b,front):mass=1.;reason='no_direct_pair_support'
             if self.mode=='independent_control':mass=1.;reason='independent_control'
@@ -141,10 +149,10 @@ class DiscretePairs:
         self.previous=current;return decisions
 
 
-def run(model_root,lateral_root,pair_root,bank,output,mode='fitted',seeds=(7,19,29),duration=60.):
+def run(model_root,lateral_root,pair_root,bank,output,mode='fitted',seeds=(7,19,29),duration=60.,dependence_scale=1.,gap_taper=False,supported_pairs_only=False):
     root=Path(output);root.mkdir(parents=True,exist_ok=False);m=PairModelQueries(model_root,lateral_root,**SINGLE_OPTIONS);runs=[]
     for seed in seeds:
-        sampler=DiscretePairs(pair_root,m,lateral_root,mode);initial=Path(bank)/f'initial_seed{seed}.json'
+        sampler=DiscretePairs(pair_root,m,lateral_root,mode,dependence_scale,gap_taper,supported_pairs_only);initial=Path(bank)/f'initial_seed{seed}.json'
         road=DiscreteRoad(m,seed,read(initial),sampler);road.decisions=[]
         while road.time<duration-1e-9:
             if not road.step():break
@@ -160,7 +168,8 @@ def run(model_root,lateral_root,pair_root,bank,output,mode='fitted',seeds=(7,19,
         print({k:row[k] for k in ('seed','elapsed_s','complete','collision_pairs','pair_statistics')},flush=True)
     write(root/'collision_summary.json',{'runs':[{k:v for k,v in r.items() if k!='decisions'} for r in runs],
         'complete_run_count':sum(r['complete'] for r in runs),'model_sha256':m.summary['model_sha256'],'joint_model':sha(Path(pair_root)/'pair_model.json'),
-        'pair_mode':mode,'single_contract':contract(m,lateral_root),'implementation_sha256':sha(__file__),
+        'pair_mode':mode,'dependence_scale':dependence_scale,'gap_taper':gap_taper,'supported_pairs_only':supported_pairs_only,
+        'single_contract':contract(m,lateral_root),'implementation_sha256':sha(__file__),
         'scope':'V34 single laws/execution unchanged. Many dynamic disjoint following pairs; rank dependence only in both-stay actions. Independent arm uses exactly the original single per-actor RNG draws. Collision-first screen, no acceptance by likelihood.'})
 
 
@@ -168,6 +177,9 @@ if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__)
     for key in ('model','lateral-model','output'):p.add_argument('--'+key,required=True)
     p.add_argument('--source-root');p.add_argument('--pair-model');p.add_argument('--initial-bank');p.add_argument('--mode',default='fitted',choices=['fitted','independent_control'])
+    p.add_argument('--dependence-scale',type=float,default=1.)
+    p.add_argument('--gap-taper',action='store_true')
+    p.add_argument('--supported-pairs-only',action='store_true')
     a=p.parse_args()
     if a.source_root:fit(a.model,a.lateral_model,a.source_root,a.output)
-    else:run(a.model,a.lateral_model,a.pair_model,a.initial_bank,a.output,a.mode)
+    else:run(a.model,a.lateral_model,a.pair_model,a.initial_bank,a.output,a.mode,dependence_scale=a.dependence_scale,gap_taper=a.gap_taper,supported_pairs_only=a.supported_pairs_only)
