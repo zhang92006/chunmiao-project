@@ -112,3 +112,114 @@ python -m scenario_reconstruction.highd_v46_workflow verify
 Raw banks, pair rows and continuation outcomes stay in ignored `outputs/`.
 Only protocol, implementation, tests and compact evidence enter Git. This
 experiment exports no PPO dataset, checkpoint, or population acceleration.
+
+## Development evidence and pre-validation freeze
+
+The implementation and protocol were committed as `2205ce8` after the training
+run and before opening validation. All 89 relevant regression tests passed.
+The training lock identifies implementation SHA-256
+`50b86b3b3ed018c589e96e9031bd184347064ff33e8d485a68d272182e54ab32`.
+Training source episodes, including the BV-only early termination, were retained.
+
+| Training arm | Selected states | Audited pairs | Strict-positive states | Strict-positive pairs | Positive source episodes |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Geometry 2, diverse pairs | 32 | 96 | 2 | 2 | 2/16 |
+| Geometry 5, top two + audit | 80 | 240 | 5 | 6 | 2/16 |
+| Mixed 2+2+1, top two + audit | 80 | 240 | 3 | 4 | 2/16 |
+
+Mixed discovery did not outperform equal-budget geometry on training. No rules
+were changed to reverse that outcome. Both selected positive source episodes
+per arm met the native interaction >=0.05 descriptive threshold; these were
+the same two known training episodes across arms, not new independent evidence.
+One joint-corner continuation collided at the known seed 160009 / 19 s; it is
+not a population collision rate. Four nonqualifying controls were also retained.
+
+Training used 121 unique states and 388 unique pair matrices. Discovery took
+172.23 s and the full run including native calibration took 192.58 s locally.
+The next result must come from the locked fresh cohort, not from further
+training-side tuning after viewing validation.
+
+## Fresh validation evidence, 2026-10-04
+
+The locked 32 episodes 180000-180031 completed with 1,901 natural decision
+states. There were 31 horizon completions, one BV-only termination and no CAV
+events in the natural source trajectories. All outcomes were retained. The
+three comparison arms shared 246 unique states / 743 unique pair matrices.
+No arm evaluated more than three pairs per state, and no source/config change
+was made between training and validation.
+
+| Diagnostic | Geometry 2 + diverse | Geometry 5 + top two | Mixed 2+2+1 + top two |
+| --- | ---: | ---: | ---: |
+| Candidate states per episode | 2 | 5 | 5 |
+| Total states / audited pairs | 64 / 184 | 160 / 460 | 160 / 461 |
+| Strict-positive states / rate | 4 / 6.25% | 9 / 5.625% | 7 / 4.375% |
+| Strict-positive pairs / rate | 4 / 2.174% | 10 / 2.174% | 7 / 1.518% |
+| Positive source episodes / coverage | 4 / 12.5% | 5 / 15.625% | 5 / 15.625% |
+| Chosen-pair second H-factor TV, mean | 0.67083 | 0.60412 | 0.70771 |
+| Chosen-pair second Q-factor TV, mean | 0.58213 | 0.52311 | 0.60441 |
+| Shadow activation / selected states | 4/64 | 9/160 | 7/160 |
+| Shadow activation / natural decisions | 4/1901 (0.2104%) | 9/1901 (0.4734%) | 7/1901 (0.3682%) |
+| Selector CPU seconds | 73.26 | 183.49 | 183.92 |
+| Native-positive cases checked / contrast >=0.05 | 4 / 4 | 5 / 5 | 5 / 5 |
+
+Shadow draws preserved full versus two-factor likelihood to maximum absolute
+error 4.44e-15. These rates are not online closed-loop intervention rates.
+The mixed bank had exactly 64 geometry, 64 uniform and 32 lateral/phase states.
+Its seven strict-positive states comprised four geometry, two uniform and one
+lateral/phase state. The last category supplied a source episode (180003) not
+found by the geometry arms; the five-geometry arm instead found episode 180007.
+The other four positive source episodes were shared. This is complementarity,
+not an improvement in total episode coverage over the equal-budget control.
+
+Discovery wall time was 322.83 s for all arms together, including 24.59 s of
+natural scanning; total time including calibration was 358.18 s. Per-arm CPU
+charges include reused pair computations, so they must not be added to infer
+the unique-run wall time. These are not collision testing acceleration factors.
+
+### Native calibration and collision witnesses
+
+There were seven distinct selected-positive cases across arms and four
+nonqualifying controls. All selected-positive cases had mean native interaction
+>=0.05; only sampled/selected cases were checked, not every passing state.
+For compactness, G2/G5/M below denote the three table columns above.
+
+| Source seed / time | Selected for | Proxy interaction | Native interaction (SE) | Base / first / second / joint CAV events, 16 each |
+| --- | --- | ---: | ---: | --- |
+| 180003 / 55 s | M | 0.06536 | 0.05631 (0.00491) | 0 / 0 / 0 / 0 |
+| 180007 / 47 s | G5 | 0.13419 | 0.22356 (0.00972) | 0 / 0 / 0 / 0 |
+| 180010 / 23 s | G2, G5, M | 0.30549 | 0.41128 (0.01120) | 0 / 0 / 0 / 0 |
+| 180011 / 48 s | G2, G5, M | 0.05654 | 0.08380 (0.00409) | 0 / 0 / 0 / 0 |
+| 180029 / 55 s | G2, G5, M | 0.06124 | 0.09446 (0.00555) | 0 / 0 / 0 / 0 |
+| 180030 / 22 s | G2, M | 0.63701 | 0.62942 (0.00885) | 0 / 0 / 0 / 14 |
+| 180030 / 29 s | G5 | 0.62699 | 0.53962 (0.00767) | 0 / 0 / 0 / 9 |
+
+The new collision mechanism at source 180030 is also found by baseline arms.
+The two times share a source episode and continuation seed schedule: do not
+pool them as independent collision evidence or attribute them exclusively to
+mixed sampling. These are forced-corner conditional events, not Q event rates.
+
+Three controls had native contrasts close to zero. One control, source 180026
+at 30 s / pair [24,26], had proxy contrast 0.00554 versus native 0.41331
+(SE 0.04279), with no CAV collision in any of its corners. This is a concrete
+conditional-corner underprediction. However, its natural-probability-weighted
+proxy interaction mass was only 2.18e-18 and several gates failed. It is **not**
+proof that rejecting it loses a useful importance-sampling opportunity, nor
+grounds for relaxing gates. The controls are a selected small audit, not a
+global false-negative-rate estimate.
+
+### Research decision
+
+Fresh discovery and conditional two-factor influence are demonstrated: mixed
+sampling found more positive states than the two-state control and all five
+selected positive source episodes reproduced the native risk interaction.
+But **mixed sampling did not beat the equal-budget five-geometry control**:
+7 versus 9 positive states, equal 5/32 source coverage, lower pair yield, and
+essentially equal CPU cost. The 2+2+1 allocation therefore is not established
+as a superior selector. Retain the equal-budget control; do not promote mixed
+sampling as the winning default or launch PPO on the strength of this pilot.
+
+Any later training-side study of temporal allocation or proxy calibration must
+use another predeclared fresh validation cohort. Seeds 180000-180031 are now
+consumed validation, not a tuning pool. NDE, Q, PPO and final-test episodes
+remain unchanged. See the complete compact provenance record in
+[`highd_v46_discovery_v2_pilot.json`](../results/highd_v46_discovery_v2_pilot.json).

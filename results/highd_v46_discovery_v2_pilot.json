@@ -1,0 +1,103 @@
+{
+  "date": "2026-10-04",
+  "base_commit": "f56f2e4",
+  "pre_validation_implementation_commit": "2205ce8",
+  "protocol": "configs/highd_v46_discovery_v2.json",
+  "config_sha256": "97c5131961bd6c9fc577049bf97ee7684bc62cf1d85d3f77978d051fd44c9eb6",
+  "config_identity": "ec7afc60baa95df2214055e320696fc96549f09d8a5dbc317e50054fdc14ccc7",
+  "implementation_sha256": "50b86b3b3ed018c589e96e9031bd184347064ff33e8d485a68d272182e54ab32",
+  "natural_target_sha256": "106a9fbc795c75c9d4f60a880da7264cb626f9163e5ec073b720e6b48c6f9db5",
+  "dependencies": {
+    "highd_v46_state_discovery.py": "551778aa3ba9b7142914836789d7e58a5e989d54967546cdbce6a497e3770a22",
+    "highd_v46_pair_synergy.py": "524ebd24f53fa2fb0734fd0782eb8b6ca697c307d75cd9b1b2c6a97184473b22",
+    "highd_v46_cross_unit.py": "285e59128144f4d9c78732a91925388645029e5839d8f46a50809f99a3e479b4",
+    "highd_v46_pair_witness.py": "54419a408317d11cb244407eb7f3aa21e9bfb3303ec7a2bfa91b8b485f831b95",
+    "highd_v46_d2rl.py": "83644ca9bf355ef37d2e1db890ff5a3a78554d2177f052d2b2a16373e296606c",
+    "base_config": "f6aa08fb58f6d46dd9695492d943b952522acff4192f4f637010754f77dc3d53",
+    "physical_config": "4cb9a5d9191564b5eb345e6627002c79b6adc068c093a41281041457f5c4cbcd"
+  },
+  "train": {
+    "seed_start": 160000, "episodes": 16, "natural_states": 925,
+    "summary_sha256": "a72bfb2ce0c68a7e645b283ff872191bfd20c34fd52ac01e00610f7d15c7dff9",
+    "unique_bank_states": 121, "unique_evaluated_pairs": 388,
+    "discovery_wall_s": 172.22566625, "total_wall_s": 192.58162991700001,
+    "methods": {
+      "geometry2_diverse": {"candidate_states": 32, "evaluated_pairs": 96, "strict_positive_states": 2, "strict_positive_pairs": 2, "positive_source_episodes": 2},
+      "geometry5_top2": {"candidate_states": 80, "evaluated_pairs": 240, "strict_positive_states": 5, "strict_positive_pairs": 6, "positive_source_episodes": 2},
+      "mixed5_top2": {"candidate_states": 80, "evaluated_pairs": 240, "strict_positive_states": 3, "strict_positive_pairs": 4, "positive_source_episodes": 2}
+    }
+  },
+  "validation": {
+    "seed_start": 180000, "episodes": 32, "natural_states": 1901,
+    "summary_sha256": "bfccf39053b925ef9f4f6bab7986acd671b13d7d2f03ad55a263588a1f4eb73d",
+    "source_events": {"horizon": 31, "bv_only": 1, "cav_first_collision": 0},
+    "unique_bank_states": 246, "unique_evaluated_pairs": 743,
+    "scan_wall_s": 24.591137292, "discovery_wall_s": 322.83250275, "total_wall_s": 358.180341667,
+    "artifacts": {
+      "state_bank.json": "010e578cd7fde9fa4b81d43a68f49c7a6af65b163830b4d622fe4b3d993b042b",
+      "pair_audit.json": "ea29b0cd773e59feabdf90cb656ccbbe12d4c3fc3c8e02a652aba328baa215e7",
+      "shadow_interventions.json": "746afce79a67a8ad0f243f45a681ff93d7563f5200059811e52d9848d43349d7",
+      "native_calibration.json": "663da7fa07b4967a2c2e87d1dc77cb5794da9a785d607b74dbf802e91b173fe5"
+    },
+    "methods": {
+      "geometry2_diverse": {
+        "candidate_states_per_episode": 2, "candidate_states": 64, "evaluated_pairs": 184,
+        "strict_positive_states": 4, "strict_positive_state_rate": 0.0625,
+        "strict_positive_pairs": 4, "strict_positive_pair_rate": 0.021739130434782608,
+        "positive_source_episodes": 4, "positive_source_episode_coverage": 0.125,
+        "second_factor_H_vs_P_tv_chosen_mean": 0.6708310283718013,
+        "second_factor_Q_vs_P_tv_chosen_mean": 0.5821317054924718,
+        "shadow_intervention_count": 4, "shadow_intervention_rate_selected_states": 0.0625,
+        "shadow_intervention_coverage_natural_decisions": 0.0021041557075223566,
+        "selector_cpu_s": 73.25680900000012,
+        "native_checked_positive_cases": 4, "native_interaction_ge_threshold_cases": 4
+      },
+      "geometry5_top2": {
+        "candidate_states_per_episode": 5, "candidate_states": 160, "evaluated_pairs": 460,
+        "strict_positive_states": 9, "strict_positive_state_rate": 0.05625,
+        "strict_positive_pairs": 10, "strict_positive_pair_rate": 0.021739130434782608,
+        "positive_source_episodes": 5, "positive_source_episode_coverage": 0.15625,
+        "second_factor_H_vs_P_tv_chosen_mean": 0.6041232314419096,
+        "second_factor_Q_vs_P_tv_chosen_mean": 0.5231058464487549,
+        "shadow_intervention_count": 9, "shadow_intervention_rate_selected_states": 0.05625,
+        "shadow_intervention_coverage_natural_decisions": 0.004734350341925302,
+        "selector_cpu_s": 183.48869900000017,
+        "native_checked_positive_cases": 5, "native_interaction_ge_threshold_cases": 5
+      },
+      "mixed5_top2": {
+        "candidate_states_per_episode": 5, "candidate_states": 160, "evaluated_pairs": 461,
+        "strict_positive_states": 7, "strict_positive_state_rate": 0.04375,
+        "strict_positive_pairs": 7, "strict_positive_pair_rate": 0.015184381778741865,
+        "positive_source_episodes": 5, "positive_source_episode_coverage": 0.15625,
+        "second_factor_H_vs_P_tv_chosen_mean": 0.7077121141346491,
+        "second_factor_Q_vs_P_tv_chosen_mean": 0.6044124106914595,
+        "shadow_intervention_count": 7, "shadow_intervention_rate_selected_states": 0.04375,
+        "shadow_intervention_coverage_natural_decisions": 0.003682272488164124,
+        "selector_cpu_s": 183.9181690000002,
+        "native_checked_positive_cases": 5, "native_interaction_ge_threshold_cases": 5,
+        "positive_state_roles": {"geometry": 4, "uniform": 2, "lateral_phase": 1}
+      }
+    },
+    "online_intervention_rate": null,
+    "maximum_shadow_likelihood_error": 4.440892098500626e-15,
+    "native_calibration_cases": 11,
+    "selected_positive_cases": 7,
+    "nonqualifying_controls": 4,
+    "collision_witnesses": [
+      {"seed": 180030, "time_s": 22, "actor_ids": [5, 7], "selected_for": ["geometry2_diverse", "mixed5_top2"], "cav_events_base_first_second_joint": [0, 0, 0, 14]},
+      {"seed": 180030, "time_s": 29, "actor_ids": [5, 7], "selected_for": ["geometry5_top2"], "cav_events_base_first_second_joint": [0, 0, 0, 9]}
+    ],
+    "underpredicted_control": {"seed": 180026, "time_s": 30, "actor_ids": [24, 26], "proxy_interaction": 0.005539298143653172, "native_interaction": 0.41331278679051964, "native_interaction_se": 0.04278897417743463, "natural_weighted_proxy_interaction_mass": 2.1819349067434512e-18}
+  },
+  "native_replicates_per_corner": 16,
+  "tests_passed": 89,
+  "frozen_code_assets_verified": true,
+  "decision": "Mixed discovery generalizes to new positive states, but does not outperform equal-budget geometry: 7 vs 9 states, equal 5/32 episode coverage, lower pair yield and similar CPU cost. No PPO or winning-selector claim.",
+  "limitations": [
+    "Offline episode-wide bank, not a causal online trigger; shadow activation is not online intervention rate",
+    "Forced-corner calibration is conditional, selected and limited, not population collision risk or a global calibration curve",
+    "Collision witness is shared with baseline arms and its two times share one source episode",
+    "32 validation episodes and few positive sources do not establish statistical significance",
+    "Validation cohort is now consumed and must not be tuned on; final-test seeds remain unused"
+  ]
+}
