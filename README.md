@@ -28,6 +28,8 @@ Its training-only [coverage audit](docs/highd_v46_discovery_coverage.md) separat
 missed states from missed pairs by exhaustively checking a bounded pair universe.
 The [discovery v2 pilot](docs/highd_v46_discovery_v2.md) tests mixed temporal
 sampling and rank-1/rank-2/audit screening on a fresh validation cohort.
+The [multi-state real-Q pilot](docs/highd_v46_multistate_q.md) compares actual
+natural/single-factor/dual samples under a declared conditional state law.
 The frozen NDE tag is `nde-v46-frozen-20261003`; training code is on
 `feature/highd-v46-d2rl-handoff`. This path needs Python 3.9 and the V46 LFS
 archive, with no SUMO or raw highD tracks. The fixed IDM CAV does not change lanes.

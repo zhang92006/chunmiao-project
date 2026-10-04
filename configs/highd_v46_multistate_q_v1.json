@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "scope": "Fixed multi-state conditional one-decision Q experiment; no population acceleration or PPO claim",
+  "discovery_config": "configs/highd_v46_discovery_v2.json",
+  "discovery_method": "geometry5_top2",
+  "training_source": {"directory": "outputs/v46_discovery_v2_train", "summary_sha256": "a72bfb2ce0c68a7e645b283ff872191bfd20c34fd52ac01e00610f7d15c7dff9"},
+  "train": {"seed_start": 160000, "episodes": 16, "replicates_per_state_arm": 128, "continuation_seed_start": 2300000},
+  "validation": {"seed_start": 190000, "episodes": 32, "replicates_per_state_arm": 256, "continuation_seed_start": 2400000},
+  "forbidden_validation_ranges": [[100000, 101023], [120000, 120031], [140000, 140007], [160000, 160015], [170000, 170007], [180000, 180031]],
+  "cases": {"maximum_positive_source_episodes": 6, "negative_control_source_episodes": 2, "selection_seed": 97, "law": "Uniform over selected cases; primary eligible-only, secondary eligible plus abstention controls; at most one case per source episode"},
+  "arms": {"natural": [1.0, 1.0], "first_factor_only": [0.1, 1.0], "second_factor_only": [1.0, 0.1], "dual": [0.1, 0.1]},
+  "horizon_s": 4,
+  "later_actions": "Unchanged natural NDE; only initial decision is tilted",
+  "statistics": {"confidence": 0.9, "rhw_target": 0.3, "minimum_events": 20, "minimum_event_source_episodes": 3, "bootstrap_repeats": 200, "bootstrap_seed": 101},
+  "validation_rule": "Complete training, freeze config/source/dependencies, then open fresh source episodes once. No native-outcome-based case selection, replacement, tuning or extra continuations.",
+  "environment": {"python": "3.9.19", "numpy": "1.23.1", "scipy": "1.13.1", "OPENBLAS_NUM_THREADS": 1, "OMP_NUM_THREADS": 1}
+}
