@@ -30,7 +30,11 @@ def select_fixed(validation_manifest,output,grid=(.0501,.1,.5,.99)):
               'weights_sha256':digest(output/'policy_weights.npz'),
               'natural_target_sha256':data['natural_target_sha256'],'experiment_target_sha256':data['experiment_target_sha256'],
               'proposal_structure_sha256':data.get('proposal_structure_sha256'),'intervention_mode':data['intervention_mode'],
-              'training_seeds':[],'validation_seeds':[s['seed'] for s in validation.sequences]}
+              'training_seeds':[],'validation_seeds':[s['seed'] for s in validation.sequences],
+              'sampling_scope':data.get('sampling_scope','natural_initialization'),
+              'conditional_target_sha256':data.get('conditional_target_sha256'),
+              'training_source_seeds':[],
+              'validation_source_seeds':sorted({s['source_seed'] for s in validation.sequences if 'source_seed' in s})}
     save(output/'policy.json',metadata)
     report={'selection':'minimum_validation_second_moment','epsilon':list(best['epsilon']),
             'validation_sequence_sha256':validation.source_sha256,'validation_episodes':len(validation.sequences),

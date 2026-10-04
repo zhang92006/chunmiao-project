@@ -7,6 +7,7 @@ from gym import Env, spaces
 from scenario_reconstruction.highd_v46_contract import (
     LEGACY_OBSERVATION, CONTEXT_OBSERVATION, OBSERVATION_DIMENSIONS, replay_observation,
     LOG_WEIGHT_INDEX, LOG_WEIGHT_SCALE,
+    CONDITIONAL_OBSERVATION, CONTEXT_CONTRACTS,
 )
 
 
@@ -24,14 +25,34 @@ class V46SequenceEnv(Env):
         if hashlib.sha256(raw).hexdigest()!=manifest['sha256']:raise ValueError('Dataset checksum mismatch')
         self.source=source;self.source_sha256=manifest['sha256']
         self.dataset=json.loads(raw)
-        if self.dataset['contract'] not in ('highd_v46_native_d2rl_sequence_v1','highd_v46_native_d2rl_sequence_v2'):raise ValueError('Wrong native event/observation contract')
+        conditional = self.dataset['contract'] == 'highd_v46_conditional_d2rl_sequence_v1'
+        if self.dataset['contract'] not in ('highd_v46_native_d2rl_sequence_v1','highd_v46_native_d2rl_sequence_v2','highd_v46_conditional_d2rl_sequence_v1'):raise ValueError('Wrong native event/observation contract')
         self.observation_contract=self.dataset['observation_contract']
         if self.observation_contract not in OBSERVATION_DIMENSIONS:raise ValueError('Wrong observation contract')
-        expected='highd_v46_native_d2rl_sequence_v2' if self.observation_contract==CONTEXT_OBSERVATION else 'highd_v46_native_d2rl_sequence_v1'
+        expected=('highd_v46_conditional_d2rl_sequence_v1' if self.observation_contract==CONDITIONAL_OBSERVATION else
+                  'highd_v46_native_d2rl_sequence_v2' if self.observation_contract==CONTEXT_OBSERVATION else 'highd_v46_native_d2rl_sequence_v1')
         if self.dataset['contract']!=expected:raise ValueError('Sequence and observation versions differ')
         self.sequences=self.dataset['sequences'];self.dimension=self.dataset['action_dimension']
         if not self.sequences:raise ValueError('Empty collection')
         if len({s['seed'] for s in self.sequences})!=len(self.sequences):raise ValueError('Duplicate collection seed')
+        if conditional:
+            if self.dataset.get('sampling_scope') != 'conditional_state_bank':raise ValueError('Missing conditional scope')
+            if manifest.get('conditional_target_sha256')!=self.dataset.get('conditional_target_sha256') or not self.dataset.get('conditional_target_sha256'):raise ValueError('Missing or mismatched conditional target')
+            masses=np.asarray([s['target_mass'] for s in self.sequences],float)
+            if not np.isfinite(masses).all() or np.any(masses<=0) or not np.isclose(masses.sum(),1.):raise ValueError('Invalid conditional target masses')
+            sources={s['source_seed'] for s in self.sequences}
+            owners={}
+            for s in self.sequences:
+                if len(s['steps'])!=1:raise ValueError('Conditional v1 requires exactly one intervention')
+                if owners.setdefault(s['case_id'],s['source_seed'])!=s['source_seed']:raise ValueError('Case ID crosses source episodes')
+            for source_seed in sources:
+                group=[s for s in self.sequences if s['source_seed']==source_seed]
+                cases={s['case_id'] for s in group}
+                for case in cases:
+                    strata=[s for s in group if s['case_id']==case]
+                    expected_mass=1/(len(sources)*len(cases)*len(strata))
+                    if not all(np.isclose(s['target_mass'],expected_mass,rtol=1e-10,atol=0) for s in strata):raise ValueError('Conditional source/state law differs')
+        elif any('target_mass' in s for s in self.sequences):raise ValueError('Conditional masses require conditional contract')
         if self.dimension not in (1,2):raise ValueError('Expected single-BV or following-pair intervention')
         if self.dimension!=(2 if self.dataset['intervention_mode']=='dual' else 1):raise ValueError('Mode and policy dimension differ')
         for key in ('natural_target_sha256','experiment_target_sha256','intervention_mode'):
@@ -49,7 +70,7 @@ class V46SequenceEnv(Env):
                 if np.any(p<=0) or np.any(q<=0) or np.any(h<0) or np.any(p>1+1e-12) or np.any(h>1+1e-12):raise ValueError('Invalid probability support')
                 if not np.allclose(q,eps*p+(1-eps)*h,rtol=1e-10,atol=0):raise ValueError('Generation Q mismatch')
                 replay_observation(step,total,self.observation_contract)
-                if self.observation_contract==CONTEXT_OBSERVATION:
+                if self.observation_contract in CONTEXT_CONTRACTS:
                     mask=np.asarray(step['factor_mask'])
                     if mask.shape!=(self.dimension,) or not np.isin(mask,[0,1]).all() or mask[0]!=1:raise ValueError('Invalid active factor mask')
                     if len(step['actor_ids'])!=int(mask.sum()):raise ValueError('Active actors and factor mask differ')
@@ -89,7 +110,7 @@ class V46SequenceEnv(Env):
         if not seq['event_result']:return 0.
         exponent=seq['generation_log_weight']+weight-self.log_scale
         if exponent>700:raise FloatingPointError('Second-moment overflow; no reward clipping')
-        return float(np.exp(exponent))
+        return float(np.exp(exponent))*seq.get('target_mass',1/len(self.sequences))*len(self.sequences)
 
     def step(self,action):
         if self.done:raise RuntimeError('Reset a completed episode')
@@ -112,3 +133,15 @@ class V46SequenceEnv(Env):
 
     def empirical_objective(self,policy):
         return float(np.mean(self.objective_values(policy)))
+
+    def objective_standard_error(self,values):
+        """Fixed-state stratified SE for conditional banks, iid SE otherwise."""
+        values=np.asarray(values,float)
+        if self.dataset.get('sampling_scope')!='conditional_state_bank':
+            return float(values.std(ddof=1)/np.sqrt(len(values))) if len(values)>1 else None
+        groups={s['case_id'] for s in self.sequences};variance=0.
+        for case in groups:
+            x=values[[s['case_id']==case for s in self.sequences]]
+            if len(x)<2:return None
+            variance+=(len(x)/len(values))**2*x.var(ddof=1)/len(x)
+        return float(np.sqrt(variance))

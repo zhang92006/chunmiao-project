@@ -13,6 +13,13 @@ license.
 
 ## Frozen V46 NDE and D2RL handoff
 
+For a ready-to-train dual-BV experiment, use the
+[conditional PPO baseline](docs/highd_v46_conditional_baseline.md): explicit
+source-weighted replay, fresh validation, fixed-policy comparators, native
+held-out evaluation and training curves. Its first version controls one
+decision followed by four seconds of native continuation; its conditional
+target is distinct from population-initialized testing.
+
 For the current native highD experiment, start with the
 [V46 single-BV baseline and dual-following training guide](docs/highd_v46_d2rl_handoff.md).
 For the dual extension with single fallback, causal context observations,

@@ -7,7 +7,7 @@ import sys
 from itertools import islice
 
 
-def export_policy(trainer,output,dataset,training_seeds,validation_seeds):
+def export_policy(trainer,output,dataset,training_seeds,validation_seeds,validation_dataset=None):
     from .highd_v46_assets import save,digest
     import numpy as np
     import torch
@@ -25,7 +25,11 @@ def export_policy(trainer,output,dataset,training_seeds,validation_seeds):
         'weights_sha256':digest(output/'policy_weights.npz'),'natural_target_sha256':dataset['natural_target_sha256'],
         'experiment_target_sha256':dataset['experiment_target_sha256'],'intervention_mode':dataset['intervention_mode'],
         'proposal_structure_sha256':dataset.get('proposal_structure_sha256'),
-        'training_seeds':training_seeds,'validation_seeds':validation_seeds})
+        'training_seeds':training_seeds,'validation_seeds':validation_seeds,
+        'sampling_scope':dataset.get('sampling_scope','natural_initialization'),
+        'conditional_target_sha256':dataset.get('conditional_target_sha256'),
+        'training_source_seeds':sorted({s['source_seed'] for s in dataset['sequences'] if 'source_seed' in s}),
+        'validation_source_seeds':sorted({s['source_seed'] for s in (validation_dataset or {}).get('sequences',[]) if 'source_seed' in s})})
 
 
 def main():
@@ -45,7 +49,7 @@ def main():
                 'replay_positive_fraction':cfg.get('replay_positive_fraction')}
     check=V46SequenceEnv(env_config)
     validation=None
-    from .highd_v46_contract import independent_split,CONTEXT_OBSERVATION
+    from .highd_v46_contract import independent_split,CONTEXT_CONTRACTS
     if a.validation_manifest:
         validation=V46SequenceEnv({'sequence_manifest':a.validation_manifest,'evaluation_only':True})
         independent_split(check.dataset,validation.dataset)
@@ -76,7 +80,7 @@ def main():
         def forward(self,input_dict,state,seq_lens):
             logits,state=super().forward(input_dict,state,seq_lens)
             n=int(np.prod(self.action_space.shape))
-            if check.observation_contract==CONTEXT_OBSERVATION:
+            if check.observation_contract in CONTEXT_CONTRACTS:
                 self.active_factor_mask=input_dict['obs_flat'].float().reshape(-1,22)[:,18:18+n]
             else:self.active_factor_mask=torch.ones_like(logits[:,:n])
             return logits,state
@@ -107,7 +111,10 @@ def main():
             'validation_sequence_sha256':validation.source_sha256 if validation else None,
             'validation_episodes':len(validation.sequences) if validation else 0,
             'validation_positive_episodes':sum(s['event_result'] for s in validation.sequences) if validation else 0,
-            'observation_contract':check.dataset['observation_contract']}
+            'observation_contract':check.dataset['observation_contract'],
+            'sampling_scope':check.dataset.get('sampling_scope','natural_initialization'),
+            'conditional_target_sha256':check.dataset.get('conditional_target_sha256'),
+            'training_source_episodes':len({s['source_seed'] for s in check.sequences if 'source_seed' in s})}
         save(output/'training_protocol.json',provenance);records=[]
         validation_baseline=validation.empirical_objective(lambda obs:[cfg['initial_epsilon']]*check.dimension) if validation else None
         best=validation.empirical_objective(deterministic) if validation else None
@@ -125,17 +132,17 @@ def main():
                 if validation:
                     values=validation.objective_values(deterministic);score=float(values.mean())
                     row['validation_scaled_second_moment']=score
-                    row['validation_objective_standard_error']=float(values.std(ddof=1)/np.sqrt(len(values))) if len(values)>1 else None
+                    row['validation_objective_standard_error']=validation.objective_standard_error(values)
                     if score<best:
                         best=score;selected_iteration=i;selected_checkpoint=checkpoint
             save(output/f'iteration_{i:04d}.json',row);records.append(row);print(json.dumps(row),flush=True)
         training_seeds=[s['seed'] for s in check.sequences]
         validation_seeds=[s['seed'] for s in validation.sequences] if validation else []
         if validation:
-            export_policy(trainer,output/'last_iteration',check.dataset,training_seeds,validation_seeds)
+            export_policy(trainer,output/'last_iteration',check.dataset,training_seeds,validation_seeds,validation.dataset)
             trainer.restore(selected_checkpoint)
         else:selected_checkpoint=checkpoint
-        export_policy(trainer,output,check.dataset,training_seeds,validation_seeds)
+        export_policy(trainer,output,check.dataset,training_seeds,validation_seeds,validation.dataset if validation else None)
         from .highd_v46_policy import NumpyPolicy
         portable=NumpyPolicy(output)
         observations=islice((s['observation'] for seq in check.sequences for s in seq['steps']),64)
