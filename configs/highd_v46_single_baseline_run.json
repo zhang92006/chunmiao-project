@@ -1,0 +1,172 @@
+{
+  "schema_version": 1,
+  "run_date": "2026-10-03",
+  "status": "completed_initial_single_bv_baseline_not_convergence_claim",
+  "freeze_tag": "nde-v46-frozen-20261003",
+  "freeze_commit": "178df83",
+  "runtime_implementation_commit": "da8838e",
+  "natural_target_sha256": "106a9fbc795c75c9d4f60a880da7264cb626f9163e5ec073b720e6b48c6f9db5",
+  "experiment_target_sha256": "e5828a9740d9fa8f6270f7a80edb3b34cd28896f853e9f479779df7f970b8d0b",
+  "cav": "fixed_native_IDM_no_discretionary_lane_change",
+  "collection": {
+    "seed_start": 1000,
+    "seed_end_inclusive": 1511,
+    "episodes": 512,
+    "horizon_s": 60,
+    "generation_epsilon": 0.1,
+    "critical_steps": 27836,
+    "event_counts": {
+      "horizon_no_collision": 491,
+      "bv_only_competing_collision": 19,
+      "cav_first_collision": 2
+    },
+    "shard_starts": [
+      1000,
+      1128,
+      1256,
+      1384
+    ],
+    "episodes_per_shard": 128,
+    "all_collected_episodes_retained": true,
+    "merged_sequence_sha256": "2565c411ea5734516b1fe5675599846d9b51fca8b15479bb970006f4d0ae8b05",
+    "environment": {
+      "python": "3.12.7",
+      "numpy": "1.26.4",
+      "scipy": "1.13.1",
+      "pandas": "2.2.2",
+      "threadpoolctl": "3.5.0"
+    }
+  },
+  "training": {
+    "natural_target_sha256": "106a9fbc795c75c9d4f60a880da7264cb626f9163e5ec073b720e6b48c6f9db5",
+    "experiment_target_sha256": "e5828a9740d9fa8f6270f7a80edb3b34cd28896f853e9f479779df7f970b8d0b",
+    "sequence_sha256": "2565c411ea5734516b1fe5675599846d9b51fca8b15479bb970006f4d0ae8b05",
+    "action_dimension": 1,
+    "intervention_mode": "single",
+    "iterations": 100,
+    "seed": 7,
+    "config": {
+      "schema_version": 1,
+      "iterations": 100,
+      "replay_positive_fraction": 0.5,
+      "initial_epsilon": 0.1,
+      "initial_precision": 80.0,
+      "ppo": {
+        "train_batch_size": 1024,
+        "sgd_minibatch_size": 128,
+        "num_sgd_iter": 5,
+        "lr": 0.0003,
+        "entropy_coeff": 0.0,
+        "vf_clip_param": 100.0,
+        "vf_loss_coeff": 1.0,
+        "clip_param": 0.3,
+        "grad_clip": 10.0,
+        "kl_coeff": 0.2,
+        "kl_target": 0.01
+      }
+    },
+    "trainer_sha256": "cd719951df696c4727c994d20e8af817fdbeb0393799978080658eee4c04faf4",
+    "environment_sha256": "1d0e71e48dc602869b54e6f605a64fb52bf0651e1f945cdbcc8a52d2ec6554b8",
+    "objective": "E_Qb[I_first_CAV_collision * P/Qb * P/Q_epsilon], full critical sequences, fixed positive scaling, no reward clipping",
+    "replay_sampling": "Stratified positive/nonpositive replay with exact 1/(N*q_episode) correction; same full-collection objective",
+    "episodes": 512,
+    "positive_episodes": 2,
+    "log_reward_scale": -6.983443075504989,
+    "completed_iterations": 100,
+    "timesteps_total": 110042,
+    "fixed_epsilon_scaled_second_moment": 0.0019531250601472414,
+    "trained_empirical_scaled_second_moment": 0.0018780269323551728,
+    "resubstitution_ratio": 0.9615497597545509,
+    "portable_policy_max_error": 2.2351741790771484e-08,
+    "checkpoint": "checkpoint\\checkpoint_000100\\checkpoint-100",
+    "scope": "Actual PPO training on native V46 single/following intervention data. Resubstitution objective is not independent online efficiency evidence."
+  },
+  "training_environment": {
+    "python": "3.9.25",
+    "torch": "1.11.0",
+    "ray": "1.11.0",
+    "gym": "0.21.0",
+    "numpy": "1.23.1",
+    "scipy": "1.13.1",
+    "pandas": "2.3.3",
+    "threadpoolctl": "3.5.0",
+    "num_cpus": 1,
+    "num_gpus": 0
+  },
+  "portable_policy": {
+    "observation_contract": "native_cav6_bv4x2_v1",
+    "action_dimension": 1,
+    "hidden_layers": 2,
+    "weights_sha256": "82fd235fa2949a8d2bce1e7a51596fa394e24fc58fee3164db6530e7a2a4ede3",
+    "natural_target_sha256": "106a9fbc795c75c9d4f60a880da7264cb626f9163e5ec073b720e6b48c6f9db5",
+    "experiment_target_sha256": "e5828a9740d9fa8f6270f7a80edb3b34cd28896f853e9f479779df7f970b8d0b",
+    "intervention_mode": "single"
+  },
+  "prior_uniform_replay_trial": {
+    "completed_iterations": 100,
+    "timesteps_total": 112505,
+    "empirical_scaled_second_moment": 0.0019608043757120704,
+    "outcome": "No improvement; retained locally. Stratified replay added with exact sampling correction."
+  },
+  "online_execution_check": {
+    "seed_start": 20000,
+    "seed_end_inclusive": 20031,
+    "learned": {
+      "episodes": 32,
+      "event_counts": {
+        "horizon_no_collision": 32
+      },
+      "critical_steps": 1819,
+      "weighted_first_collision_mean": 0.0,
+      "weighted_second_moment": 0.0,
+      "weighted_standard_error": 0.0,
+      "mode": "single",
+      "experiment_target_sha256": "e5828a9740d9fa8f6270f7a80edb3b34cd28896f853e9f479779df7f970b8d0b",
+      "natural_target_sha256": "106a9fbc795c75c9d4f60a880da7264cb626f9163e5ec073b720e6b48c6f9db5"
+    },
+    "fixed_epsilon_0_1": {
+      "episodes": 32,
+      "event_counts": {
+        "horizon_no_collision": 31,
+        "bv_only_competing_collision": 1
+      },
+      "critical_steps": 1804,
+      "weighted_first_collision_mean": 0.0,
+      "weighted_second_moment": 0.0,
+      "weighted_standard_error": 0.0,
+      "mode": "single",
+      "experiment_target_sha256": "e5828a9740d9fa8f6270f7a80edb3b34cd28896f853e9f479779df7f970b8d0b",
+      "natural_target_sha256": "106a9fbc795c75c9d4f60a880da7264cb626f9163e5ec073b720e6b48c6f9db5"
+    },
+    "interpretation": "No observed CAV events in either arm; insufficient for online efficiency comparison."
+  },
+  "dual_handoff_probe": {
+    "episodes": 2,
+    "event_counts": {
+      "horizon_no_collision": 2
+    },
+    "critical_steps": 79,
+    "weighted_first_collision_mean": 0.0,
+    "weighted_second_moment": 0.0,
+    "weighted_standard_error": 0.0,
+    "mode": "dual",
+    "experiment_target_sha256": "e5828a9740d9fa8f6270f7a80edb3b34cd28896f853e9f479779df7f970b8d0b",
+    "natural_target_sha256": "106a9fbc795c75c9d4f60a880da7264cb626f9163e5ec073b720e6b48c6f9db5",
+    "seed_start": 30000,
+    "seed_end_inclusive": 30001,
+    "maximum_intervened_bvs": 2,
+    "scope": "Actual two-factor collection only; not a trained dual baseline."
+  },
+  "local_artifacts": {
+    "collection": "data_analysis/raw_data/highd_v46_single_train512_v1",
+    "training": "data_analysis/raw_data/highd_v46_single_ppo_seed7_stratified_v3",
+    "checkpoint": "data_analysis/raw_data/highd_v46_single_ppo_seed7_stratified_v3/checkpoint/checkpoint_000100/checkpoint-100"
+  },
+  "reproduce_single_command": "python -m scenario_reconstruction.highd_v46_workflow start --mode single --episodes 512 --seed 1000 --iterations 100 --training-seed 7 --output outputs/v46_single_seed7",
+  "start_dual_command": "python -m scenario_reconstruction.highd_v46_workflow start --mode dual --episodes 512 --seed 1000 --iterations 100 --training-seed 7 --output outputs/v46_dual_seed7",
+  "limitations": [
+    "Two positive trajectories only; resubstitution improvement is not independent efficiency evidence.",
+    "A new machine regenerates its own trajectories/checkpoints; no checkpoint or raw run data is committed.",
+    "Collector and trainer used different compatible Python/NumPy versions; byte-identical regeneration across platforms is not promised."
+  ]
+}

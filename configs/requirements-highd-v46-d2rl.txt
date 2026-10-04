@@ -1,0 +1,12 @@
+# Python 3.9; matches the existing repository PPO environment.
+setuptools==65.5.0
+wheel<0.38
+numpy==1.23.1
+scipy==1.13.1
+pandas==2.3.3
+threadpoolctl==3.5.0
+PyYAML==6.0.1
+gym==0.21.0
+ray[rllib]==1.11.0
+torch==1.11.0
+protobuf==3.20.3

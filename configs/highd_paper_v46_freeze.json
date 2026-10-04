@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "status": "frozen_by_user_for_d2rl_baselines",
+  "nde_code_commit": "5649f90d26a8db6db7aa7cff38c36d64f38da2eb",
+  "natural_target_sha256": "106a9fbc795c75c9d4f60a880da7264cb626f9163e5ec073b720e6b48c6f9db5",
+  "archive": "source_data/highd_paper_v46/runtime.zip",
+  "archive_sha256": "d88005c0c71ef72300b63d9bd4e06487d182efa3dfc3316e546ee3aededf41a6",
+  "version": "highd_paper_v46",
+  "files": {
+    "model/empirical.npz": "906c1a33d26b03a1ec75bf42bd3f6e2fc0bc0faf3dee6563ba2615a7a2934368",
+    "model/fit_summary.json": "0bb18c7cbe41d179a1d4731bb5f6c400be66cfdfa7e70b205b2acf46d7976227",
+    "model/lateral.json": "9004d0351558a632fb7c911759550793414536bd48609532f9df3f75b5bf8efa",
+    "lateral/fit_summary.json": "b46ee0fb6e5eb700bea01442a096c26de9bf3ee7eab0a14db5d7887e166f1d3b",
+    "lateral/lateral.json": "ed4e5bcf8307727c591db175dda3cd4ac8f71be867da404b881c8812b95a6358",
+    "pair/pair_model.json": "8acc627bddedff23cd8d0f6a183c14720b3f8b1923715ee1a3e9f9f358a3a6a6",
+    "reference/reference.npz": "5e050658ab1a36bc829b0ab4f430679da1569bbe28a9fa3c78238515bb2229cf",
+    "reference/reference_summary.json": "b65719015b31159a747fe170ee5820bcd7c44fb3b9e27525f580d0b04c3dd2d5",
+    "initial_fleets/initial_seed7.json": "b51247d3e3de3798d34ef4fee2a3ece04f2c58d5c2fa082ac23829196edec9ef",
+    "initial_fleets/initial_seed19.json": "6eeadb0281a41e9a0c9dd001611f74ca1e7a289a4621eb11787a187cb8d8dc61",
+    "initial_fleets/initial_seed29.json": "54fc5e1c10d0b1c74203aa26c4d231e1ce3f583dfee72f204a407919fa337f2e"
+  },
+  "code_sha256": {
+    "scenario_reconstruction/templates.py": "fae0bf0321448092ab27048612199641f513fddfff560753e1a9dce2cd753f73",
+    "scenario_reconstruction/__init__.py": "1aff6312977b6b670a18a17220219c68a8088e446cf7b77ec6a081efa950a03d",
+    "scenario_reconstruction/highd_paper_data.py": "b02a9adecea771c7c3096b736952bc945644a510ac93afd739e21a15b2552b85",
+    "scenario_reconstruction/highd_paper_dynamics.py": "ac959104ffc8d636f436a1996af193e38c821ef71d4a2cf1b76a3b5306546a49",
+    "scenario_reconstruction/highd_paper_discrete.py": "59950ad0b0056db9388a83cb2316cc1012a939518408ca4b2a7462d84b0edd98",
+    "scenario_reconstruction/highd_pair_data_inventory.py": "d472f5c9b184b3ddbeca6db1ad5dcc66e8cdac9338e803ecf8fca65ffd8f45c1",
+    "scenario_reconstruction/highd_pair_sample_export.py": "ac1d7297403bf9ee03b2aff7e8329f63460a0e4427f5cfd393f4317a2d2d0f89",
+    "scenario_reconstruction/highd_conditional_lane_start.py": "685263cf528cda8f2312d14995897a4e93c4b8321306a7143398d2875b591263",
+    "scenario_reconstruction/highd_pair_model_fit.py": "e060ad1708c5ba827e60f90cdac1385f51c88a533d0e10dda15ee375184ebfa9",
+    "scenario_reconstruction/highd_lane_phase_longitudinal.py": "b59ae79609309a93162d27b2f1254c9a142fe12d2fb09a41cc0b7edeec47a289",
+    "scenario_reconstruction/highd_lane_phase_fine.py": "7ed797faedce131b8a497e9157c034274d151567e2fd8009f05038a36a1bab93",
+    "scenario_reconstruction/highd_dual_ndd.py": "1a7918e8306b1cebb8859f294078fbb275920fb5571bae60234361f6d90fc3d3",
+    "scenario_reconstruction/highd_lane_geometry.py": "6fd3e23dd48ecd7949987ef76f4aed904e30b9c2ee732fb596a8fb81105cc7e7",
+    "scenario_reconstruction/highd_dual_ndd_runtime.py": "040b059fc5ffa8a26ef811d212daea0d4b7b9866edcd751288f83e46f3c9b234",
+    "scenario_reconstruction/highd_dynamic_pairs.py": "7c8320131b567255b6b94c9bd1e44b138064ee2b6a52bb53c27fb42e4d00a3b7",
+    "scenario_reconstruction/highd_paper_pairs.py": "82e80a5f5dbe5dd1cb6c8e0f0cd5b259ed97c58000d455fd2bef3a04d2087456",
+    "scenario_reconstruction/highd_paper_pair_calibration.py": "f6066cb3ffefda089b6df0d1e4383dad485fcf4f6178c1552cdefff1950aa701",
+    "scenario_reconstruction/highd_paper_pair_matching.py": "48fcd35221866771d1be9aaa9ec1d58efc6b4d098ce601703aaa0a5dbd354a68",
+    "scenario_reconstruction/highd_paper_discrete_pairs.py": "b7655b1e720b69046a98c1204c8e54bfddf89d5f93642e753d0917f75acccdca",
+    "configs/highd_paper_discrete_dual_v46.json": "ed1ae7f2a80073422b546e14a606e28ef41a811787e0850e4c3de8481b6949ad"
+  },
+  "runtime_options": {
+    "supported_pairs_only": true,
+    "dependence_scale": 1.0,
+    "gap_taper": false,
+    "pair_selection": "continuity"
+  },
+  "data_scope": "Required fitted runtime probability tables only; no raw highD trajectories, training checkpoints or experiment logs. Original artifact bytes retained.",
+  "user_acceptance": "V46 frozen by explicit user request. Development metrics/limitations remain in configs/highd_paper_discrete_dual_v46.json."
+}

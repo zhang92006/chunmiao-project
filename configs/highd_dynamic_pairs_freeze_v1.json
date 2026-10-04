@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "version": "dynamic_pairs_research_reference_20260927_v1",
+  "status": "research_reference_frozen_not_behavior_accepted",
+  "base_contract": "configs/highd_dual_ndd_research_freeze_v1.json",
+  "natural_target_sha256": "c2942781b96d901823fd291f7167bfc1ba8f6d0129eff47404f963f7c876cb64",
+  "experiment_target_sha256": "24743c972160a9b57f76fd630ed4017573d3425ed6eae335030aa0d946237629",
+  "pins": {
+    "scenario_reconstruction/highd_dynamic_pairs.py": "7c8320131b567255b6b94c9bd1e44b138064ee2b6a52bb53c27fb42e4d00a3b7",
+    "scenario_reconstruction/highd_dynamic_pairs_pilot.py": "01eae1535337e27bffd3a8849b9afd6350eaebab6d728cb9401c275818039907",
+    "configs/highd_dynamic_pairs_v1.json": "a1c7ef819ab2391181f2a72400cc95c0588be6c7bf8afd68f5cca6407758b895"
+  },
+  "scope": "Unchanged two-lane road, fitted local NDD and executor; multiple disjoint natural pairs, at most one biased pair. Fresh data only.",
+  "known_limits": [
+    "Independent fallback for unsupported lane relations",
+    "Configured initial mixture is not highD exposure",
+    "No proven realism or risk-estimation efficiency",
+    "Bundled checkpoint is a two-iteration smoke, not a recommended trained policy"
+  ]
+}

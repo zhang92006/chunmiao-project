@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "status": "selected_development_candidate_v38_supported_pair_matching",
+  "module": "scenario_reconstruction.highd_paper_discrete_pairs",
+  "single_baseline": "configs/highd_paper_discrete_v34.json",
+  "single_contract": {
+    "single_version": "user_accepted_v34",
+    "model_sha256": "906c1a33d26b03a1ec75bf42bd3f6e2fc0bc0faf3dee6563ba2615a7a2934368",
+    "lateral_sha256": "ed4e5bcf8307727c591db175dda3cd4ac8f71be867da404b881c8812b95a6358",
+    "options": {
+      "empirical_backoff": true,
+      "pooled_lateral": true,
+      "weighted_lateral": true,
+      "reference_lateral": false,
+      "train_headway": false,
+      "one_second_feasibility": true
+    },
+    "decision_interval_s": 1.0,
+    "lane_change_duration_s": 1.0,
+    "physics_hz": 15,
+    "action_count": 33
+  },
+  "joint_artifact": "highd_paper_discrete_pair_fit_v1_20261003",
+  "joint_sha256": "fb7b7a8facc7d9d77ce1c8c007df07c274981a6a7d7a3e889b8a3af88a310a5f",
+  "rollout_artifact": "highd_paper_discrete_dual_v38_supported_20261003",
+  "initial_fleet_artifact": "highd_paper_native_matched_v2_20261001/initial_fleets",
+  "reference_artifact": "highd_paper_native_reference_v2_20261001",
+  "reference_sha256": "5e050658ab1a36bc829b0ab4f430679da1569bbe28a9fa3c78238515bb2229cf",
+  "seeds": [
+    7,
+    19,
+    29
+  ],
+  "duration_s": 60,
+  "completed_runs": 3,
+  "lane_change_counts": [
+    7,
+    8,
+    7
+  ],
+  "pair_statistics": [
+    {
+      "paired_decisions": 724,
+      "correlated_pair_decisions": 724,
+      "maximum_simultaneous_pairs": 16,
+      "pair_additions": 108,
+      "pair_removals": 99,
+      "maximum_marginal_error": 2.7755575615628914e-16
+    },
+    {
+      "paired_decisions": 632,
+      "correlated_pair_decisions": 632,
+      "maximum_simultaneous_pairs": 15,
+      "pair_additions": 118,
+      "pair_removals": 107,
+      "maximum_marginal_error": 3.3306690738754696e-16
+    },
+    {
+      "paired_decisions": 743,
+      "correlated_pair_decisions": 743,
+      "maximum_simultaneous_pairs": 16,
+      "pair_additions": 87,
+      "pair_removals": 76,
+      "maximum_marginal_error": 2.7755575615628914e-16
+    }
+  ],
+  "full_exposure_hellinger": {
+    "speed": 0.1640043095187425,
+    "gap": 0.22306312233993383,
+    "rr": 0.11069118662461945
+  },
+  "independent_control_exact_v34_actions_and_diagnostics": true,
+  "validation": "3/3 fitted and 3/3 independent 60 s screens without collisions; replay has no extra collisions; all independent action/acceleration records and diagnostics exactly match V34; two focused regression tests pass.",
+  "scope": "V35 joint weights, single marginals and LC execution unchanged. Require both actors to have direct empirical state support and >=3 s past-only stable history BEFORE disjoint matching; unsupported pairs no longer reserve actors. After matching, sample every actor once. No hidden safety intervention or marginal edit.",
+  "environment": {
+    "python": "3.12.7",
+    "numpy": "1.26.4",
+    "scipy": "1.13.1",
+    "pandas": "2.2.2"
+  },
+  "independent_control_artifact": "highd_paper_discrete_dual_v38_control_20261003",
+  "runtime_options": {
+    "supported_pairs_only": true,
+    "dependence_scale": 1.0,
+    "gap_taper": false
+  },
+  "collision_summary_sha256": "2ced704186145e3ec5e28ad1a9666d7e734c863f5f1fd2e7527b9b1448f08567",
+  "implementation_sha256": "5512b906a4d88b6aead892d6bc0a32fd679628b9c30da8c7b0d21122ef02aec0",
+  "selection_basis": "After passing fixed-seed collision screen, prefer V38 for lower speed/gap H versus V35 with nearly unchanged rr. Fixed development seeds were reused; this is exploratory improvement, not independent confirmation or a statistically established gain.",
+  "development_variants": [
+    {
+      "version": "V36",
+      "artifact": "highd_paper_discrete_dual_v36_half_20261003",
+      "completed_runs": 2,
+      "elapsed_s": [
+        60.0,
+        33.666666666666664,
+        60.0
+      ]
+    },
+    {
+      "version": "V37",
+      "artifact": "highd_paper_discrete_dual_v37_local_20261003",
+      "completed_runs": 3,
+      "elapsed_s": [
+        60.0,
+        60.0,
+        60.0
+      ],
+      "H": {
+        "speed": 0.1701782286822494,
+        "gap": 0.2362092011143041,
+        "rr": 0.11272940029641516
+      }
+    },
+    {
+      "version": "V38",
+      "artifact": "highd_paper_discrete_dual_v38_supported_20261003",
+      "completed_runs": 3,
+      "elapsed_s": [
+        60.0,
+        60.0,
+        60.0
+      ],
+      "H": {
+        "speed": 0.1640043095187425,
+        "gap": 0.22306312233993383,
+        "rr": 0.11069118662461945
+      }
+    },
+    {
+      "version": "V39",
+      "artifact": "highd_paper_discrete_dual_v39_supported_half_20261003",
+      "completed_runs": 3,
+      "elapsed_s": [
+        60.0,
+        60.0,
+        60.0
+      ],
+      "H": {
+        "speed": 0.16126962554725766,
+        "gap": 0.23861350398533557,
+        "rr": 0.12563306845462952
+      }
+    }
+  ]
+}
