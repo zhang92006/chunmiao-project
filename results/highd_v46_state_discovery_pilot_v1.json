@@ -1,0 +1,63 @@
+{
+  "date": "2026-10-04",
+  "base_commit": "cea7e3a",
+  "scope": "Offline state/pair discovery and conditional native witnesses; no NDE, production proposal, PPO or precision-guard change",
+  "protocol": "configs/highd_v46_state_discovery_v1.json",
+  "witness_protocol": "configs/highd_v46_discovery_witness_v1.json",
+  "config_identity": "ecb075127a2245e4fd7d87a802219a839b04c1270bca6216bc4f28473638698f",
+  "implementation_sha256": "551778aa3ba9b7142914836789d7e58a5e989d54967546cdbce6a497e3770a22",
+  "witness_implementation_sha256": "71d3695ce96f1178c47f78b48358ee65c4276cc7e3686f512881ec8078ab591d",
+  "witness_config_sha256": "50d7bf85ec386a2ce6625de2e402fecc920c8de3d78ddd85da28e6b4ba9dcb7a",
+  "natural_target_sha256": "106a9fbc795c75c9d4f60a880da7264cb626f9163e5ec073b720e6b48c6f9db5",
+  "dependencies": {
+    "highd_v46_pair_synergy.py": "524ebd24f53fa2fb0734fd0782eb8b6ca697c307d75cd9b1b2c6a97184473b22",
+    "highd_v46_cross_unit.py": "285e59128144f4d9c78732a91925388645029e5839d8f46a50809f99a3e479b4",
+    "highd_v46_d2rl.py": "83644ca9bf355ef37d2e1db890ff5a3a78554d2177f052d2b2a16373e296606c",
+    "physical_config": "4cb9a5d9191564b5eb345e6627002c79b6adc068c093a41281041457f5c4cbcd"
+  },
+  "environment": {"python": "3.9.19", "numpy": "1.23.1", "scipy": "1.13.1", "OPENBLAS_NUM_THREADS": 1, "OMP_NUM_THREADS": 1},
+  "train": {
+    "seed_start": 160000, "episodes": 16,
+    "source_events": {"horizon": 15, "bv_only": 1, "cav_first_collision": 0},
+    "scanned_states": 925, "cheap_pairs": 16479,
+    "unique_bank_states": 92, "unique_evaluated_pairs": 276,
+    "scan_wall_time_s": 11.896793041999999, "total_wall_time_s": 121.880802209,
+    "summary_sha256": "77dd136342ab59daebf150eb05096283358796a1f2bdbb78c91195cee9cd73e3",
+    "state_bank_sha256": "cb6f6b81f1d7571b27578ee3519993702301ab2c94c8527ad1258f97710e6f6a",
+    "pair_audit_sha256": "6c2935616f76baadd9f4432779516598fa66f159c88c7c024473b9b1b16ed618",
+    "methods": {
+      "geometry_1s": {"bank_states": 32, "evaluated_pairs": 96, "leverage_rejections": 88, "strict_states": 2, "strict_source_episodes": 2, "strict_off_grid_states": 2, "drop_global_excess_states": 2, "local_interaction_states": 3},
+      "geometry_5s": {"bank_states": 32, "evaluated_pairs": 96, "leverage_rejections": 87, "strict_states": 1, "strict_source_episodes": 1, "strict_off_grid_states": 0, "drop_global_excess_states": 2, "local_interaction_states": 3},
+      "random_1s": {"bank_states": 32, "evaluated_pairs": 96, "leverage_rejections": 94, "strict_states": 0, "strict_source_episodes": 0, "strict_off_grid_states": 0, "drop_global_excess_states": 0, "local_interaction_states": 0}
+    }
+  },
+  "validation": {
+    "seed_start": 170000, "episodes": 8,
+    "source_events": {"horizon": 8, "bv_only": 0, "cav_first_collision": 0},
+    "scanned_states": 480, "cheap_pairs": 6236,
+    "unique_bank_states": 45, "unique_evaluated_pairs": 128,
+    "scan_wall_time_s": 5.914094, "total_wall_time_s": 51.730501333,
+    "summary_sha256": "3063358dd16841eefcdff428641c45ee31545da8b476ff5352c3a1296fd1fb7d",
+    "state_bank_sha256": "86e28c59d692209cf9b75c97634a813d761e263017fc2a63fc54c668b36d1e47",
+    "pair_audit_sha256": "f91e9004049f23567f70e7bbc3d1185286a1d3c8adfbd05eb90b2bbb32f9c243",
+    "methods": {
+      "geometry_1s": {"bank_states": 16, "evaluated_pairs": 46, "leverage_rejections": 42, "strict_states": 0, "drop_global_excess_states": 0, "local_interaction_states": 0},
+      "geometry_5s": {"bank_states": 16, "evaluated_pairs": 46, "leverage_rejections": 43, "strict_states": 0, "drop_global_excess_states": 0, "local_interaction_states": 0},
+      "random_1s": {"bank_states": 16, "evaluated_pairs": 43, "leverage_rejections": 41, "strict_states": 0, "drop_global_excess_states": 0, "local_interaction_states": 0}
+    },
+    "native_witnesses": []
+  },
+  "train_native_witnesses": [
+    {"seed": 160009, "time_s": 19, "actor_ids": [7, 9], "production_strict": true, "replicates_per_corner": 16, "cav_events_base_first_second_joint": [0, 0, 0, 3], "risk_interaction_mean": 0.2504215324244513, "risk_interaction_se": 0.009230475716974768},
+    {"seed": 160013, "time_s": 53, "actor_ids": [21, 5], "production_strict": true, "replicates_per_corner": 16, "cav_events_base_first_second_joint": [0, 0, 0, 0], "risk_interaction_mean": 0.07905542687133227, "risk_interaction_se": 0.0033021264197730742}
+  ],
+  "validation_evidence": {"regression_tests_passed": 77, "frozen_code_and_assets_verified": true},
+  "limitations": [
+    "Episode-wide bank ranking is offline, not a causal online trigger or natural reset law",
+    "Proxy qualification is not a collision probability; incomplete random competitor audits do not estimate global recall",
+    "Native witnesses force four action corners, not samples from Q; no population-risk or significance claim",
+    "No held-out discoveries, including ablated gates; no claim of training-pool readiness or reliable generalization",
+    "Timings are local implementation measurements, not controlled acceleration benchmarks",
+    "Validation cohort consumed; improved screening requires a newly declared validation cohort"
+  ]
+}

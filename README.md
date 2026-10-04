@@ -22,6 +22,8 @@ Before further PPO tuning, the [pair-synergy diagnostic](docs/highd_v46_pair_syn
 audits joint-action influence and a natural-rollout high-risk state pool.
 The opt-in [cross-unit sampler](docs/highd_v46_cross_unit.md) preserves natural
 partners' conditional law while intervening on a pair from different units.
+The [state-discovery audit](docs/highd_v46_state_discovery.md) compares cheap
+per-second screening, the five-second grid and random state-bank controls.
 The frozen NDE tag is `nde-v46-frozen-20261003`; training code is on
 `feature/highd-v46-d2rl-handoff`. This path needs Python 3.9 and the V46 LFS
 archive, with no SUMO or raw highD tracks. The fixed IDM CAV does not change lanes.
