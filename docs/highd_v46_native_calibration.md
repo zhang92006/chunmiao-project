@@ -308,3 +308,91 @@ this unchanged two-source signal.
 
 Compact evidence:
 [highd_v46_training_expansion_v1.json](../results/highd_v46_training_expansion_v1.json).
+
+## Three-way fixed-training ranking audit
+
+The [ranking protocol](../configs/highd_v46_selector_ranking_v1.json), frozen at
+`b729a57` before computing this comparison, uses only the two completed training
+calibrations. This is retrospective development evidence: previous labels were
+already known when designing the audit, so it is **not** fresh validation.
+There are 128 natural source episodes, 1,883 cached pair audits, 34 strict-positive
+pairs at 32 states from 24 sources, and 31 native-labelled state-pair cases.
+No discovery rollout, proxy matrix, continuation, validation/test episode or
+PPO training is added. Frozen NDE/Q/gates and the production selector are unchanged.
+
+The ranking scores are:
+
+- Interaction-only: natural-probability-weighted positive interaction mass `I`.
+- Absolute-risk-only: maximum supported proxy clearance risk `Rmax`.
+- Joint: `Rmax * I`, with no fitted coefficient, normalization or new threshold.
+
+All three first apply the **same unchanged strict dual gate**. Thus absolute-risk-
+only means only the ranking score ignores interaction; it is not an ablation
+removing the eligibility gate. One ordered pair per state and at most two states
+per source are retained. The primary global state budget is 16; budgets 8 and
+24 are fixed diagnostic views, not choices made to show the best result. Ties
+break by source seed, time and ordered actor IDs. This operates on the bounded
+cached audit universe, not all road pairs or an online future-aware selector.
+
+The primary common-labelled panel is:
+
+| Score | Strict states | Source episodes | Observed collision-source recall | Dual events / continuations | Q2 TV, source-weighted mean | Largest source M2 share |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Interaction-only | 16 | 13 | 1/2 | 3/1,024 (0.293%) | 0.5682 | 100% |
+| Absolute-risk-only | 16 | 15 | 2/2 | 31/1,024 (3.027%) | 0.5575 | 99.26% |
+| Absolute-risk x interaction | 16 | 14 | 2/2 | 31/1,024 (3.027%) | 0.5628 | 99.26% |
+
+Recall requires retaining an actually collision-positive **state-pair**, not
+merely any state from its episode. Its denominator is the two observed event
+sources in the already labelled training bank, not all possible collision
+sources or population recall. The continuation rate is observed yield under
+fixed dual Q=(0.1,0.1), not natural collision probability. These cases were
+originally chosen by interaction-based sampling; comparing their labelled
+subset cannot remove that coverage/selection limitation. Strict-state counts
+are equal by construction at a filled budget, not evidence of equal discovery.
+
+Two separate TVs are reported: logged H2-versus-P2 influence weighted by H1,
+and actual Q2-versus-P2 TV weighted by Q1. They must not be interchanged. In the
+primary labelled panel Q2 TV ranges from 0.4141 to 0.6980 for all three methods.
+The two risk-based rankings have no demonstrated second-factor influence or
+concentration improvement despite retaining more known event sequences.
+
+In the full cached panel, absolute-risk-only additionally selects an **unlabelled**
+state-pair: source 200017 at 30 s, pair [12,14]. All its full native metrics
+(collision rate, Q2 TV and source concentration) are therefore `null`, rather
+than calculated by treating the missing case as zero or dropping it. Its known
+witness retention is still 2/2. The other two primary selections are fully
+labelled. Only three strict-positive pairs in the full cache lack native labels;
+none can be assigned a collision result by inference.
+
+Source 200051's known collision state ranks 17th under interaction-only, 5th
+under absolute risk, and 8th under the product score after the common caps.
+At budget 8, the risk-based methods again retain both known sources while
+interaction-only retains one. At budget 24 all three retain both. Therefore
+the primary contrast is budget-dependent and does not establish a statistical
+or generalization advantage. The 98.52% source share for absolute-only at budget
+8 in the labelled panel comes from changing selected source/state masses; the
+same two event states remain. The report separately records retained second-
+moment contributions under the unchanged reference-bank law to expose this
+reweighting, rather than calling it same-target variance improvement.
+
+**Decision:** absolute-risk information helps retain known collision states at
+tighter budgets, but this audit selects no winner and does not demonstrate that
+the product is better than absolute-risk-only. It adds no observed collision
+source and leaves severe second-moment concentration. PPO remains paused.
+"High absolute risk + nontrivial interaction" is a candidate discovery criterion,
+not a proven sufficient condition for native collision utility or lower IS
+variance. A subsequently frozen candidate still needs a separately specified
+fresh, source-disjoint validation; this task does not consume such a cohort.
+
+```bash
+export OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1
+python -m scenario_reconstruction.highd_v46_selector_ranking --output outputs/v46_selector_ranking_v1
+python -m pytest tests/test_highd_v46_selector_ranking.py tests/test_highd_v46_training_expansion.py tests/test_highd_v46_conditional_baseline.py -q
+python -m scenario_reconstruction.highd_v46_workflow verify
+```
+
+Outputs are exclusive-create and contain all three methods at every declared
+budget. Timing records sorting cached features only, not total discovery or
+testing acceleration. Compact evidence is
+[highd_v46_selector_ranking_v1.json](../results/highd_v46_selector_ranking_v1.json).
