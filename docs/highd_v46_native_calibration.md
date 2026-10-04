@@ -93,3 +93,115 @@ and compact evidence. Any subsequent state-law/selector update needs an
 explicitly locked, source-episode-disjoint fresh validation cohort; a trained
 policy still needs independent original-initialization evaluation. No formal
 fresh validation or PPO is launched by this training-only stage.
+
+## Evidence, 2026-10-04
+
+Protocol and implementation were frozen at
+`fc773612197bab8c7c288580ec8dbd49b946930d` before opening the new sources.
+The complete fixed-budget run took 737.60 s locally. All 104 relevant regression
+tests passed and frozen code/assets verified. No NDE, production Q, proxy/gate,
+PPO, consumed validation or reserved final-test change was made.
+
+The 64 natural episodes supplied 3,662 pre-draw states: 58 episodes reached
+the horizon and six ended at a BV-only collision; none had a CAV first collision.
+The bank retained five states per episode: 128 geometry, 128 uniform, 55
+lateral/phase and nine phase-fallback states. It evaluated 939 pair matrices,
+at most three per state, finding 23 strict-positive pairs, 22 positive states
+and 16 positive source episodes. The main first failures were leverage (850)
+and interaction (64); two failed risk-H factor TV. No gate was relaxed.
+
+The 22 positive states comprised 13 geometry, two uniform and seven
+lateral/phase states. Phase/uniform slots added six proxy-positive source
+episodes beyond those found by the two geometry slots in this bank. This
+within-training-bank comparison is not an equal-budget fresh-validation result
+or a population recall estimate. In particular, source 200051's native-event
+state came from the lateral/phase slot and was absent from the geometry slots.
+
+The pre-outcome plan selected 21 eligible states across all 16 eligible source
+episodes, plus four abstention controls. The two-state-per-source cap was
+retained; no missing or native-negative case was backfilled. All 6,400 planned
+continuations completed. Each primary arm has 1,344 continuations (21 x 64);
+controls are retained separately rather than mixed into the eligible law.
+
+| Arm | CAV first events | Distinct event source episodes | Conditional IS mean | Event second moment |
+| --- | ---: | ---: | ---: | ---: |
+| Natural | 0 | 0 | 0 | 0 |
+| First factor only | 12 | 1 | 0.00013755 | 0.00000161445 |
+| Second factor only | 2 | 2 | 0.00035582 | 0.000116303 |
+| Dual | 31 | 2 | 0.00033968 | 0.0000276788 |
+
+Means and second moments use the predeclared source-then-state masses, not
+equal state masses or self-normalized weights. Zero observed natural events
+are not evidence of zero true risk. These estimates have no natural-initial
+density correction and must not be relabelled as population risk.
+
+Only two selected states produced CAV events; the other 19 eligible states
+produced none in these continuations. Every outcome was retained:
+
+| Source / time / pair | Bank slot / pair mechanism | Natural / first / second / dual CAV events, 64 each |
+| --- | --- | --- |
+| 200017 / 20 s / [12,14] | Geometry / bracket | 0 / 0 / 1 / 3 |
+| 200051 / 20 s / [26,28] | Lateral-phase / lateral | 0 / 12 / 1 / 28 |
+
+This adds a training-side bracketing event mechanism alongside the lateral
+case; it does not establish generalization or a significant dual advantage.
+Four abstention controls reproduced identical endpoint, clearance and weight
+records across all four arms (apart from timing), with no CAV events and
+weight one. Native BV-only counts across all cases were 1/0/4/2 respectively.
+The actual Q-versus-P second-factor TV ranged from 0.41408 to 0.67202 at
+eligible cases, but nonzero factor influence alone did not predict collision.
+
+### Event density is not variance efficiency
+
+Dual has 31 events but only two event-bearing sources; its source guard fails,
+90% RHW is 0.7763 and event-contribution ESS is 4.2847. Its descriptive
+second-moment ratio to first-only is **17.1444**, not a variance improvement.
+Both-arm comparison guards fail, so bootstrap intervals and efficiency claims
+remain unavailable. The different finite-run IS means are also too uncertain
+to infer different natural conditional targets.
+
+At source 200051, two of the 28 dual events have zero H probability in the
+second conditional factor. Q still samples these actions through its natural
+epsilon floor, so likelihood support is correct. Their weights are each
+approximately 0.117374 and they account for 97.94% of that case's observed
+event second moment. The case's event ESS is only 3.8756 despite its high raw
+event count. The first-only case has second moment 0.0000258311 versus dual's
+0.000439563. This is concrete training evidence of interaction-H/native-event
+misalignment, not a likelihood bug or proof about the true efficiency ratio.
+No weights were clipped, and these events were not removed.
+
+All 105 output artifact hashes, predeclared case/seed schedules, unique
+within-arm continuation seeds and source-based masses were independently
+checked. Every per-case summary and the full conditional comparison reproduced
+exactly from raw sequences. Full-versus-two-factor log likelihood error was
+at most 1.42e-14; protocol/configuration content still matched the frozen
+commit. No policy checkpoint or population sequence manifest exists.
+
+### Decision and next stage
+
+The native-yield ranker was **not fitted or exported**: 31 events satisfy its
+count gate but two event sources do not satisfy its three-source gate; 14
+eligible source episodes have zero observed events. No threshold was relaxed.
+The three prespecified proxy-only replay scores each retain the same 31 events
+when selecting one calibrated case per source. They do not demonstrate a
+ranking improvement; their comparison covers only the queried cases.
+
+Phase coverage has now found a useful native-event source in training, while
+most strict-positive states still yield no event and a few event weights
+dominate the second moment. The next discovery version should therefore
+target **diverse native CAV-event sources and stable weighted utility together**,
+not merely larger interaction mass or raw collision yield. Use the negative
+cases and H-zero-event diagnostics to design training-side discovery features
+or a teacher budget; do not deploy post-hoc hard thresholds, change production
+Q/NDE, or add PPO epochs. Define any expanded training protocol before opening
+new episodes. Only after label/source guards and a frozen candidate screen
+permit fitting should a separately locked, episode-disjoint fresh validation
+check event-source coverage, weighted second moments/ESS/RHW, both factor TVs,
+intervention yield and CPU. Consumed 190000-190031 validation remains excluded
+from fitting, and original-initialization evaluation remains required later.
+
+Discovery scanning took 45.92 s and proxy CPU 366.52 s (413.21 s total discovery)
+in this local run; the four native arms each used approximately 78-79 CPU s.
+These are development timings, not a testing-acceleration benchmark.
+The compact evidence is
+[highd_v46_native_calibration_pilot_v1.json](../results/highd_v46_native_calibration_pilot_v1.json).

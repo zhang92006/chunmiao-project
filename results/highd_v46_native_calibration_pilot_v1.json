@@ -1,0 +1,1053 @@
+{
+  "schema_version": 1,
+  "evidence_date": "2026-10-04",
+  "dependency_commit": "9f85b7c",
+  "protocol_frozen_before_source_opening_commit": "fc773612197bab8c7c288580ec8dbd49b946930d",
+  "protocol": "configs/highd_v46_native_calibration_v1.json",
+  "config_sha256": "6a30b0f25e2a44ec601170c3733dab8cb7e9b8eab42cfec34bf1e643e65b2a82",
+  "implementation_sha256": "14792aed68876b4975dbf19c9e505c578ae01e29f6f8aa3cc74658e6e1898ea3",
+  "natural_target_sha256": "106a9fbc795c75c9d4f60a880da7264cb626f9163e5ec073b720e6b48c6f9db5",
+  "experiment_target_sha256": "ab84bb18d3d649be86ff4d3f568e1562079fae656dd7004b726645affe4e07fe",
+  "dependencies": {
+    "highd_v46_assets.py": "98e0ffd8d53d9d03b912a568dfb0f10a458afc3223e1d38363ba363fdc00c3c3",
+    "highd_v46_discovery_v2.py": "50b86b3b3ed018c589e96e9031bd184347064ff33e8d485a68d272182e54ab32",
+    "highd_v46_state_discovery.py": "551778aa3ba9b7142914836789d7e58a5e989d54967546cdbce6a497e3770a22",
+    "highd_v46_pair_synergy.py": "524ebd24f53fa2fb0734fd0782eb8b6ca697c307d75cd9b1b2c6a97184473b22",
+    "highd_v46_cross_unit.py": "285e59128144f4d9c78732a91925388645029e5839d8f46a50809f99a3e479b4",
+    "highd_v46_pair_witness.py": "54419a408317d11cb244407eb7f3aa21e9bfb3303ec7a2bfa91b8b485f831b95",
+    "highd_v46_d2rl.py": "83644ca9bf355ef37d2e1db890ff5a3a78554d2177f052d2b2a16373e296606c",
+    "highd_v46_statistics.py": "f6152d59a851dea62cc0efe2357e295b5be2a3c2c6b2925580f194ee51b74cbc",
+    "highd_paper_discrete_pairs.py": "b7655b1e720b69046a98c1204c8e54bfddf89d5f93642e753d0917f75acccdca",
+    "discovery_config": "97c5131961bd6c9fc577049bf97ee7684bc62cf1d85d3f77978d051fd44c9eb6",
+    "base_config": "f6aa08fb58f6d46dd9695492d943b952522acff4192f4f637010754f77dc3d53",
+    "physical_config": "4cb9a5d9191564b5eb345e6627002c79b6adc068c093a41281041457f5c4cbcd",
+    "highd_v46_multistate_q.py": "44fc860c30c9ed1cbb2ae9230d87bb708cb8fd355e2fdc3f6c2ff186a4af5ff2"
+  },
+  "environment": {
+    "python": "3.9.19",
+    "numpy": "1.23.1",
+    "scipy": "1.13.1",
+    "OPENBLAS_NUM_THREADS": 1,
+    "OMP_NUM_THREADS": 1
+  },
+  "scope": "Training-only native real-Q discovery calibration; no production selector, NDE, Q or PPO change",
+  "source_seed_range": [
+    200000,
+    200063
+  ],
+  "continuation_seed_start": 2500000,
+  "replicates_per_case_arm": 64,
+  "arm_order": [
+    "natural",
+    "first_factor_only",
+    "second_factor_only",
+    "dual"
+  ],
+  "conditional_law": "Uniform selected source episode, then uniform selected eligible cases within source; controls retained separately",
+  "single_factor_scope": "Factor ablations on the selected ordered pair, not the paper single-BV agent",
+  "output_directory": "outputs/v46_native_calibration_v1_train",
+  "summary_sha256": "f8b1334db8901e009a9e1b190a5c4e157a8bc2e64964f8af41d81d96b27ac131",
+  "discovery": {
+    "natural_states": 3662,
+    "bank_states": 320,
+    "bank_roles": {
+      "uniform": 128,
+      "lateral_phase": 55,
+      "geometry": 128,
+      "phase_fallback": 9
+    },
+    "evaluated_pairs": 939,
+    "strict_positive_pairs": 23,
+    "strict_positive_states": 22,
+    "strict_positive_source_episodes": 16,
+    "strict_positive_mechanisms": {
+      "bracket": 15,
+      "lateral": 8
+    },
+    "first_failure_counts": {
+      "leverage": 850,
+      "interaction": 64,
+      "passed": 23,
+      "risk_H_tv": 2
+    },
+    "scan_wall_s": 45.92328875,
+    "discovery_wall_s": 413.213903959,
+    "feature_cpu_s": 0.12843299999997404,
+    "proxy_cpu_s": 366.5202880000001,
+    "natural_source_endpoints": {
+      "horizon": 58,
+      "bv_only": 6
+    },
+    "positive_state_roles": {
+      "lateral_phase": 7,
+      "geometry": 13,
+      "uniform": 2
+    },
+    "positive_sources_by_bank_role": {
+      "geometry": [
+        200002,
+        200010,
+        200017,
+        200019,
+        200020,
+        200030,
+        200034,
+        200041,
+        200047,
+        200059
+      ],
+      "lateral_phase": [
+        200020,
+        200024,
+        200028,
+        200031,
+        200034,
+        200051,
+        200053
+      ],
+      "uniform": [
+        200017,
+        200043
+      ],
+      "phase_fallback": []
+    }
+  },
+  "case_count": 25,
+  "eligible_states": 21,
+  "eligible_source_episodes": 16,
+  "abstention_controls": 4,
+  "cases": [
+    {
+      "source_seed": 200002,
+      "time_s": 50,
+      "role": "eligible",
+      "selected_pair": [
+        3,
+        5
+      ],
+      "state_sha256": "5a613dc7f5c84ac78504c9bef3a44a5c933011ebcc770e1708148d15b8f0c13e",
+      "mechanism": "bracket",
+      "mass": 0.00010828446142709453,
+      "q_second_tv": 0.5861105359920125,
+      "cav_events": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "bv_only_events": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "source_seed": 200010,
+      "time_s": 53,
+      "role": "eligible",
+      "selected_pair": [
+        19,
+        22
+      ],
+      "state_sha256": "01775269bf7ca66bb5890d17e9779c8d5074be3d895340b308407f8d17d4205d",
+      "mechanism": "bracket",
+      "mass": 0.0008852686910480125,
+      "q_second_tv": 0.630027825224022,
+      "cav_events": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "bv_only_events": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "source_seed": 200017,
+      "time_s": 20,
+      "role": "eligible",
+      "selected_pair": [
+        12,
+        14
+      ],
+      "state_sha256": "5f8f734bcee689ac3170e01d740c4428b3fd394508dff2a014bac07794fcb4ff",
+      "mechanism": "bracket",
+      "mass": 0.0009247176754108379,
+      "q_second_tv": 0.521499311836719,
+      "cav_events": [
+        0,
+        0,
+        1,
+        3
+      ],
+      "bv_only_events": [
+        1,
+        0,
+        4,
+        2
+      ]
+    },
+    {
+      "source_seed": 200017,
+      "time_s": 24,
+      "role": "eligible",
+      "selected_pair": [
+        12,
+        14
+      ],
+      "state_sha256": "54e21ac99222b3991341abdf6d644017186cbff9799f1e53e8fc7f774c957d0c",
+      "mechanism": "bracket",
+      "mass": 0.0006724885496890841,
+      "q_second_tv": 0.4140840473117899,
+      "cav_events": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "bv_only_events": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "source_seed": 200019,
+      "time_s": 42,
+      "role": "eligible",
+      "selected_pair": [
+        2,
+        4
+      ],
+      "state_sha256": "3be780b1d6ea7e899baf790a2576fbcab2cb0bcde83281898bcfc44056ab90bf",
+      "mechanism": "bracket",
+      "mass": 0.0010600548179102373,
+      "q_second_tv": 0.5952745360084336,
+      "cav_events": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "bv_only_events": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "source_seed": 200020,
+      "time_s": 27,
+      "role": "eligible",
+      "selected_pair": [
+        31,
+        33
+      ],
+      "state_sha256": "2ccbbff8bc0fab38a7d6db0dc003c8a5b20ae4c0e6c8e04aa99c951ac0f8cc57",
+      "mechanism": "bracket",
+      "mass": 0.000369528635372637,
+      "q_second_tv": 0.5907354532811656,
+      "cav_events": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "bv_only_events": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "source_seed": 200020,
+      "time_s": 17,
+      "role": "eligible",
+      "selected_pair": [
+        15,
+        33
+      ],
+      "state_sha256": "bcc461df05b1fb425d3afab94462853ae85e4ae90dfb964dff54560b11090f28",
+      "mechanism": "lateral",
+      "mass": 0.00010120357041534152,
+      "q_second_tv": 0.5373621741633494,
+      "cav_events": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "bv_only_events": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "source_seed": 200024,
+      "time_s": 10,
+      "role": "eligible",
+      "selected_pair": [
+        10,
+        33
+      ],
+      "state_sha256": "3f5902abf06fbf2c333b64e39ca51ce219fdff5f1123c6abfca9f760721efd0b",
+      "mechanism": "lateral",
+      "mass": 0.00024818280182320023,
+      "q_second_tv": 0.5343703860795742,
+      "cav_events": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "bv_only_events": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "source_seed": 200028,
+      "time_s": 35,
+      "role": "eligible",
+      "selected_pair": [
+        25,
+        8
+      ],
+      "state_sha256": "81c1034e1f8cadb793ef7d6a44954f74f0c8f86ededb9c715d45497ba02f8cc3",
+      "mechanism": "lateral",
+      "mass": 0.0003076829361342089,
+      "q_second_tv": 0.5066602741871588,
+      "cav_events": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "bv_only_events": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "source_seed": 200030,
+      "time_s": 53,
+      "role": "eligible",
+      "selected_pair": [
+        20,
+        22
+      ],
+      "state_sha256": "4fb8ada23683b8d5b35e7259c77490a62ce96e559b2ec4e67c2fd3e6f7c80ec4",
+      "mechanism": "bracket",
+      "mass": 0.00046106209288232784,
+      "q_second_tv": 0.5106988155318991,
+      "cav_events": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "bv_only_events": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "source_seed": 200030,
+      "time_s": 47,
+      "role": "eligible",
+      "selected_pair": [
+        20,
+        22
+      ],
+      "state_sha256": "d38ddf45344186cabce25213bf45dcfcccebc38cbce0782b68ce54f00f6ee290",
+      "mechanism": "bracket",
+      "mass": 0.00022101231109412347,
+      "q_second_tv": 0.6720174896396638,
+      "cav_events": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "bv_only_events": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "source_seed": 200031,
+      "time_s": 17,
+      "role": "eligible",
+      "selected_pair": [
+        16,
+        1
+      ],
+      "state_sha256": "3fd85323c1579252f5708bf97afa924bb9f9bbc54d408ecba521d8e7fe688f9e",
+      "mechanism": "lateral",
+      "mass": 0.00005313373644643318,
+      "q_second_tv": 0.5002090914190784,
+      "cav_events": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "bv_only_events": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "source_seed": 200034,
+      "time_s": 39,
+      "role": "eligible",
+      "selected_pair": [
+        24,
+        26
+      ],
+      "state_sha256": "cfa85d6275745d61820dd944638f95aa83758e793f7e8a871b9db4ac2bda6c89",
+      "mechanism": "bracket",
+      "mass": 0.00043303025448176123,
+      "q_second_tv": 0.6151776808916145,
+      "cav_events": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "bv_only_events": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "source_seed": 200034,
+      "time_s": 5,
+      "role": "eligible",
+      "selected_pair": [
+        10,
+        26
+      ],
+      "state_sha256": "8d272d5be24d34a4d85f373032bc08c0f38f743b82009299c9867b6301d2f3db",
+      "mechanism": "lateral",
+      "mass": 0.00002522785597789857,
+      "q_second_tv": 0.5643587409004317,
+      "cav_events": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "bv_only_events": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "source_seed": 200041,
+      "time_s": 39,
+      "role": "eligible",
+      "selected_pair": [
+        26,
+        28
+      ],
+      "state_sha256": "dc91e2c545a8de2ac7159350c8fcb64d9cf04db9855cf49c4a312f776f97fa76",
+      "mechanism": "bracket",
+      "mass": 0.0005948432170866776,
+      "q_second_tv": 0.42784689327335607,
+      "cav_events": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "bv_only_events": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "source_seed": 200043,
+      "time_s": 21,
+      "role": "eligible",
+      "selected_pair": [
+        22,
+        24
+      ],
+      "state_sha256": "528d053b7db5fa04004dc3359a5cf059452fff70bb4e83b8c079e31b8da99d46",
+      "mechanism": "bracket",
+      "mass": 0.0003640732620866133,
+      "q_second_tv": 0.5880621320873609,
+      "cav_events": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "bv_only_events": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "source_seed": 200047,
+      "time_s": 37,
+      "role": "eligible",
+      "selected_pair": [
+        0,
+        17
+      ],
+      "state_sha256": "0568d0cd14613a06e2dabb7a9b28251f18a1d950105d3ebbec09941080d028f7",
+      "mechanism": "bracket",
+      "mass": 0.0010599753368650021,
+      "q_second_tv": 0.5468253043760389,
+      "cav_events": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "bv_only_events": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "source_seed": 200047,
+      "time_s": 32,
+      "role": "eligible",
+      "selected_pair": [
+        0,
+        17
+      ],
+      "state_sha256": "02c6403ce45cc5964d5c218d3c336847b546cc3fe72ae4ab0553455ccdbdf3d3",
+      "mechanism": "bracket",
+      "mass": 0.000563502482038194,
+      "q_second_tv": 0.571723134910089,
+      "cav_events": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "bv_only_events": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "source_seed": 200051,
+      "time_s": 20,
+      "role": "eligible",
+      "selected_pair": [
+        26,
+        28
+      ],
+      "state_sha256": "a9f12d185661d1093e18e865c4664d25bb8f8a2adf9748b923dfb17795c9d8cb",
+      "mechanism": "lateral",
+      "mass": 0.000284833627570264,
+      "q_second_tv": 0.5578299288748167,
+      "cav_events": [
+        0,
+        12,
+        1,
+        28
+      ],
+      "bv_only_events": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "source_seed": 200053,
+      "time_s": 12,
+      "role": "eligible",
+      "selected_pair": [
+        19,
+        20
+      ],
+      "state_sha256": "6943f30604e85b5884be08e6021753645e0ed3f7a2d42e937b479d9363db9d7b",
+      "mechanism": "lateral",
+      "mass": 0.00029428962283200465,
+      "q_second_tv": 0.607996327837271,
+      "cav_events": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "bv_only_events": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "source_seed": 200059,
+      "time_s": 21,
+      "role": "eligible",
+      "selected_pair": [
+        31,
+        33
+      ],
+      "state_sha256": "48cc21ac8dacdc1d0a107f01ca2ca4cfeea607e294b5d3bb26ddf90bb26ee4ba",
+      "mechanism": "bracket",
+      "mass": 0.00009281950947784918,
+      "q_second_tv": 0.6004294357197654,
+      "cav_events": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "bv_only_events": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "source_seed": 200025,
+      "time_s": 52,
+      "role": "abstention_control",
+      "selected_pair": null,
+      "state_sha256": "c7d225149a0ade119d57d6a96ef1fcd83f9cf9befcfb2af1604787360ceb6960",
+      "cav_events": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "bv_only_events": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "source_seed": 200026,
+      "time_s": 34,
+      "role": "abstention_control",
+      "selected_pair": null,
+      "state_sha256": "eb48f4358018fe04b809ced16c666220fa8f5b290987a8e992e92517f73e5cc4",
+      "cav_events": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "bv_only_events": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "source_seed": 200027,
+      "time_s": 12,
+      "role": "abstention_control",
+      "selected_pair": null,
+      "state_sha256": "6136b470d0720f0ad1de041a181de9a5d1517e7ac1a365324f809629f94f7ade",
+      "cav_events": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "bv_only_events": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "source_seed": 200033,
+      "time_s": 32,
+      "role": "abstention_control",
+      "selected_pair": null,
+      "state_sha256": "febf1ce83c8f7e626970b4c5a73d7b1bb3f3a397afed3d8cbf2371543b55bdbd",
+      "cav_events": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "bv_only_events": [
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "primary_conditional_comparison": {
+    "arms": {
+      "natural": {
+        "cases": 21,
+        "source_episodes": 16,
+        "continuations": 1344,
+        "raw_cav_events": 0,
+        "event_source_episodes": 0,
+        "conditional_event_mean": 0,
+        "weighted_event_second_moment": 0,
+        "stratified_standard_error": 0,
+        "relative_half_width": null,
+        "event_contribution_ess": 0,
+        "top_event_contribution_fraction": null,
+        "evidence_guard_passed": false,
+        "precision_status": "insufficient_multisource_events"
+      },
+      "first_factor_only": {
+        "cases": 21,
+        "source_episodes": 16,
+        "continuations": 1344,
+        "raw_cav_events": 12,
+        "event_source_episodes": 1,
+        "conditional_event_mean": 0.0001375474326566752,
+        "weighted_event_second_moment": 0.0000016144466116644357,
+        "stratified_standard_error": 0.00003607391375974871,
+        "relative_half_width": 0.4313879709711736,
+        "event_contribution_ess": 11.999999999999995,
+        "top_event_contribution_fraction": 0.08333333333333334,
+        "evidence_guard_passed": false,
+        "precision_status": "insufficient_multisource_events"
+      },
+      "second_factor_only": {
+        "cases": 21,
+        "source_episodes": 16,
+        "continuations": 1344,
+        "raw_cav_events": 2,
+        "event_source_episodes": 2,
+        "conditional_event_mean": 0.0003558207119541096,
+        "weighted_event_second_moment": 0.00011630315708089419,
+        "stratified_standard_error": 0.00033641851944613357,
+        "relative_half_width": 1.5551630450224718,
+        "event_contribution_ess": 1.1186717174003622,
+        "top_event_contribution_fraction": 0.943800235986262,
+        "evidence_guard_passed": false,
+        "precision_status": "insufficient_multisource_events"
+      },
+      "dual": {
+        "cases": 21,
+        "source_episodes": 16,
+        "continuations": 1344,
+        "raw_cav_events": 31,
+        "event_source_episodes": 2,
+        "conditional_event_mean": 0.00033968163407662166,
+        "weighted_event_second_moment": 0.00002767875574386739,
+        "stratified_standard_error": 0.0001603175321979201,
+        "relative_half_width": 0.7763118398099084,
+        "event_contribution_ess": 4.284668225049915,
+        "top_event_contribution_fraction": 0.33744203115018584,
+        "evidence_guard_passed": false,
+        "precision_status": "insufficient_multisource_events"
+      }
+    },
+    "dual_comparisons": {
+      "natural": {
+        "dual_over_reference_second_moment_descriptive": null,
+        "guard_passed_both_arms": false,
+        "paired_bootstrap_repeats": 200,
+        "zero_reference_second_moment_repeats": 200,
+        "dual_minus_reference_second_moment_interval": null,
+        "second_moment_ratio_interval": null,
+        "lower_dual_second_moment_supported": false,
+        "scope": "Paired continuation resampling within fixed states; no source-population or original-initialization inference"
+      },
+      "first_factor_only": {
+        "dual_over_reference_second_moment_descriptive": 17.144423075924202,
+        "guard_passed_both_arms": false,
+        "paired_bootstrap_repeats": 200,
+        "zero_reference_second_moment_repeats": 0,
+        "dual_minus_reference_second_moment_interval": null,
+        "second_moment_ratio_interval": null,
+        "lower_dual_second_moment_supported": false,
+        "scope": "Paired continuation resampling within fixed states; no source-population or original-initialization inference"
+      },
+      "second_factor_only": {
+        "dual_over_reference_second_moment_descriptive": 0.2379879999699023,
+        "guard_passed_both_arms": false,
+        "paired_bootstrap_repeats": 200,
+        "zero_reference_second_moment_repeats": 14,
+        "dual_minus_reference_second_moment_interval": null,
+        "second_moment_ratio_interval": null,
+        "lower_dual_second_moment_supported": false,
+        "scope": "Paired continuation resampling within fixed states; no source-population or original-initialization inference"
+      }
+    },
+    "case_masses": [
+      0.0625,
+      0.0625,
+      0.03125,
+      0.03125,
+      0.0625,
+      0.03125,
+      0.03125,
+      0.0625,
+      0.0625,
+      0.03125,
+      0.03125,
+      0.0625,
+      0.03125,
+      0.03125,
+      0.0625,
+      0.0625,
+      0.03125,
+      0.03125,
+      0.0625,
+      0.0625,
+      0.0625
+    ]
+  },
+  "ranker": {
+    "dual_events": 31,
+    "event_source_episodes": 2,
+    "zero_event_source_episodes": 14,
+    "fit_guard_passed": false,
+    "model": null,
+    "leave_source_out_predictions": [],
+    "scope": "Training calibration/replay only, within preselected cases. No deployment or fresh-validation success.",
+    "status": "insufficient_native_training_labels"
+  },
+  "training_selection_replay": {
+    "interaction_mass": {
+      "selected_cases": 16,
+      "raw_dual_events": 31,
+      "event_source_episodes": 2,
+      "trials": 1024,
+      "scope": "Training-side selection replay among at most two preselected cases per source; not whole-bank recall or validation"
+    },
+    "dual_expected_proxy_risk": {
+      "selected_cases": 16,
+      "raw_dual_events": 31,
+      "event_source_episodes": 2,
+      "trials": 1024,
+      "scope": "Training-side selection replay among at most two preselected cases per source; not whole-bank recall or validation"
+    },
+    "maximum_proxy_risk": {
+      "selected_cases": 16,
+      "raw_dual_events": 31,
+      "event_source_episodes": 2,
+      "trials": 1024,
+      "scope": "Training-side selection replay among at most two preselected cases per source; not whole-bank recall or validation"
+    }
+  },
+  "event_weight_diagnostics": [
+    {
+      "source_seed": 200017,
+      "time_s": 20,
+      "dual_events": 3,
+      "zero_H_second_factor_events": 0,
+      "zero_H_second_factor_event_second_moment_share": 0,
+      "dual_second_moment": 0.000006594168667550814,
+      "first_second_moment": 0,
+      "dual_event_ess": 2.948846020568016,
+      "event_weight_range": [
+        0.009568820235304113,
+        0.012854269213527595
+      ]
+    },
+    {
+      "source_seed": 200051,
+      "time_s": 20,
+      "dual_events": 28,
+      "zero_H_second_factor_events": 2,
+      "zero_H_second_factor_event_second_moment_share": 0.9794252223946479,
+      "dual_second_moment": 0.00043956300756810285,
+      "first_second_moment": 0.00002583114578663097,
+      "dual_event_ess": 3.875615650022081,
+      "event_weight_range": [
+        0.0007006725731389795,
+        0.11737380920036287
+      ]
+    }
+  ],
+  "likelihood_and_output_audit": {
+    "artifact_count": 105,
+    "all_artifact_hashes_match": true,
+    "frozen_protocol_content_matches": true,
+    "audited_continuations": 6400,
+    "audited_controls": 4,
+    "controls_exactly_match_all_arms": true,
+    "seed_schedule_and_disjointness_verified": true,
+    "raw_stratum_and_aggregate_statistics_reproduced": true,
+    "maximum_full_vs_factor_log_weight_error": 1.4210854715202004e-14
+  },
+  "timing": {
+    "total_wall_s": 737.598024041,
+    "scope": "Local development timing, not a controlled acceleration benchmark",
+    "native_arms": {
+      "natural": {
+        "cpu_s": 78.857724999999,
+        "wall_s": 78.9374035819996
+      },
+      "first_factor_only": {
+        "cpu_s": 78.3245640000028,
+        "wall_s": 78.39437115400204
+      },
+      "second_factor_only": {
+        "cpu_s": 78.57209000000012,
+        "wall_s": 78.68578356399968
+      },
+      "dual": {
+        "cpu_s": 78.02511299999873,
+        "wall_s": 78.11804288500326
+      }
+    }
+  },
+  "artifacts": {
+    "state_bank.json": "3a71f8c50d62e3ebff8b43f9b3e401282efc6ab5692c91e888504341c378ea7c",
+    "pair_audit.json": "bcb34a4f9c730f7d7543f7551abe91530302ad0a6e396a4104d48f59f6973043",
+    "case_plan.json": "53072b5697b696da34c11c75a8b82954863d944c66f6c28a97e062fe456efd5a",
+    "case_00_natural.json": "4d797005dc3bfd1113a57229517aeca6e1abcb7d5bd39bd5e4369a1c3aebd2b1",
+    "case_00_first_factor_only.json": "d9aca0006fa8d8831e6e994a00110085eaa120a0159e552d825f1dfa426302bc",
+    "case_00_second_factor_only.json": "41e127f118c710c9dd9aab730b4dec1e0bfc0aa1438f3a15236d9c58c2e8f8f2",
+    "case_00_dual.json": "3c74ff9f080205b1d7d83cf51a1e0fbd9374cb40f04c5d704687ce5ddc8cd09e",
+    "case_01_natural.json": "57404e51fa7186c8a9cc5cd2177b7249679ec1b690f6c0dd122ba64a2ffdd2e4",
+    "case_01_first_factor_only.json": "27293e05629e63502c48b0e1fca9e35134709806176949f738b33d6793dcc796",
+    "case_01_second_factor_only.json": "e737cb6fd4b7379b36d74a8adea1a554d10e5721af9594f7b76d3b3184c9df3f",
+    "case_01_dual.json": "9b6ee9b056157d6275a218cc17959815d7b3e67c710301b93dde58d5c6331af6",
+    "case_02_natural.json": "958317b0d42c3159a84656d8cdf15b901441c0de5b0a255c689d494cffd774e0",
+    "case_02_first_factor_only.json": "8e0b16676c7ec8c55724cb2ce1598782c20971ee9e78dffb4a3b70fbfa010dfc",
+    "case_02_second_factor_only.json": "e513503fd078edc7164613ebb815452dbd03fb5db70148e1dfd5fa7bafd7b163",
+    "case_02_dual.json": "c25af725e6e40ce3bdce1de9f43fbf65d5f817980b1655d0990366b159dec1de",
+    "case_03_natural.json": "763714a4ad69db7653d326b599e827b9306ded7d0a2ad2aec8b3c291bfa67a8e",
+    "case_03_first_factor_only.json": "55ee123d79e1ccf6b029aa173f23582fca6d5c3f3914845e9a2fe19a8f98deab",
+    "case_03_second_factor_only.json": "7693af9470fa0145d5de36d39fa993be771e9cf9db3d4a38913235f2811bff1b",
+    "case_03_dual.json": "51e35de848114d0f0bc316020c3067a2078bf23fafa179bf0fe9958c9f0c2d69",
+    "case_04_natural.json": "2485dbe312820524ad063454e49cd135ec1fdc3ff35e07b06394910c8b554f08",
+    "case_04_first_factor_only.json": "3aee948c5ea746b6efb48ed574df24ec40d96fdbc0b90f1dc23c5b7c77e1a337",
+    "case_04_second_factor_only.json": "630972c9e56c87bd8ff9a69d67a0c8420c89064adb91f13f40acbcb0da68d82a",
+    "case_04_dual.json": "69b8f4d5b55229e8224fe008b32f1db33fcddc2efc7e2cb5a8c6bab94e51eef6",
+    "case_05_natural.json": "b5bb57989b9125d914436f9c741a0d3033279fa866501e7930e722711492eb9f",
+    "case_05_first_factor_only.json": "befe44805d4bc944cf25b0523cc8e904258595b481a5cd557362a95e9c2d5008",
+    "case_05_second_factor_only.json": "ec46e350de4c33a4bd4f382f6eaae584d1920f74beaba863f5d427115e6b897c",
+    "case_05_dual.json": "a7eb2366bd6cbc4508638bfe3045d89f612d36b097a96519e56295d4b4ac7ff5",
+    "case_06_natural.json": "ce9ebd7e55d5394262ec4aed5a54924c585fa23c5594d3dc62afae57c5298a53",
+    "case_06_first_factor_only.json": "af6502a0c7deda4def07e3d17d9f350c32c1b968eb6202f67c46b9dba9d2902a",
+    "case_06_second_factor_only.json": "3562e30e037e701aa926b3930548065ebeb0fc163cadd2358046f2ef6a343555",
+    "case_06_dual.json": "4737c1c3249b89310ef5854eb2806c21b710eeb1a65b1a8eccda326c0248d437",
+    "case_07_natural.json": "e843d0c70bd8f5692de2013ec97bf5279074cfcfcb4cd50ddaba9dafe3e2c154",
+    "case_07_first_factor_only.json": "64f713bad0c3c57d354010b88072f79f0ed42529af96dfb9e3c72966207531ff",
+    "case_07_second_factor_only.json": "f3be8fc05109928def1a9076a2347491f76a55fe7846280b87807189fdc7e015",
+    "case_07_dual.json": "5485da9913e24dabc1738de3fa339b702fda4172a904ff7ffe40cc4ac253cabf",
+    "case_08_natural.json": "59de5cf7461e3f2fc2d093b0341558e1ab29bea56b6ff2800d5dbc75ebf9c96b",
+    "case_08_first_factor_only.json": "e9c8998524ad95364ff8e77b56a291d4dbbd8f9434a54595c704233bdc0c11ce",
+    "case_08_second_factor_only.json": "0d919101f76ab407a5278576c2166818a2b03af17d5b1dca410439cb784a1eaf",
+    "case_08_dual.json": "d4d8b66d0bf85b3b0b854472634c661f906b7da8a3383ae0218cfd2e4c7c647e",
+    "case_09_natural.json": "73cb55ca3b376cf4a7065b7c147513a99f6d81e3ec1ebbfefad7269699500bcb",
+    "case_09_first_factor_only.json": "348ef3ebd1a826f729fd40e81808cdd800adc4c47b67408ffac82c6b2ac1159d",
+    "case_09_second_factor_only.json": "03a51d578cde941fd91dbc182e629058029725445f8539d61c11e439b7f29556",
+    "case_09_dual.json": "53713097a9ac828f638de66d3f5e7b8bdef35429c32ef6eb97b09c1b6b60073c",
+    "case_10_natural.json": "1cca8e264d9e6f6976ad56c6b41cf0f94e4fcf83eb0f1025794efcafbc43c8f5",
+    "case_10_first_factor_only.json": "6e58304a40057c150d8034a1a8e130d7f08173f0410560c40af41746ed7eb5e5",
+    "case_10_second_factor_only.json": "31991d7f2e9aa8d9cc339c3da76bee2f6980d620894f3c437312f253f67d1872",
+    "case_10_dual.json": "65e7e058ae2248de90cbc87b14ea4b7bc95098d57c6f7e4ebe1f1eccabdb84b3",
+    "case_11_natural.json": "c5c6b666e86e6d049812df2cce456b16ed7b87e267292b06b83c1f2cc5bf1ba0",
+    "case_11_first_factor_only.json": "ffdd83d8511b79d283db057e373fdfec07ce272b875a4e07baa60fb27a58bc5d",
+    "case_11_second_factor_only.json": "2e19c6649bf413a0480b72ac1926cdabcf9865e248a733492088a2ad5014a133",
+    "case_11_dual.json": "44162787b212d320ddeb0622a66d117c43fdf3bf2b0b04d3ca215b6281996bc8",
+    "case_12_natural.json": "26aeb507a6bcce18d7cec89a599b0c8b8ca1db6f46356c1ec8575c246ded0932",
+    "case_12_first_factor_only.json": "21defd264b150424025a4a2d4c37cf8bcd35a752361615344114e1dab59ae5c5",
+    "case_12_second_factor_only.json": "ae0c95f344991269ceb52ed78678666967c3b220b4d0c4b50371c0e22e6220f2",
+    "case_12_dual.json": "1f1fdb899b25ce4f55e3fc23f7c249a35fd928afa94f3341a9fc56f60e1cb581",
+    "case_13_natural.json": "10acb16b7c28421bdc58c0bcd63209b90c1eabb4b7a2ea24470b507324e5cbeb",
+    "case_13_first_factor_only.json": "6cdafa89f6e8c0cc3cb503217ca8463be9784b24369a8295feb77d663679bed3",
+    "case_13_second_factor_only.json": "f111aaa811753fcabac329e947e58130712f442ec98f6dbd6b2245d67c2ab2a2",
+    "case_13_dual.json": "416939e14b1578d93f41eaa4aed52bc47c2a34b57288930a3bc5c4cd841b3a41",
+    "case_14_natural.json": "6bc1ac45458c2e85d5e6f2bcff6aff554963367a60d9ce64b4b9d684eaa316ee",
+    "case_14_first_factor_only.json": "e879ccbbb499c200fb51c1b4a9b28bd38ea5d23f12fa8d75327ce2431923f27b",
+    "case_14_second_factor_only.json": "16d6e92eb84a39037a558f6b5288ad6729ae92f8d0af6735be8f437370cba5c9",
+    "case_14_dual.json": "2070ca2535283f38c27ab855f643cef810632cfe82897c3efe5927703e31b1c9",
+    "case_15_natural.json": "ce66886f7c7fa4d50bbc85bcab952c4831694fe814c62d1efcb89ca3f90da8bb",
+    "case_15_first_factor_only.json": "ed0acb082f9749806d260c05ba6df7dd7b9eb8fc84c46ac0b07a8ddde3200f39",
+    "case_15_second_factor_only.json": "6f9703a40b476d5d3d57058c45b3019be068f2b87619de0564b819ffe6ca7617",
+    "case_15_dual.json": "29f75a60adeb2619d0d1ae841440468d41fe4bd2f5b98a7b41b7c9accc633236",
+    "case_16_natural.json": "1b4ab47ee1a0f3a2bab15c92adcdc58a36c9cc67c330bf34910d3fd0eaaa304b",
+    "case_16_first_factor_only.json": "c0c3f663c716cd54ce32098fef5e0612393952b9cda46d41084504f551394765",
+    "case_16_second_factor_only.json": "4a83cf656fb9db004851edb400b9c7396ee2e76edae802c1d3730101e772dd1b",
+    "case_16_dual.json": "b69fa715bd4f07762f859721f651c64a29e38d2cd6e0bcd116fbaadebc0014b2",
+    "case_17_natural.json": "3a45b0d3d6dc6c90dedf3c0f504790feffcae66b44188c666bafa303669e868a",
+    "case_17_first_factor_only.json": "bcdadb35f57f58bf5c4b7f552c409ab4d5059dd6dd013524a086e42f193f5443",
+    "case_17_second_factor_only.json": "aaab676acac655f9a95516353928a1350940496e261261be911b79dc80561c74",
+    "case_17_dual.json": "bf340625b664b37f971be666485136cb6664a607cfa5e63e50b4ac1fc5c9ed91",
+    "case_18_natural.json": "bfaf1d4419dd68dc25bfffdccda5b41bd77c7a7327c220c8f290e990cbd46ee1",
+    "case_18_first_factor_only.json": "f9d8d201acd43db633e6f0b830cb0c8f7f196fff4ea61e89df1564724fe1e13a",
+    "case_18_second_factor_only.json": "a35ecb54a4b5cfc77b7ecbd6099ceae37cff46e76f35ddfc96198669e0381237",
+    "case_18_dual.json": "a652ebc00369d1b3102e7cf4f04fe5c36b24a038c3bcd167e75a7c89f5e42efd",
+    "case_19_natural.json": "f8eb3bc706363f88a080f7e9bc323ff2a96d0db68fe4791553a15c110abf35d7",
+    "case_19_first_factor_only.json": "59d541e02622c2945ea82bf40f07d1c1da8798a9168e09fc8a602788a050e6d7",
+    "case_19_second_factor_only.json": "28b470f8d614fc49653c40f2cdb6ac2fcc0ee7726bc33be178c639f67d012c6b",
+    "case_19_dual.json": "bbfbb5e4f41461049cf61ae450cdd57f777f968420ba9d9c3ccc0fa6ad033fe5",
+    "case_20_natural.json": "6b300cc3453e4522ab5a13bd314e88d3519a8bcfe2b2987f68f46c3944bd0053",
+    "case_20_first_factor_only.json": "b8698650094b70fd5d56262947e1cabbf0f28b606c4ae624bd9b94e68045137c",
+    "case_20_second_factor_only.json": "9ff10d466aae1a0283aa2fb69c65a0d5a8cd74044e529f399c80e671768a890e",
+    "case_20_dual.json": "77312b38e5960e49958d68203ee4d5fd37ab05d2de3d6ea383218dcd96c6e874",
+    "case_21_natural.json": "d9a85ce2d40b48c270e8c90625b72b80a8a623c5eb34f406b977de9f4533808c",
+    "case_21_first_factor_only.json": "aea112bb518920129b988763a220d01581c73e1bccb1e17a04ea120be6a11043",
+    "case_21_second_factor_only.json": "37008eaff3568193f834a753d1350e8423d5efc4d038d4ddc063478dcf86a683",
+    "case_21_dual.json": "33a2de0047c10aed33f2d12fa29642529a0f9f1662e4b7641afd525881320155",
+    "case_22_natural.json": "94257326b039723bc1b26aabb93cc6d4724da2dd6c6e4e32055ce4ddd11f8b7d",
+    "case_22_first_factor_only.json": "c925ce27591878801183cc7b2cc543be239ef3c7f7714f383cae1d6d8a105246",
+    "case_22_second_factor_only.json": "f8233fe563d729c16091e44d4fc0bbfcda2821df1be9ef941aa3738a01cdc9d7",
+    "case_22_dual.json": "6a761a6196951ee41c45a9cd7010eeff70e5d238e361b697cdfc33381b45076d",
+    "case_23_natural.json": "c8669433f47d81e2bbdd43c01e614b938d1d87b2b7debd2444d01a43236ad82a",
+    "case_23_first_factor_only.json": "727a2c040ffdf332180b342f501576e0b91ee937957937f7e43362047bf26a41",
+    "case_23_second_factor_only.json": "fb402b0b2dcf1c4fecbf80275a1a9d158ff84ae33a89181dd58c2cd19650c732",
+    "case_23_dual.json": "258f1a44f01261c22bb05ba333c17c16e1ae7f0e1a4a608c7984adf4f3439a6d",
+    "case_24_natural.json": "d7b476544e0cbcbac96be3248d7ce8c5489b62babf0bf4cefd6318c75793dd57",
+    "case_24_first_factor_only.json": "46eeb01f28f8d9d36832070aa8a0808ce11cc0ecbe3b479b1393fa7953791d5e",
+    "case_24_second_factor_only.json": "da0f28cb456b87846370b75bba22abaf120c76951b47c13377e73be6740658b7",
+    "case_24_dual.json": "235ea424ff443eefb56e5ac1c3f49a68c53edf59d6ce68a1a2584fef22629eca",
+    "native_calibration.json": "8697e44064663eaba514516b4ee76b8bf27008d7b202d39e80ba5731ba16fe2a",
+    "ranker_training_report.json": "f02e659ce423dbe17f01433e896170b8c9edc8f3efdc000aad07ac15bff3a8e3"
+  },
+  "validation": {
+    "relevant_regression_tests_passed": 104,
+    "frozen_code_and_assets_verified": true
+  },
+  "fresh_validation_performed": false,
+  "population_acceleration": null,
+  "ppo_trained": false,
+  "candidate_ranker_exported": false,
+  "decision": "Phase coverage adds an observed training-side native event source missed by the two geometry slots. Only two event-bearing sources and concentrated event weights prevent model export and efficiency claims. Next discovery version must target diverse native CAV yield and weighted stability, not raw collision count alone; it requires a new training protocol and episode-disjoint fresh validation. No production rule was deployed."
+}
