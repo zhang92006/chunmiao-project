@@ -252,3 +252,59 @@ separately frozen fresh validation protocol and matched data identity are
 required before standard training/selection. No additional PPO run is launched
 by collection or export. More event sources would improve training coverage,
 but do not by themselves establish generalization or population acceleration.
+
+### Supplement evidence, 2026-10-04
+
+The complete fixed-budget run took 638.86 s locally. All 64 natural sources
+reached the horizon, supplying 3,840 states. Mixed5 retained 320 states and
+audited 944 pair matrices, finding 11 strict-positive pairs at ten states
+from eight source episodes. All ten states and four abstention controls were
+retained. All 3,584 planned native continuations completed: **zero CAV events
+in every arm**, including controls. BV-only competing endpoints totaled
+3/3/3/4 across natural/first-only/second-only/dual. Zero observed CAV events
+do not establish zero true risk. No ranker was fitted or exported.
+
+The completed collection summary SHA is
+`6cd41910ab556c0aa5ad4da262808f0bff1e9d65296b08484fff0e266eccdef3`.
+All 61 collection artifact locks passed, including the full continuation
+schedules and likelihood checks. The exporter also verified all original
+training artifacts before creating
+`outputs/v46_training_expansion_v1_dataset/conditional_sequence_manifest.json`.
+
+| Training union | Before | After |
+| --- | ---: | ---: |
+| Natural source episodes scanned | 64 | 128 |
+| Selected eligible source episodes | 16 | 24 |
+| Selected states | 21 | 31 |
+| Dual continuation sequences | 1,344 | 1,984 |
+| CAV events | 31 | 31 |
+| Event-bearing source episodes | 2 | 2 |
+| Largest source's empirical second-moment share | 99.26% | 99.26% |
+
+The event-source diversity problem is **not solved** by this supplement.
+Under the recomputed uniform-source law, the empirical second moment falls
+from 2.76788e-5 to 1.84525e-5 only because zero-observed-event strata now receive
+one third of target mass. It is not a policy improvement or a same-target
+efficiency comparison. The effective second-moment source count remains 1.015.
+No weights, endpoints or negative cases were removed or clipped.
+
+Training-side diagnosis: all ten newly selected states have maximum supported
+proxy risk between 0.1304 and 0.3424. The two original event states both had
+proxy maxima of 1.0, though other original maximum-1.0 states had no observed
+events. These are clearance-risk scores, **not collision probabilities**.
+Positive joint interaction can occur without a collision-proximate absolute
+risk level. This motivates a separately declared training-only comparison of
+endpoint-oriented risk features alongside interaction; it does not justify
+deploying a post-hoc risk threshold or relaxing strict gates. State selection
+and the temporal coverage budget also remain possible limitations.
+
+All 129 relevant tests passed and frozen NDE/assets verified. Old validation
+artifacts are unchanged, no fresh validation/test source was opened, and no
+PPO run was launched. The merged replay is ready for data inspection, but is
+not a newly validated training/selection baseline. The next experiment should
+address native-event discovery utility and require fresh independent validation
+after freezing any candidate change, rather than spending more PPO epochs on
+this unchanged two-source signal.
+
+Compact evidence:
+[highd_v46_training_expansion_v1.json](../results/highd_v46_training_expansion_v1.json).
