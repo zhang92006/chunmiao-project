@@ -1,0 +1,1167 @@
+{
+  "schema_version": 1,
+  "evidence_date": "2026-10-04",
+  "dependency_commit": "7836c05",
+  "protocol_frozen_before_validation_commit": "1958ea1a4d9ddc6a08ffbe7980a932b54b8c67c1",
+  "protocol": "configs/highd_v46_multistate_q_v1.json",
+  "config_sha256": "cab260f99987d8cd3fcbb7f80cef76fcb4cd0fed30f10adc6ee927064e3e9118",
+  "implementation_sha256": "44fc860c30c9ed1cbb2ae9230d87bb708cb8fd355e2fdc3f6c2ff186a4af5ff2",
+  "natural_target_sha256": "106a9fbc795c75c9d4f60a880da7264cb626f9163e5ec073b720e6b48c6f9db5",
+  "experiment_target_sha256": "ab84bb18d3d649be86ff4d3f568e1562079fae656dd7004b726645affe4e07fe",
+  "dependencies": {
+    "highd_v46_assets.py": "98e0ffd8d53d9d03b912a568dfb0f10a458afc3223e1d38363ba363fdc00c3c3",
+    "highd_v46_discovery_v2.py": "50b86b3b3ed018c589e96e9031bd184347064ff33e8d485a68d272182e54ab32",
+    "highd_v46_state_discovery.py": "551778aa3ba9b7142914836789d7e58a5e989d54967546cdbce6a497e3770a22",
+    "highd_v46_pair_synergy.py": "524ebd24f53fa2fb0734fd0782eb8b6ca697c307d75cd9b1b2c6a97184473b22",
+    "highd_v46_cross_unit.py": "285e59128144f4d9c78732a91925388645029e5839d8f46a50809f99a3e479b4",
+    "highd_v46_pair_witness.py": "54419a408317d11cb244407eb7f3aa21e9bfb3303ec7a2bfa91b8b485f831b95",
+    "highd_v46_d2rl.py": "83644ca9bf355ef37d2e1db890ff5a3a78554d2177f052d2b2a16373e296606c",
+    "highd_v46_statistics.py": "f6152d59a851dea62cc0efe2357e295b5be2a3c2c6b2925580f194ee51b74cbc",
+    "highd_paper_discrete_pairs.py": "b7655b1e720b69046a98c1204c8e54bfddf89d5f93642e753d0917f75acccdca",
+    "discovery_config": "97c5131961bd6c9fc577049bf97ee7684bc62cf1d85d3f77978d051fd44c9eb6",
+    "base_config": "f6aa08fb58f6d46dd9695492d943b952522acff4192f4f637010754f77dc3d53",
+    "physical_config": "4cb9a5d9191564b5eb345e6627002c79b6adc068c093a41281041457f5c4cbcd"
+  },
+  "environment": {
+    "python": "3.9.19",
+    "numpy": "1.23.1",
+    "scipy": "1.13.1",
+    "OPENBLAS_NUM_THREADS": 1,
+    "OMP_NUM_THREADS": 1
+  },
+  "scope": "Fixed multi-state conditional one-decision Q experiment; no population acceleration or PPO claim",
+  "single_factor_scope": "Factor ablations on the same selected ordered pair, not the paper single-BV agent",
+  "train": {
+    "source_seed_range": [
+      160000,
+      160015
+    ],
+    "source_discovery_summary_sha256": "a72bfb2ce0c68a7e645b283ff872191bfd20c34fd52ac01e00610f7d15c7dff9",
+    "cases": [
+      {
+        "source_seed": 160009,
+        "time_s": 19,
+        "role": "eligible",
+        "selected_pair": [
+          7,
+          9
+        ],
+        "state_sha256": "32f16fa0da0742730f6484fe5ff42256540f1f66e5e49c140debb83a4c27fb22",
+        "mass": 0.0024811326258974186,
+        "mechanism": "bracket",
+        "factor_tv": [
+          0.25307600305945793,
+          0.5133076353875204
+        ],
+        "q_second_tv": 0.4550868992627197,
+        "arms": {
+          "natural": {
+            "positive_episodes": 0,
+            "weighted_second_moment": 0,
+            "relative_half_width": null,
+            "mean_likelihood_ratio": 1,
+            "weight_mean_mcse": 0,
+            "weight_ess": 128,
+            "maximum_weight": 1,
+            "event_contribution_ess": 0,
+            "mean_clearance_risk": 0.18530970045909187,
+            "bv_only_events": 0
+          },
+          "first_factor_only": {
+            "positive_episodes": 0,
+            "weighted_second_moment": 0,
+            "relative_half_width": null,
+            "mean_likelihood_ratio": 1.0805123749479617,
+            "weight_mean_mcse": 0.143307979426892,
+            "weight_ess": 39.57935437474649,
+            "maximum_weight": 9.999999999999998,
+            "event_contribution_ess": 0,
+            "mean_clearance_risk": 0.18392153875355077,
+            "bv_only_events": 0
+          },
+          "second_factor_only": {
+            "positive_episodes": 0,
+            "weighted_second_moment": 0,
+            "relative_half_width": null,
+            "mean_likelihood_ratio": 0.8889215512311308,
+            "weight_mean_mcse": 0.1480392898524436,
+            "weight_ess": 28.303953406890486,
+            "maximum_weight": 10.000000000000002,
+            "event_contribution_ess": 0,
+            "mean_clearance_risk": 0.19747804091981003,
+            "bv_only_events": 0
+          },
+          "dual": {
+            "positive_episodes": 0,
+            "weighted_second_moment": 0,
+            "relative_half_width": null,
+            "mean_likelihood_ratio": 1.1078027917662965,
+            "weight_mean_mcse": 0.22936083990968617,
+            "weight_ess": 19.863468436717522,
+            "maximum_weight": 14.33414837371435,
+            "event_contribution_ess": 0,
+            "mean_clearance_risk": 0.199859256080006,
+            "bv_only_events": 0
+          }
+        }
+      },
+      {
+        "source_seed": 160013,
+        "time_s": 53,
+        "role": "eligible",
+        "selected_pair": [
+          21,
+          5
+        ],
+        "state_sha256": "5502a3755cb244f9aaca180ae07905aa0f42ee78979c648bbf71831b45786809",
+        "mass": 0.0002596155720142511,
+        "mechanism": "bracket",
+        "factor_tv": [
+          0.6630843732565619,
+          0.7367737897377815
+        ],
+        "q_second_tv": 0.6388685784921584,
+        "arms": {
+          "natural": {
+            "positive_episodes": 0,
+            "weighted_second_moment": 0,
+            "relative_half_width": null,
+            "mean_likelihood_ratio": 1,
+            "weight_mean_mcse": 0,
+            "weight_ess": 128,
+            "maximum_weight": 1,
+            "event_contribution_ess": 0,
+            "mean_clearance_risk": 0.06591499268155719,
+            "bv_only_events": 0
+          },
+          "first_factor_only": {
+            "positive_episodes": 0,
+            "weighted_second_moment": 0,
+            "relative_half_width": null,
+            "mean_likelihood_ratio": 0.8045438492536318,
+            "weight_mean_mcse": 0.17021376286432366,
+            "weight_ess": 19.14872612468769,
+            "maximum_weight": 10.000000000000002,
+            "event_contribution_ess": 0,
+            "mean_clearance_risk": 0.07290590814368664,
+            "bv_only_events": 0
+          },
+          "second_factor_only": {
+            "positive_episodes": 0,
+            "weighted_second_moment": 0,
+            "relative_half_width": null,
+            "mean_likelihood_ratio": 0.9723023794198299,
+            "weight_mean_mcse": 0.18065540785004705,
+            "weight_ess": 23.772700928303333,
+            "maximum_weight": 10.000000000000002,
+            "event_contribution_ess": 0,
+            "mean_clearance_risk": 0.07088971880398243,
+            "bv_only_events": 0
+          },
+          "dual": {
+            "positive_episodes": 0,
+            "weighted_second_moment": 0,
+            "relative_half_width": null,
+            "mean_likelihood_ratio": 1.181791506042361,
+            "weight_mean_mcse": 0.6934312732670579,
+            "weight_ess": 2.8619403380462956,
+            "maximum_weight": 87.41864854646158,
+            "event_contribution_ess": 0,
+            "mean_clearance_risk": 0.08290992264836737,
+            "bv_only_events": 0
+          }
+        }
+      },
+      {
+        "source_seed": 160003,
+        "time_s": 8,
+        "role": "abstention_control",
+        "selected_pair": null,
+        "state_sha256": "46a701f6fc131366bd009915e051db5fef2366038b9d02c9d947ccdb4fd73d5b",
+        "arms": {
+          "natural": {
+            "positive_episodes": 0,
+            "weighted_second_moment": 0,
+            "relative_half_width": null,
+            "mean_likelihood_ratio": 1,
+            "weight_mean_mcse": 0,
+            "weight_ess": 128,
+            "maximum_weight": 1,
+            "event_contribution_ess": 0,
+            "mean_clearance_risk": 0.025918653749984574,
+            "bv_only_events": 0
+          },
+          "first_factor_only": {
+            "positive_episodes": 0,
+            "weighted_second_moment": 0,
+            "relative_half_width": null,
+            "mean_likelihood_ratio": 1,
+            "weight_mean_mcse": 0,
+            "weight_ess": 128,
+            "maximum_weight": 1,
+            "event_contribution_ess": 0,
+            "mean_clearance_risk": 0.025918653749984574,
+            "bv_only_events": 0
+          },
+          "second_factor_only": {
+            "positive_episodes": 0,
+            "weighted_second_moment": 0,
+            "relative_half_width": null,
+            "mean_likelihood_ratio": 1,
+            "weight_mean_mcse": 0,
+            "weight_ess": 128,
+            "maximum_weight": 1,
+            "event_contribution_ess": 0,
+            "mean_clearance_risk": 0.025918653749984574,
+            "bv_only_events": 0
+          },
+          "dual": {
+            "positive_episodes": 0,
+            "weighted_second_moment": 0,
+            "relative_half_width": null,
+            "mean_likelihood_ratio": 1,
+            "weight_mean_mcse": 0,
+            "weight_ess": 128,
+            "maximum_weight": 1,
+            "event_contribution_ess": 0,
+            "mean_clearance_risk": 0.025918653749984574,
+            "bv_only_events": 0
+          }
+        }
+      },
+      {
+        "source_seed": 160011,
+        "time_s": 41,
+        "role": "abstention_control",
+        "selected_pair": null,
+        "state_sha256": "dba60a913728215836ec30ebf0bc6bed55311ed71011fe9ea0d81aa71db00e13",
+        "arms": {
+          "natural": {
+            "positive_episodes": 0,
+            "weighted_second_moment": 0,
+            "relative_half_width": null,
+            "mean_likelihood_ratio": 1,
+            "weight_mean_mcse": 0,
+            "weight_ess": 128,
+            "maximum_weight": 1,
+            "event_contribution_ess": 0,
+            "mean_clearance_risk": 0.029275417125265487,
+            "bv_only_events": 0
+          },
+          "first_factor_only": {
+            "positive_episodes": 0,
+            "weighted_second_moment": 0,
+            "relative_half_width": null,
+            "mean_likelihood_ratio": 1,
+            "weight_mean_mcse": 0,
+            "weight_ess": 128,
+            "maximum_weight": 1,
+            "event_contribution_ess": 0,
+            "mean_clearance_risk": 0.029275417125265487,
+            "bv_only_events": 0
+          },
+          "second_factor_only": {
+            "positive_episodes": 0,
+            "weighted_second_moment": 0,
+            "relative_half_width": null,
+            "mean_likelihood_ratio": 1,
+            "weight_mean_mcse": 0,
+            "weight_ess": 128,
+            "maximum_weight": 1,
+            "event_contribution_ess": 0,
+            "mean_clearance_risk": 0.029275417125265487,
+            "bv_only_events": 0
+          },
+          "dual": {
+            "positive_episodes": 0,
+            "weighted_second_moment": 0,
+            "relative_half_width": null,
+            "mean_likelihood_ratio": 1,
+            "weight_mean_mcse": 0,
+            "weight_ess": 128,
+            "maximum_weight": 1,
+            "event_contribution_ess": 0,
+            "mean_clearance_risk": 0.029275417125265487,
+            "bv_only_events": 0
+          }
+        }
+      }
+    ],
+    "primary": {
+      "arms": {
+        "natural": {
+          "states": 2,
+          "continuations": 256,
+          "raw_cav_events": 0,
+          "event_source_episodes": 0,
+          "conditional_event_mean": 0,
+          "weighted_event_second_moment": 0,
+          "stratified_standard_error": 0,
+          "relative_half_width": null,
+          "event_contribution_ess": 0,
+          "top_event_contribution_fraction": null,
+          "evidence_guard_passed": false,
+          "precision_status": "insufficient_multistate_events"
+        },
+        "first_factor_only": {
+          "states": 2,
+          "continuations": 256,
+          "raw_cav_events": 0,
+          "event_source_episodes": 0,
+          "conditional_event_mean": 0,
+          "weighted_event_second_moment": 0,
+          "stratified_standard_error": 0,
+          "relative_half_width": null,
+          "event_contribution_ess": 0,
+          "top_event_contribution_fraction": null,
+          "evidence_guard_passed": false,
+          "precision_status": "insufficient_multistate_events"
+        },
+        "second_factor_only": {
+          "states": 2,
+          "continuations": 256,
+          "raw_cav_events": 0,
+          "event_source_episodes": 0,
+          "conditional_event_mean": 0,
+          "weighted_event_second_moment": 0,
+          "stratified_standard_error": 0,
+          "relative_half_width": null,
+          "event_contribution_ess": 0,
+          "top_event_contribution_fraction": null,
+          "evidence_guard_passed": false,
+          "precision_status": "insufficient_multistate_events"
+        },
+        "dual": {
+          "states": 2,
+          "continuations": 256,
+          "raw_cav_events": 0,
+          "event_source_episodes": 0,
+          "conditional_event_mean": 0,
+          "weighted_event_second_moment": 0,
+          "stratified_standard_error": 0,
+          "relative_half_width": null,
+          "event_contribution_ess": 0,
+          "top_event_contribution_fraction": null,
+          "evidence_guard_passed": false,
+          "precision_status": "insufficient_multistate_events"
+        }
+      },
+      "dual_comparisons": {
+        "natural": {
+          "dual_over_reference_second_moment_descriptive": null,
+          "guard_passed_both_arms": false,
+          "paired_bootstrap_repeats": 200,
+          "zero_reference_second_moment_repeats": 200,
+          "dual_minus_reference_second_moment_interval": null,
+          "second_moment_ratio_interval": null,
+          "lower_dual_second_moment_supported": false,
+          "scope": "Paired continuation resampling within fixed states; no source-population or original-initialization inference"
+        },
+        "first_factor_only": {
+          "dual_over_reference_second_moment_descriptive": null,
+          "guard_passed_both_arms": false,
+          "paired_bootstrap_repeats": 200,
+          "zero_reference_second_moment_repeats": 200,
+          "dual_minus_reference_second_moment_interval": null,
+          "second_moment_ratio_interval": null,
+          "lower_dual_second_moment_supported": false,
+          "scope": "Paired continuation resampling within fixed states; no source-population or original-initialization inference"
+        },
+        "second_factor_only": {
+          "dual_over_reference_second_moment_descriptive": null,
+          "guard_passed_both_arms": false,
+          "paired_bootstrap_repeats": 200,
+          "zero_reference_second_moment_repeats": 200,
+          "dual_minus_reference_second_moment_interval": null,
+          "second_moment_ratio_interval": null,
+          "lower_dual_second_moment_supported": false,
+          "scope": "Paired continuation resampling within fixed states; no source-population or original-initialization inference"
+        }
+      }
+    },
+    "total_wall_s": 108.212542583,
+    "audit": {
+      "summary_sha256": "4cc339f1f357c3bd8845536a110fff0c57286900bed99cd8e9b65e6051cb2fc1",
+      "artifacts_verified": 19,
+      "raw_continuations_retained": 2048,
+      "controls_exactly_match": [
+        160003,
+        160011
+      ],
+      "maximum_full_vs_factor_log_weight_error": 1.4210854715202004e-14,
+      "stratified_estimates_reproduced": true,
+      "seed_schedule_verified": true
+    }
+  },
+  "validation": {
+    "source_seed_range": [
+      190000,
+      190031
+    ],
+    "source_events": {
+      "horizon": 29,
+      "bv_only": 3,
+      "cav_first_collision": 0
+    },
+    "discovery": {
+      "natural_states": 1823,
+      "candidate_states": 160,
+      "evaluated_pairs": 472,
+      "strict_positive_pairs": 12,
+      "strict_positive_states": 11,
+      "positive_source_episodes": 10,
+      "first_failure_counts": {
+        "interaction": 19,
+        "leverage": 439,
+        "passed": 12,
+        "risk_H_tv": 2
+      },
+      "feature_cpu_s": 0.0651230000000278,
+      "proxy_cpu_s": 192.69999699999985,
+      "scan_wall_s": 22.790264834,
+      "discovery_wall_s": 215.89071270899998,
+      "strict_positive_state_rate": 0.06875,
+      "strict_positive_pair_rate": 0.025423728813559324,
+      "positive_source_episode_coverage": 0.3125
+    },
+    "cases": [
+      {
+        "source_seed": 190003,
+        "time_s": 18,
+        "role": "eligible",
+        "selected_pair": [
+          27,
+          29
+        ],
+        "state_sha256": "717341760e629d52b74dfeb583fd9b310a7ad6b879319dc49490aa5e8d3b0a5a",
+        "mass": 0.00004528222138265157,
+        "mechanism": "bracket",
+        "factor_tv": [
+          0.6256269042668783,
+          0.5953471521941366
+        ],
+        "q_second_tv": 0.5038377930568486,
+        "arms": {
+          "natural": {
+            "positive_episodes": 0,
+            "weighted_second_moment": 0,
+            "relative_half_width": null,
+            "mean_likelihood_ratio": 1,
+            "weight_mean_mcse": 0,
+            "weight_ess": 256,
+            "maximum_weight": 1,
+            "event_contribution_ess": 0,
+            "mean_clearance_risk": 0.045213788264254234,
+            "bv_only_events": 0
+          },
+          "first_factor_only": {
+            "positive_episodes": 0,
+            "weighted_second_moment": 0,
+            "relative_half_width": null,
+            "mean_likelihood_ratio": 0.7812206967110125,
+            "weight_mean_mcse": 0.11761305069025653,
+            "weight_ess": 37.75989903057185,
+            "maximum_weight": 9.999999999999998,
+            "event_contribution_ess": 0,
+            "mean_clearance_risk": 0.04453045125222759,
+            "bv_only_events": 0
+          },
+          "second_factor_only": {
+            "positive_episodes": 0,
+            "weighted_second_moment": 0,
+            "relative_half_width": null,
+            "mean_likelihood_ratio": 0.9466055653484555,
+            "weight_mean_mcse": 0.08239382926286538,
+            "weight_ess": 87.31449118528008,
+            "maximum_weight": 10.000000000000002,
+            "event_contribution_ess": 0,
+            "mean_clearance_risk": 0.04499439142777367,
+            "bv_only_events": 0
+          },
+          "dual": {
+            "positive_episodes": 0,
+            "weighted_second_moment": 0,
+            "relative_half_width": null,
+            "mean_likelihood_ratio": 0.8814690416167188,
+            "weight_mean_mcse": 0.14889417469660693,
+            "weight_ess": 30.933520634912394,
+            "maximum_weight": 9.999999999999998,
+            "event_contribution_ess": 0,
+            "mean_clearance_risk": 0.04460220590741172,
+            "bv_only_events": 0
+          }
+        }
+      },
+      {
+        "source_seed": 190015,
+        "time_s": 32,
+        "role": "eligible",
+        "selected_pair": [
+          4,
+          24
+        ],
+        "state_sha256": "df613de9f45048d5c48f6228b2cf71207bb3859f8bf27ec492bfb8f034d8e794",
+        "mass": 0.0000929054936503807,
+        "mechanism": "bracket",
+        "factor_tv": [
+          0.8520149795258751,
+          0.6426115258309751
+        ],
+        "q_second_tv": 0.5296430271522292,
+        "arms": {
+          "natural": {
+            "positive_episodes": 0,
+            "weighted_second_moment": 0,
+            "relative_half_width": null,
+            "mean_likelihood_ratio": 1,
+            "weight_mean_mcse": 0,
+            "weight_ess": 256,
+            "maximum_weight": 1,
+            "event_contribution_ess": 0,
+            "mean_clearance_risk": 0.03060054596220272,
+            "bv_only_events": 241
+          },
+          "first_factor_only": {
+            "positive_episodes": 0,
+            "weighted_second_moment": 0,
+            "relative_half_width": null,
+            "mean_likelihood_ratio": 0.7936315730086654,
+            "weight_mean_mcse": 0.1540562041646936,
+            "weight_ess": 24.13133603166211,
+            "maximum_weight": 10.000000000000002,
+            "event_contribution_ess": 0,
+            "mean_clearance_risk": 0.039368150774752926,
+            "bv_only_events": 128
+          },
+          "second_factor_only": {
+            "positive_episodes": 0,
+            "weighted_second_moment": 0,
+            "relative_half_width": null,
+            "mean_likelihood_ratio": 0.9327367098227872,
+            "weight_mean_mcse": 0.03857565596097238,
+            "weight_ess": 178.25276461339158,
+            "maximum_weight": 10.000000000000002,
+            "event_contribution_ess": 0,
+            "mean_clearance_risk": 0.031166615901198333,
+            "bv_only_events": 241
+          },
+          "dual": {
+            "positive_episodes": 0,
+            "weighted_second_moment": 0,
+            "relative_half_width": null,
+            "mean_likelihood_ratio": 0.8133011954710487,
+            "weight_mean_mcse": 0.15804462680663048,
+            "weight_ess": 24.084264436970017,
+            "maximum_weight": 10.000000000000002,
+            "event_contribution_ess": 0,
+            "mean_clearance_risk": 0.04433142515759072,
+            "bv_only_events": 129
+          }
+        }
+      },
+      {
+        "source_seed": 190016,
+        "time_s": 27,
+        "role": "eligible",
+        "selected_pair": [
+          18,
+          4
+        ],
+        "state_sha256": "61cd9c2fdd4e118eec3fdec955d64fd1210a4f1f03a182c97f5d90011e61f573",
+        "mass": 0.0003651197207659553,
+        "mechanism": "lateral",
+        "factor_tv": [
+          0.984333825592781,
+          0.5865849111052955
+        ],
+        "q_second_tv": 0.5645353490329901,
+        "arms": {
+          "natural": {
+            "positive_episodes": 0,
+            "weighted_second_moment": 0,
+            "relative_half_width": null,
+            "mean_likelihood_ratio": 1,
+            "weight_mean_mcse": 0,
+            "weight_ess": 256,
+            "maximum_weight": 1,
+            "event_contribution_ess": 0,
+            "mean_clearance_risk": 0.011169170718831386,
+            "bv_only_events": 1
+          },
+          "first_factor_only": {
+            "positive_episodes": 1,
+            "weighted_second_moment": 0.0000011794792466692975,
+            "relative_half_width": 1.6448536269514717,
+            "mean_likelihood_ratio": 0.7582744427115704,
+            "weight_mean_mcse": 0.16386477454808218,
+            "weight_ess": 19.83183086187783,
+            "maximum_weight": 10.000000000000002,
+            "event_contribution_ess": 1,
+            "mean_clearance_risk": 0.5349255548742813,
+            "bv_only_events": 1
+          },
+          "second_factor_only": {
+            "positive_episodes": 0,
+            "weighted_second_moment": 0,
+            "relative_half_width": null,
+            "mean_likelihood_ratio": 0.7111287407175421,
+            "weight_mean_mcse": 0.16000922347585933,
+            "weight_ess": 18.403730481256584,
+            "maximum_weight": 10.000000000000002,
+            "event_contribution_ess": 0,
+            "mean_clearance_risk": 0.013291428582548637,
+            "bv_only_events": 0
+          },
+          "dual": {
+            "positive_episodes": 20,
+            "weighted_second_moment": 8.533697375140605e-8,
+            "relative_half_width": 0.35646488530688747,
+            "mean_likelihood_ratio": 0.40326821916547406,
+            "weight_mean_mcse": 0.3905802748577016,
+            "weight_ess": 1.0657501118819528,
+            "maximum_weight": 99.99999999999996,
+            "event_contribution_ess": 19.728420171583295,
+            "mean_clearance_risk": 0.6437381453958398,
+            "bv_only_events": 1
+          }
+        }
+      },
+      {
+        "source_seed": 190021,
+        "time_s": 27,
+        "role": "eligible",
+        "selected_pair": [
+          17,
+          19
+        ],
+        "state_sha256": "bc07525cd3dae637c879c31825406c5b9cea0450407dc8c53843b02b9db2728a",
+        "mass": 0.00041222780325027926,
+        "mechanism": "bracket",
+        "factor_tv": [
+          0.6852415282555026,
+          0.6339915684868241
+        ],
+        "q_second_tv": 0.5853883682317327,
+        "arms": {
+          "natural": {
+            "positive_episodes": 0,
+            "weighted_second_moment": 0,
+            "relative_half_width": null,
+            "mean_likelihood_ratio": 1,
+            "weight_mean_mcse": 0,
+            "weight_ess": 256,
+            "maximum_weight": 1,
+            "event_contribution_ess": 0,
+            "mean_clearance_risk": 0.037695343568684356,
+            "bv_only_events": 0
+          },
+          "first_factor_only": {
+            "positive_episodes": 0,
+            "weighted_second_moment": 0,
+            "relative_half_width": null,
+            "mean_likelihood_ratio": 0.8642864362329219,
+            "weight_mean_mcse": 0.12398875493631517,
+            "weight_ess": 40.973463467359345,
+            "maximum_weight": 9.999999999999998,
+            "event_contribution_ess": 0,
+            "mean_clearance_risk": 0.030184729700189844,
+            "bv_only_events": 0
+          },
+          "second_factor_only": {
+            "positive_episodes": 0,
+            "weighted_second_moment": 0,
+            "relative_half_width": null,
+            "mean_likelihood_ratio": 0.8024538342757906,
+            "weight_mean_mcse": 0.14190550251151154,
+            "weight_ess": 28.525553362705917,
+            "maximum_weight": 10.000000000000002,
+            "event_contribution_ess": 0,
+            "mean_clearance_risk": 0.04134446791178227,
+            "bv_only_events": 0
+          },
+          "dual": {
+            "positive_episodes": 0,
+            "weighted_second_moment": 0,
+            "relative_half_width": null,
+            "mean_likelihood_ratio": 0.6184257779799252,
+            "weight_mean_mcse": 0.24916498288326697,
+            "weight_ess": 6.0385682120215805,
+            "maximum_weight": 63.129064337538416,
+            "event_contribution_ess": 0,
+            "mean_clearance_risk": 0.02618434333565264,
+            "bv_only_events": 0
+          }
+        }
+      },
+      {
+        "source_seed": 190022,
+        "time_s": 36,
+        "role": "eligible",
+        "selected_pair": [
+          5,
+          21
+        ],
+        "state_sha256": "6d92e44a58b711dca657e6583a19d3b2b06d4e04eedb2ba871698a4fe50610cc",
+        "mass": 0.0005751687209861294,
+        "mechanism": "lateral",
+        "factor_tv": [
+          0.968544127482341,
+          0.5815664167653558
+        ],
+        "q_second_tv": 0.47271522869590715,
+        "arms": {
+          "natural": {
+            "positive_episodes": 0,
+            "weighted_second_moment": 0,
+            "relative_half_width": null,
+            "mean_likelihood_ratio": 1,
+            "weight_mean_mcse": 0,
+            "weight_ess": 256,
+            "maximum_weight": 1,
+            "event_contribution_ess": 0,
+            "mean_clearance_risk": 0.04540070903390435,
+            "bv_only_events": 0
+          },
+          "first_factor_only": {
+            "positive_episodes": 2,
+            "weighted_second_moment": 0.000009477154787239513,
+            "relative_half_width": 1.160804350389338,
+            "mean_likelihood_ratio": 1.1636962382950558,
+            "weight_mean_mcse": 0.19778193301621996,
+            "weight_ess": 30.599896485137947,
+            "maximum_weight": 10.000000000000002,
+            "event_contribution_ess": 2,
+            "mean_clearance_risk": 0.46309898026021334,
+            "bv_only_events": 1
+          },
+          "second_factor_only": {
+            "positive_episodes": 0,
+            "weighted_second_moment": 0,
+            "relative_half_width": null,
+            "mean_likelihood_ratio": 0.9857728268407329,
+            "weight_mean_mcse": 0.0065734261486148846,
+            "weight_ess": 253.12979224034726,
+            "maximum_weight": 1,
+            "event_contribution_ess": 0,
+            "mean_clearance_risk": 0.04637803511026853,
+            "bv_only_events": 0
+          },
+          "dual": {
+            "positive_episodes": 4,
+            "weighted_second_moment": 8.212439273118625e-7,
+            "relative_half_width": 1.3064278592592682,
+            "mean_likelihood_ratio": 1.160293312672389,
+            "weight_mean_mcse": 0.19790398003229978,
+            "weight_ess": 30.409368489067962,
+            "maximum_weight": 10.000000000000002,
+            "event_contribution_ess": 1.581583090206398,
+            "mean_clearance_risk": 0.5409807564958158,
+            "bv_only_events": 1
+          }
+        }
+      },
+      {
+        "source_seed": 190027,
+        "time_s": 39,
+        "role": "eligible",
+        "selected_pair": [
+          8,
+          25
+        ],
+        "state_sha256": "cad383f20ba14fbb85cca45b85a5c11041e568520e8783bdcece1abc567e7fb1",
+        "mass": 0.000018792003911244327,
+        "mechanism": "bracket",
+        "factor_tv": [
+          0.7507884079527662,
+          0.6151246873017078
+        ],
+        "q_second_tv": 0.5175605632703378,
+        "arms": {
+          "natural": {
+            "positive_episodes": 0,
+            "weighted_second_moment": 0,
+            "relative_half_width": null,
+            "mean_likelihood_ratio": 1,
+            "weight_mean_mcse": 0,
+            "weight_ess": 256,
+            "maximum_weight": 1,
+            "event_contribution_ess": 0,
+            "mean_clearance_risk": 0.15283512983790212,
+            "bv_only_events": 0
+          },
+          "first_factor_only": {
+            "positive_episodes": 0,
+            "weighted_second_moment": 0,
+            "relative_half_width": null,
+            "mean_likelihood_ratio": 1.023133409490534,
+            "weight_mean_mcse": 0.15150366007773905,
+            "weight_ess": 38.83838522709988,
+            "maximum_weight": 9.999999999999998,
+            "event_contribution_ess": 0,
+            "mean_clearance_risk": 0.1607341923231274,
+            "bv_only_events": 0
+          },
+          "second_factor_only": {
+            "positive_episodes": 0,
+            "weighted_second_moment": 0,
+            "relative_half_width": null,
+            "mean_likelihood_ratio": 1.027499482522276,
+            "weight_mean_mcse": 0.08954382940319429,
+            "weight_ess": 87.17453918757693,
+            "maximum_weight": 10.000000000000002,
+            "event_contribution_ess": 0,
+            "mean_clearance_risk": 0.15358762594557623,
+            "bv_only_events": 0
+          },
+          "dual": {
+            "positive_episodes": 0,
+            "weighted_second_moment": 0,
+            "relative_half_width": null,
+            "mean_likelihood_ratio": 0.9809270811663325,
+            "weight_mean_mcse": 0.17524842771153792,
+            "weight_ess": 28.01159097423106,
+            "maximum_weight": 21.932987578997754,
+            "event_contribution_ess": 0,
+            "mean_clearance_risk": 0.16367439400380057,
+            "bv_only_events": 0
+          }
+        }
+      },
+      {
+        "source_seed": 190004,
+        "time_s": 54,
+        "role": "abstention_control",
+        "selected_pair": null,
+        "state_sha256": "d170d20a22ecd71c32bb5d8cb9138fb2fbb58bd1fd3f5f16b5abe644dc171812",
+        "arms": {
+          "natural": {
+            "positive_episodes": 0,
+            "weighted_second_moment": 0,
+            "relative_half_width": null,
+            "mean_likelihood_ratio": 1,
+            "weight_mean_mcse": 0,
+            "weight_ess": 256,
+            "maximum_weight": 1,
+            "event_contribution_ess": 0,
+            "mean_clearance_risk": 0.015142153750860378,
+            "bv_only_events": 0
+          },
+          "first_factor_only": {
+            "positive_episodes": 0,
+            "weighted_second_moment": 0,
+            "relative_half_width": null,
+            "mean_likelihood_ratio": 1,
+            "weight_mean_mcse": 0,
+            "weight_ess": 256,
+            "maximum_weight": 1,
+            "event_contribution_ess": 0,
+            "mean_clearance_risk": 0.015142153750860378,
+            "bv_only_events": 0
+          },
+          "second_factor_only": {
+            "positive_episodes": 0,
+            "weighted_second_moment": 0,
+            "relative_half_width": null,
+            "mean_likelihood_ratio": 1,
+            "weight_mean_mcse": 0,
+            "weight_ess": 256,
+            "maximum_weight": 1,
+            "event_contribution_ess": 0,
+            "mean_clearance_risk": 0.015142153750860378,
+            "bv_only_events": 0
+          },
+          "dual": {
+            "positive_episodes": 0,
+            "weighted_second_moment": 0,
+            "relative_half_width": null,
+            "mean_likelihood_ratio": 1,
+            "weight_mean_mcse": 0,
+            "weight_ess": 256,
+            "maximum_weight": 1,
+            "event_contribution_ess": 0,
+            "mean_clearance_risk": 0.015142153750860378,
+            "bv_only_events": 0
+          }
+        }
+      },
+      {
+        "source_seed": 190008,
+        "time_s": 29,
+        "role": "abstention_control",
+        "selected_pair": null,
+        "state_sha256": "56f42c60793abfcd6934fcae4864fccaaacde9d3f46025b4c9c8c4cfadcb8529",
+        "arms": {
+          "natural": {
+            "positive_episodes": 0,
+            "weighted_second_moment": 0,
+            "relative_half_width": null,
+            "mean_likelihood_ratio": 1,
+            "weight_mean_mcse": 0,
+            "weight_ess": 256,
+            "maximum_weight": 1,
+            "event_contribution_ess": 0,
+            "mean_clearance_risk": 0.04100674146930732,
+            "bv_only_events": 0
+          },
+          "first_factor_only": {
+            "positive_episodes": 0,
+            "weighted_second_moment": 0,
+            "relative_half_width": null,
+            "mean_likelihood_ratio": 1,
+            "weight_mean_mcse": 0,
+            "weight_ess": 256,
+            "maximum_weight": 1,
+            "event_contribution_ess": 0,
+            "mean_clearance_risk": 0.04100674146930732,
+            "bv_only_events": 0
+          },
+          "second_factor_only": {
+            "positive_episodes": 0,
+            "weighted_second_moment": 0,
+            "relative_half_width": null,
+            "mean_likelihood_ratio": 1,
+            "weight_mean_mcse": 0,
+            "weight_ess": 256,
+            "maximum_weight": 1,
+            "event_contribution_ess": 0,
+            "mean_clearance_risk": 0.04100674146930732,
+            "bv_only_events": 0
+          },
+          "dual": {
+            "positive_episodes": 0,
+            "weighted_second_moment": 0,
+            "relative_half_width": null,
+            "mean_likelihood_ratio": 1,
+            "weight_mean_mcse": 0,
+            "weight_ess": 256,
+            "maximum_weight": 1,
+            "event_contribution_ess": 0,
+            "mean_clearance_risk": 0.04100674146930732,
+            "bv_only_events": 0
+          }
+        }
+      }
+    ],
+    "primary": {
+      "arms": {
+        "natural": {
+          "states": 6,
+          "continuations": 1536,
+          "raw_cav_events": 0,
+          "event_source_episodes": 0,
+          "conditional_event_mean": 0,
+          "weighted_event_second_moment": 0,
+          "stratified_standard_error": 0,
+          "relative_half_width": null,
+          "event_contribution_ess": 0,
+          "top_event_contribution_fraction": null,
+          "evidence_guard_passed": false,
+          "precision_status": "insufficient_multistate_events"
+        },
+        "first_factor_only": {
+          "states": 6,
+          "continuations": 1536,
+          "raw_cav_events": 3,
+          "event_source_episodes": 2,
+          "conditional_event_mean": 0.00005666346941821316,
+          "weighted_event_second_moment": 0.0000017761056723181353,
+          "stratified_standard_error": 0.000033945339923780124,
+          "relative_half_width": 0.9853811647082701,
+          "event_contribution_ess": 2.7766985839985074,
+          "top_event_contribution_fraction": 0.4001746685233682,
+          "evidence_guard_passed": false,
+          "precision_status": "insufficient_multistate_events"
+        },
+        "second_factor_only": {
+          "states": 6,
+          "continuations": 1536,
+          "raw_cav_events": 0,
+          "event_source_episodes": 0,
+          "conditional_event_mean": 0,
+          "weighted_event_second_moment": 0,
+          "stratified_standard_error": 0,
+          "relative_half_width": null,
+          "event_contribution_ess": 0,
+          "top_event_contribution_fraction": null,
+          "evidence_guard_passed": false,
+          "precision_status": "insufficient_multistate_events"
+        },
+        "dual": {
+          "states": 6,
+          "continuations": 1536,
+          "raw_cav_events": 24,
+          "event_source_episodes": 2,
+          "conditional_event_mean": 0.000025387499350733122,
+          "weighted_event_second_moment": 1.5109681684387808e-7,
+          "stratified_standard_error": 0.000009873551227489704,
+          "relative_half_width": 0.63970642886333,
+          "event_contribution_ess": 6.552028097232071,
+          "top_event_contribution_fraction": 0.3672910565653459,
+          "evidence_guard_passed": false,
+          "precision_status": "insufficient_multistate_events"
+        }
+      },
+      "dual_comparisons": {
+        "natural": {
+          "dual_over_reference_second_moment_descriptive": null,
+          "guard_passed_both_arms": false,
+          "paired_bootstrap_repeats": 200,
+          "zero_reference_second_moment_repeats": 200,
+          "dual_minus_reference_second_moment_interval": null,
+          "second_moment_ratio_interval": null,
+          "lower_dual_second_moment_supported": false,
+          "scope": "Paired continuation resampling within fixed states; no source-population or original-initialization inference"
+        },
+        "first_factor_only": {
+          "dual_over_reference_second_moment_descriptive": 0.0850719747134582,
+          "guard_passed_both_arms": false,
+          "paired_bootstrap_repeats": 200,
+          "zero_reference_second_moment_repeats": 9,
+          "dual_minus_reference_second_moment_interval": null,
+          "second_moment_ratio_interval": null,
+          "lower_dual_second_moment_supported": false,
+          "scope": "Paired continuation resampling within fixed states; no source-population or original-initialization inference"
+        },
+        "second_factor_only": {
+          "dual_over_reference_second_moment_descriptive": null,
+          "guard_passed_both_arms": false,
+          "paired_bootstrap_repeats": 200,
+          "zero_reference_second_moment_repeats": 200,
+          "dual_minus_reference_second_moment_interval": null,
+          "second_moment_ratio_interval": null,
+          "lower_dual_second_moment_supported": false,
+          "scope": "Paired continuation resampling within fixed states; no source-population or original-initialization inference"
+        }
+      }
+    },
+    "secondary": {
+      "arms": {
+        "natural": {
+          "states": 8,
+          "continuations": 2048,
+          "raw_cav_events": 0,
+          "event_source_episodes": 0,
+          "conditional_event_mean": 0,
+          "weighted_event_second_moment": 0,
+          "stratified_standard_error": 0,
+          "relative_half_width": null,
+          "event_contribution_ess": 0,
+          "top_event_contribution_fraction": null,
+          "evidence_guard_passed": false,
+          "precision_status": "insufficient_multistate_events"
+        },
+        "first_factor_only": {
+          "states": 8,
+          "continuations": 2048,
+          "raw_cav_events": 3,
+          "event_source_episodes": 2,
+          "conditional_event_mean": 0.00004249760206365987,
+          "weighted_event_second_moment": 0.0000013320792542386014,
+          "stratified_standard_error": 0.000025459004942835093,
+          "relative_half_width": 0.9853811647082702,
+          "event_contribution_ess": 2.7766985839985074,
+          "top_event_contribution_fraction": 0.4001746685233682,
+          "evidence_guard_passed": false,
+          "precision_status": "insufficient_multistate_events"
+        },
+        "second_factor_only": {
+          "states": 8,
+          "continuations": 2048,
+          "raw_cav_events": 0,
+          "event_source_episodes": 0,
+          "conditional_event_mean": 0,
+          "weighted_event_second_moment": 0,
+          "stratified_standard_error": 0,
+          "relative_half_width": null,
+          "event_contribution_ess": 0,
+          "top_event_contribution_fraction": null,
+          "evidence_guard_passed": false,
+          "precision_status": "insufficient_multistate_events"
+        },
+        "dual": {
+          "states": 8,
+          "continuations": 2048,
+          "raw_cav_events": 24,
+          "event_source_episodes": 2,
+          "conditional_event_mean": 0.000019040624513049843,
+          "weighted_event_second_moment": 1.1332261263290856e-7,
+          "stratified_standard_error": 0.000007405163420617278,
+          "relative_half_width": 0.63970642886333,
+          "event_contribution_ess": 6.552028097232071,
+          "top_event_contribution_fraction": 0.3672910565653459,
+          "evidence_guard_passed": false,
+          "precision_status": "insufficient_multistate_events"
+        }
+      },
+      "dual_comparisons": {
+        "natural": {
+          "dual_over_reference_second_moment_descriptive": null,
+          "guard_passed_both_arms": false,
+          "paired_bootstrap_repeats": 200,
+          "zero_reference_second_moment_repeats": 200,
+          "dual_minus_reference_second_moment_interval": null,
+          "second_moment_ratio_interval": null,
+          "lower_dual_second_moment_supported": false,
+          "scope": "Paired continuation resampling within fixed states; no source-population or original-initialization inference"
+        },
+        "first_factor_only": {
+          "dual_over_reference_second_moment_descriptive": 0.0850719747134582,
+          "guard_passed_both_arms": false,
+          "paired_bootstrap_repeats": 200,
+          "zero_reference_second_moment_repeats": 12,
+          "dual_minus_reference_second_moment_interval": null,
+          "second_moment_ratio_interval": null,
+          "lower_dual_second_moment_supported": false,
+          "scope": "Paired continuation resampling within fixed states; no source-population or original-initialization inference"
+        },
+        "second_factor_only": {
+          "dual_over_reference_second_moment_descriptive": null,
+          "guard_passed_both_arms": false,
+          "paired_bootstrap_repeats": 200,
+          "zero_reference_second_moment_repeats": 200,
+          "dual_minus_reference_second_moment_interval": null,
+          "second_moment_ratio_interval": null,
+          "lower_dual_second_moment_supported": false,
+          "scope": "Paired continuation resampling within fixed states; no source-population or original-initialization inference"
+        }
+      }
+    },
+    "arm_cpu_s": {
+      "natural": 89.60017999999945,
+      "first_factor_only": 92.37729500000054,
+      "second_factor_only": 88.89640600000024,
+      "dual": 91.5143829999995
+    },
+    "arm_wall_s": {
+      "natural": 90.023764728,
+      "first_factor_only": 92.53590432599975,
+      "second_factor_only": 89.05442333599936,
+      "dual": 91.61060653899926
+    },
+    "total_wall_s": 582.890478917,
+    "audit": {
+      "summary_sha256": "21d8987f9563c8e7845606c519a935fb1376f39f78c9bb5337d7e1416f6c757c",
+      "artifacts_verified": 35,
+      "raw_continuations_retained": 8192,
+      "controls_exactly_match": [
+        190004,
+        190008
+      ],
+      "maximum_full_vs_factor_log_weight_error": 1.4876988529977098e-14,
+      "stratified_estimates_reproduced": true,
+      "seed_schedule_verified": true
+    }
+  },
+  "tests": {
+    "relevant_regression_tests_passed": 97,
+    "frozen_code_and_assets_verified": true
+  },
+  "decisions": [
+    "Dual Q exercised CAV events at two new lateral source states without forcing actions.",
+    "Descriptive dual/first-factor second-moment ratio is 0.0850719747134582; comparison guards failed, no superiority interval or acceleration estimate.",
+    "No NDE, production Q, proxy, strict-gate or PPO change; no checkpoint or population manifest.",
+    "190000-190031 is now consumed validation. Native-outcome training/ranking needs separate training episodes and another locked fresh validation cohort."
+  ],
+  "population_acceleration": null,
+  "ppo_trained": false
+}
