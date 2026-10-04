@@ -28,6 +28,11 @@ first collisions). See the [run record](configs/highd_v46_single_baseline_run.js
 for configuration, results and the limited statistical scope. The guide includes
 installation, exact intervention/event definitions and fresh-seed evaluation.
 
+The [100-seed matched Single-NDE / Dual-NDE comparison](docs/highd_v46_matched_fidelity_100.md)
+reports distribution fidelity, rollout drift, interaction fidelity and paired
+bootstrap intervals on frozen V46. It improves joint acceleration fidelity but
+does not establish comprehensive NDE superiority or D2RL efficiency.
+
 ## Clone and install
 
 Git LFS is required for the runtime probability tables, and the Autoware message

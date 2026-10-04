@@ -41,7 +41,7 @@ def record_reference(source, rec, model, config):
     meta = pd.read_csv(root/f'{rec}_tracksMeta.csv')
     if int(pd.read_csv(root/f'{rec}_recordingMeta.csv').iloc[0].frameRate) != 25:
         raise ValueError('Expected 25 Hz highD source')
-    cols = ['frame', 'id', 'laneId', 'xVelocity', 'precedingId', 'precedingXVelocity', 'dhw']
+    cols = ['frame', 'id', 'laneId', 'xVelocity', 'yVelocity', 'precedingId', 'precedingXVelocity', 'dhw']
     rows = pd.read_csv(root/f'{rec}_tracks.csv', usecols=cols).sort_values(['id', 'frame']).reset_index(drop=True)
     supported = meta.loc[meta['class'].isin(model.config['vehicle_classes']) & (meta.numFrames >= 75), 'id']
     speed = rows.xVelocity.abs().to_numpy(); gap = rows.dhw.to_numpy()
@@ -62,7 +62,9 @@ def record_reference(source, rec, model, config):
     lead_index = lookup.get_indexer(pd.MultiIndex.from_arrays([frame, leader]))
     safe = np.maximum(lead_index, 0)
     direction = rows.id.map(dict(zip(meta.id, meta.drivingDirection))).to_numpy()
-    valid = following & (lead_index >= 0) & domain[safe] & (lane == lane[safe]) & (direction == direction[safe])
+    quiet = rows.yVelocity.abs().to_numpy() < .2
+    valid = (following & (lead_index >= 0) & domain[safe] & (lane == lane[safe]) &
+             (direction == direction[safe]) & quiet & quiet[safe])
     changed = np.ones(len(rows), dtype=bool)
     changed[1:] = ((actor[1:] != actor[:-1]) | (frame[1:] != frame[:-1]+1) |
                    (leader[1:] != leader[:-1]) | (lane[1:] != lane[:-1]) |
