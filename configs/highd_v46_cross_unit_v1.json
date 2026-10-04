@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "physical_config": "configs/highd_v46_dual_context_v2.json",
+  "epsilon": [0.1, 0.1],
+  "selection_interval_s": 5,
+  "candidate": {"nearest_actors": 4, "observation_m": 115.0},
+  "proxy": {"horizon_s": 4.0, "step_s": 0.2, "clearance_scale_m": 2.0},
+  "selection": {"minimum_delta": 0.01, "minimum_interaction": 0.05,
+    "minimum_joint_excess": 0.05, "minimum_factor_tv": 0.001,
+    "minimum_synergy_mass": 0.000001},
+  "adversarial_score": "positive_four_corner_interaction",
+  "no_eligible_pair": "natural_sampling",
+  "pair_order": "rear_to_front_then_actor_id",
+  "scope": "Opt-in cross-natural-unit sampler; frozen physical P and natural initialization unchanged"
+}

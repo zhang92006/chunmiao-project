@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "scope": "Known training-state conditional one-step proposal audit; not independent population evaluation",
+  "state_pool_sha256": "047696b0b9f169c888a185115e3dd820e4a2b4bc728d7af0acec6c7bade9b95b",
+  "state_index": 17,
+  "proposal_config": "configs/highd_v46_cross_unit_v1.json",
+  "expected_selected_pair": [36, 38],
+  "replicates_per_arm": 256,
+  "continuation_seed_start": 1500000,
+  "horizon_s": 4,
+  "arms": {"natural": [1.0, 1.0], "first_factor_only": [0.1, 1.0], "dual": [0.1, 0.1]},
+  "later_actions": "Unchanged natural NDE; only initial decision is tilted",
+  "output_contract": "Diagnostic summary only; no population-P sequence manifest"
+}

@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-04",
+  "dependency_commit": "b439dd6",
+  "config": "configs/highd_v46_cross_unit_v1.json",
+  "natural_pilot_protocol": "configs/highd_v46_cross_unit_pilot_v1.json",
+  "conditional_probe_protocol": "configs/highd_v46_cross_unit_conditional_probe_v1.json",
+  "sampler_sha256": "285e59128144f4d9c78732a91925388645029e5839d8f46a50809f99a3e479b4",
+  "probe_sha256": "45e72234ed6f5e5c4d4bfa49a58b95b550c83ecc628314492a9eb0c7117285b1",
+  "experiment_target_sha256": "ab84bb18d3d649be86ff4d3f568e1562079fae656dd7004b726645affe4e07fe",
+  "dual_proposal_structure_sha256": "e5dec84baa3b3ead7052c4296d01bb992d7bf73e58a4137806c3be01b86479e9",
+  "fresh_natural_initialization_pilot": {
+    "seed_start": 140000,
+    "episodes_per_arm": 8,
+    "arms": ["natural", "first_factor_only", "dual"],
+    "cav_events_per_arm": [0, 0, 0],
+    "intervened_steps_per_arm": [0, 0, 0],
+    "evaluated_pair_candidates_per_biased_arm": 538,
+    "observed_acceleration": null,
+    "bootstrap_repeats": 30,
+    "budget_censored_repeats_per_arm": [30, 30, 30],
+    "wall_time_s_per_arm": [6.361596333, 264.566329, 263.928957916],
+    "interpretation": "No eligible pair in this small fresh cohort; no online advantage measured. Timings from concurrent local runs, not a controlled benchmark."
+  },
+  "known_mechanism_replay": {
+    "seed": 120013,
+    "episodes": 1,
+    "horizon_s": 60,
+    "cross_unit_steps": 1,
+    "cav_events": 0,
+    "terminal_log_weight": -1.375802570064563,
+    "maximum_full_vs_factor_log_weight_error": 1.5543122344752192e-15,
+    "offline_sequence_audit_passed": true,
+    "scope": "Previously selected training seed, excluded from fresh-seed comparison"
+  },
+  "conditional_probe": {
+    "source_seed": 120013,
+    "source_time_s": 25,
+    "selected_pair": [36, 38],
+    "continuation_seed_start": 1500000,
+    "replicates_per_arm": 256,
+    "horizon_s": 4,
+    "only_first_decision_tilted": true,
+    "arms": ["natural", "first_factor_only", "dual"],
+    "cav_events_per_arm": [0, 0, 7],
+    "mean_likelihood_ratio_per_arm": [1.0, 1.073922174480834, 1.253779378314146],
+    "mean_likelihood_ratio_standard_error_per_arm": [0.0, 0.11841798969741092, 0.42630565989867386],
+    "dual_weighted_conditional_event_estimate": 0.0001689891126095294,
+    "dual_standard_error": 0.00006428046470967546,
+    "dual_relative_half_width_90_percent": 0.6256731802843579,
+    "dual_event_contribution_ess": 6.755308273431683,
+    "factor_tv": [0.5268038738007382, 0.6289497270452505],
+    "precision_status": "insufficient_events",
+    "scope": "Known training-state conditional risk; no population estimate or acceleration. No worst-corner action forced."
+  },
+  "checks": {
+    "pytest_passed": 69,
+    "frozen_nde_verified": true,
+    "full_joint_q_normalization_and_exact_is_enumeration": true,
+    "unforced_natural_partner_conditionals_preserved": true,
+    "seeded_natural_rollout_matches_legacy": true,
+    "all_four_collections_pass_offline_likelihood_audit": true,
+    "zero_event_training_guard_passed": true,
+    "ppo_trained": false
+  },
+  "remaining_work": [
+    "Independent multi-state conditional training/validation design and reset-distribution accounting",
+    "State discovery density, strict gate sensitivity and candidate evaluation cost",
+    "PPO only after informative training and independent validation cohorts exist",
+    "Independent natural-initialization performance and precision comparison"
+  ]
+}
