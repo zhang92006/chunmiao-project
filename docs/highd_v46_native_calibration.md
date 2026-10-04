@@ -205,3 +205,50 @@ in this local run; the four native arms each used approximately 78-79 CPU s.
 These are development timings, not a testing-acceleration benchmark.
 The compact evidence is
 [highd_v46_native_calibration_pilot_v1.json](../results/highd_v46_native_calibration_pilot_v1.json).
+
+## Fixed-budget training-source supplement
+
+The [expansion protocol](../configs/highd_v46_training_expansion_v1.json) was
+committed as `e1c1189` before opening 64 fresh natural training episodes,
+230000–230063. Continuation seeds start at 2800000. This supplements independent
+sources rather than repeatedly extending the two known event states. Discovery
+still uses mixed5 and rank 1 + rank 2 + audit; the proxy, strict gates, native
+NDE, Q and PPO are unchanged. All eligible sources may enter (cap 64), at most
+two states per source, plus four separately retained abstention controls.
+Every case receives the fixed 64 continuations per arm. Neither the budget nor
+case selection changes in response to native events. No validation/test source
+is opened, reused for training, or replaced in this task.
+
+```bash
+export OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1
+python -m scenario_reconstruction.highd_v46_native_calibration --config configs/highd_v46_training_expansion_v1.json --output outputs/v46_training_expansion_v1
+```
+
+After completion, the training-only exporter checksum-locks both calibrations,
+checks unchanged code/dependencies, replays outcome-blind case selection, and
+checks every planned continuation and full/factor likelihood. It combines all
+eligible dual sequences, including zeros, with the original locked calibration.
+Source-then-state masses are recomputed across the union, not concatenated from
+separately normalized batches. Raw controls and other arms remain in their
+original archives; the four-arm union comparison is a training diagnostic.
+
+```bash
+python -m scenario_reconstruction.highd_v46_training_expansion --expansion outputs/v46_training_expansion_v1 --expansion-sha256 <completed-summary-sha256> --output outputs/v46_training_expansion_v1_dataset
+python -m pytest tests/test_highd_v46_training_expansion.py tests/test_highd_v46_conditional_baseline.py tests/test_highd_v46_native_calibration.py -q
+python -m scenario_reconstruction.highd_v46_workflow verify
+```
+
+`conditional_sequence_manifest.json` is a verified training replay artifact;
+`training_quality.json` reports all-source event coverage, empirical unscaled
+second-moment concentration, H2-zero event contributions, and the four arms.
+The descriptive effective number of second-moment sources is
+`1 / sum(source_fraction**2)`, not an independent sample size or precision test.
+All-zero observations yield undefined concentration, not evidence of zero risk.
+
+This new data law has its own identity. It cannot silently replace the old
+baseline's train directory or reuse its selected checkpoints. No fresh
+validation is prepared and `checkpoint_selection_ready` remains false. A
+separately frozen fresh validation protocol and matched data identity are
+required before standard training/selection. No additional PPO run is launched
+by collection or export. More event sources would improve training coverage,
+but do not by themselves establish generalization or population acceleration.
