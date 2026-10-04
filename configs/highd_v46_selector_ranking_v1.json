@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "scope": "Retrospective training-only ranking audit; no new discovery, proxy matrices, continuations, validation, test or PPO",
+  "sources": [
+    {"path": "outputs/v46_native_calibration_v1_train", "config": "configs/highd_v46_native_calibration_v1.json", "summary_sha256": "f8b1334db8901e009a9e1b190a5c4e157a8bc2e64964f8af41d81d96b27ac131"},
+    {"path": "outputs/v46_training_expansion_v1", "config": "configs/highd_v46_training_expansion_v1.json", "summary_sha256": "6cd41910ab556c0aa5ad4da262808f0bff1e9d65296b08484fff0e266eccdef3"}
+  ],
+  "methods": ["interaction_only", "absolute_risk_only", "absolute_risk_times_interaction"],
+  "scores": {
+    "interaction_only": "I = natural-probability-weighted positive four-corner interaction mass",
+    "absolute_risk_only": "R = maximum supported proxy clearance risk; not a collision probability",
+    "absolute_risk_times_interaction": "R * I; no fitted coefficient or post-hoc threshold"
+  },
+  "primary_state_budget": 16,
+  "diagnostic_state_budgets": [8, 24],
+  "maximum_states_per_source": 2,
+  "pair_per_state": 1,
+  "eligibility": "Unchanged production_strict gate before ranking; maximum one ordered pair per state",
+  "tie_break": "Descending score, ascending source seed, time, ordered actor IDs",
+  "panels": ["common_native_labelled_cases", "all_cached_strict_pairs"],
+  "native_epsilon": [0.1, 0.1],
+  "unknown_labels": "Never zero-fill or infer native outcomes for unaudited state-pair combinations; incomplete native panels return null",
+  "mass_law": "Uniform selected source, then uniform selected states within source; report reference-bank retained mass separately",
+  "collision_source_recall": "Retain a labelled collision-positive state-pair from that source, divided by all observed collision sources in the locked eligible training bank; not global or population recall",
+  "decision": "No automatic winner selection or PPO launch. Same two observed collision sources cannot establish source expansion. A fresh source-disjoint protocol is required after freezing a candidate.",
+  "environment": {"python": "3.9.19", "numpy": "1.23.1", "scipy": "1.13.1", "OPENBLAS_NUM_THREADS": 1, "OMP_NUM_THREADS": 1}
+}
