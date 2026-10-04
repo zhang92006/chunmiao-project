@@ -1,0 +1,312 @@
+{
+  "schema_version": 1,
+  "evidence_date": "2026-10-04",
+  "protocol_commit": "7b8b56ea83d7788962715f67916e430007478056",
+  "protocol": "configs/highd_v46_conditional_baseline_v1.json",
+  "config_sha256": "313e4ca5db45bc88c1882c3b5a7ad45c75593bb5b90b3d492eb23c667fa69ae2",
+  "ppo_config_sha256": "43c51df09cbb44c488e0ef44d58e1ca9270eea8f15d6ff9d9972485ced6838af",
+  "scope": "Conditional one-decision dual PPO engineering baseline; no demonstrated generalization or population acceleration",
+  "prepared": {
+    "train": {
+      "split": "train",
+      "cases": 21,
+      "source_episodes": 16,
+      "bank_sha256": "6ffce1a571bc4f35063f7d5aa1093300feb4be1c9ca59d845533582e2c43a435",
+      "scope": "Conditional one-decision dual-BV PPO baseline; four-second native continuation",
+      "config_identity": "a90746a7b4898e7883f3b6c9367c174b873900e87ea9881b3ecc37c16973cb4c",
+      "sequences": 1344,
+      "cav_events": 31,
+      "event_source_episodes": 2,
+      "sequence_sha256": "388fdb1aeb98e291442249060e52c4060cf3103e9ba52ccf06aeee9e10883142",
+      "manifest": "conditional_sequence_manifest.json",
+      "wall_s": 1.006612333
+    },
+    "validation": {
+      "split": "validation",
+      "cases": 9,
+      "source_episodes": 7,
+      "bank_sha256": "20fb6d97c0791256dd846bbc8a194fead8b5997257b48e2f4ac2853656c67647",
+      "scope": "Conditional one-decision dual-BV PPO baseline; four-second native continuation",
+      "config_identity": "a90746a7b4898e7883f3b6c9367c174b873900e87ea9881b3ecc37c16973cb4c",
+      "sequences": 1152,
+      "cav_events": 1,
+      "event_source_episodes": 1,
+      "sequence_sha256": "b7c9690eb5f720cbcfec23292722315ab63b158ca34189debea8df2e2ad6960e",
+      "manifest": "conditional_sequence_manifest.json",
+      "wall_s": 254.257797625
+    },
+    "test": {
+      "split": "test",
+      "cases": 9,
+      "source_episodes": 7,
+      "bank_sha256": "79480865b2f87d0f2bfeae8f7b946b08686161eb0b22e98ebfc4cbd52a46f5df",
+      "scope": "Conditional one-decision dual-BV PPO baseline; four-second native continuation",
+      "config_identity": "a90746a7b4898e7883f3b6c9367c174b873900e87ea9881b3ecc37c16973cb4c",
+      "native_outcomes_opened": false,
+      "wall_s": 204.621158458
+    }
+  },
+  "conditional_target_hashes": {
+    "train": "cb109a855e2d54e35fdb30c72262e7a1d0bc16baf87da9a67805e39f1a03f37e",
+    "validation": "aa2885e8fbaabc2294120979c4b9bf6c9e03535a07dc5bb63589533132ac2157",
+    "test": "ca5de662aed4cdf916fc3a4a341c2b6576bfbb2395382422b5d93fd169f53955"
+  },
+  "source_episode_counts": {
+    "train": 16,
+    "validation": 7,
+    "test": 7
+  },
+  "training": {
+    "seed": 7,
+    "completed_iterations": 100,
+    "timesteps_total": 102400,
+    "positive_episodes": 31,
+    "validation_positive_episodes": 1,
+    "selected_iteration": 0,
+    "selection": "independent_validation_second_moment",
+    "portable_policy_max_error": 0,
+    "validation_ratio": 1.0000000136419116,
+    "log_reward_scale": -4.284782973525996
+  },
+  "last_iteration": {
+    "training_second_moment_ratio": 0.17431588819556737,
+    "validation_second_moment_ratio": 1.0792373377408364
+  },
+  "fixed_selection": {
+    "epsilon": [
+      0.0501,
+      0.0501
+    ],
+    "grid": [
+      0.0501,
+      0.1,
+      0.3,
+      0.6,
+      0.99
+    ],
+    "validation_positive_episodes": 1
+  },
+  "curve_summary": {
+    "completed_iterations": 100,
+    "selected_iteration": 0,
+    "resubstitution_ratio": 0.9999999230216747,
+    "validation_ratio": 1.0000000136419116,
+    "portable_policy_max_error": 0,
+    "sampling_scope": "conditional_state_bank",
+    "last_training_ratio": 0.17431588819556737,
+    "selected_fixed_validation_ratio": 0.9280802198915301,
+    "ppo_over_selected_fixed_validation_ratio": 1.0774930789482693,
+    "scope": "Conditional training/validation curves; not population efficiency evidence"
+  },
+  "native_smoke": {
+    "scope": "Conditional one-decision dual-BV PPO baseline; four-second native continuation",
+    "conditional_target_sha256": "ca5de662aed4cdf916fc3a4a341c2b6576bfbb2395382422b5d93fd169f53955",
+    "smoke": true,
+    "replicates_per_case_arm": 16,
+    "arms": {
+      "natural": {
+        "cases": 9,
+        "source_episodes": 7,
+        "continuations": 144,
+        "raw_cav_events": 0,
+        "event_source_episodes": 0,
+        "conditional_event_mean": 0,
+        "weighted_event_second_moment": 0,
+        "stratified_standard_error": 0,
+        "relative_half_width": null,
+        "event_contribution_ess": 0,
+        "top_event_contribution_fraction": null,
+        "evidence_guard_passed": false,
+        "precision_status": "insufficient_multisource_events"
+      },
+      "first_factor_only": {
+        "cases": 9,
+        "source_episodes": 7,
+        "continuations": 144,
+        "raw_cav_events": 2,
+        "event_source_episodes": 1,
+        "conditional_event_mean": 0.00015639026782486177,
+        "weighted_event_second_moment": 0.0000027392865774771837,
+        "stratified_standard_error": 0.0001068348916451063,
+        "relative_half_width": 1.1236489421721205,
+        "event_contribution_ess": 2,
+        "top_event_contribution_fraction": 0.5,
+        "evidence_guard_passed": false,
+        "precision_status": "insufficient_multisource_events"
+      },
+      "second_factor_only": {
+        "cases": 9,
+        "source_episodes": 7,
+        "continuations": 144,
+        "raw_cav_events": 0,
+        "event_source_episodes": 0,
+        "conditional_event_mean": 0,
+        "weighted_event_second_moment": 0,
+        "stratified_standard_error": 0,
+        "relative_half_width": null,
+        "event_contribution_ess": 0,
+        "top_event_contribution_fraction": null,
+        "evidence_guard_passed": false,
+        "precision_status": "insufficient_multisource_events"
+      },
+      "fixed_dual": {
+        "cases": 9,
+        "source_episodes": 7,
+        "continuations": 144,
+        "raw_cav_events": 6,
+        "event_source_episodes": 1,
+        "conditional_event_mean": 0.0001445207418619869,
+        "weighted_event_second_moment": 0.000001014340384582058,
+        "stratified_standard_error": 0.00006366898188703793,
+        "relative_half_width": 0.724644465783412,
+        "event_contribution_ess": 4.612375601584328,
+        "top_event_contribution_fraction": 0.33025024816279086,
+        "evidence_guard_passed": false,
+        "precision_status": "insufficient_multisource_events"
+      },
+      "selected_fixed": {
+        "cases": 9,
+        "source_episodes": 7,
+        "continuations": 144,
+        "raw_cav_events": 6,
+        "event_source_episodes": 1,
+        "conditional_event_mean": 0.00013191231593737704,
+        "weighted_event_second_moment": 8.475704553236981e-7,
+        "stratified_standard_error": 0.00005821622587062557,
+        "relative_half_width": 0.7259153142014694,
+        "event_contribution_ess": 4.5987828068015375,
+        "top_event_contribution_fraction": 0.33020182673239357,
+        "evidence_guard_passed": false,
+        "precision_status": "insufficient_multisource_events"
+      },
+      "ppo": {
+        "cases": 9,
+        "source_episodes": 7,
+        "continuations": 144,
+        "raw_cav_events": 6,
+        "event_source_episodes": 1,
+        "conditional_event_mean": 0.00014452074428273075,
+        "weighted_event_second_moment": 0.0000010143404180076312,
+        "stratified_standard_error": 0.00006366898293279078,
+        "relative_half_width": 0.7246444655476794,
+        "event_contribution_ess": 4.6123756041086,
+        "top_event_contribution_fraction": 0.3302502481691925,
+        "evidence_guard_passed": false,
+        "precision_status": "insufficient_multisource_events"
+      }
+    },
+    "ppo_comparisons": {
+      "natural": {
+        "dual_over_reference_second_moment_descriptive": null,
+        "guard_passed_both_arms": false,
+        "paired_bootstrap_repeats": 200,
+        "zero_reference_second_moment_repeats": 200,
+        "dual_minus_reference_second_moment_interval": null,
+        "second_moment_ratio_interval": null,
+        "lower_dual_second_moment_supported": false,
+        "scope": "Paired continuation resampling within fixed states; no source-population or original-initialization inference"
+      },
+      "first_factor_only": {
+        "dual_over_reference_second_moment_descriptive": 0.3702936473853035,
+        "guard_passed_both_arms": false,
+        "paired_bootstrap_repeats": 200,
+        "zero_reference_second_moment_repeats": 21,
+        "dual_minus_reference_second_moment_interval": null,
+        "second_moment_ratio_interval": null,
+        "lower_dual_second_moment_supported": false,
+        "scope": "Paired continuation resampling within fixed states; no source-population or original-initialization inference"
+      },
+      "second_factor_only": {
+        "dual_over_reference_second_moment_descriptive": null,
+        "guard_passed_both_arms": false,
+        "paired_bootstrap_repeats": 200,
+        "zero_reference_second_moment_repeats": 200,
+        "dual_minus_reference_second_moment_interval": null,
+        "second_moment_ratio_interval": null,
+        "lower_dual_second_moment_supported": false,
+        "scope": "Paired continuation resampling within fixed states; no source-population or original-initialization inference"
+      },
+      "fixed_dual": {
+        "dual_over_reference_second_moment_descriptive": 1.000000032953014,
+        "guard_passed_both_arms": false,
+        "paired_bootstrap_repeats": 200,
+        "zero_reference_second_moment_repeats": 1,
+        "dual_minus_reference_second_moment_interval": null,
+        "second_moment_ratio_interval": null,
+        "lower_dual_second_moment_supported": false,
+        "scope": "Paired continuation resampling within fixed states; no source-population or original-initialization inference"
+      },
+      "selected_fixed": {
+        "dual_over_reference_second_moment_descriptive": 1.1967623595612962,
+        "guard_passed_both_arms": false,
+        "paired_bootstrap_repeats": 200,
+        "zero_reference_second_moment_repeats": 1,
+        "dual_minus_reference_second_moment_interval": null,
+        "second_moment_ratio_interval": null,
+        "lower_dual_second_moment_supported": false,
+        "scope": "Paired continuation resampling within fixed states; no source-population or original-initialization inference"
+      }
+    },
+    "raw_totals": {
+      "natural": {
+        "cav_events": 0,
+        "bv_only": 0,
+        "cpu_s": 6.840050999999992,
+        "wall_s": 6.850730496999992
+      },
+      "first_factor_only": {
+        "cav_events": 2,
+        "bv_only": 0,
+        "cpu_s": 6.696584000000001,
+        "wall_s": 6.700699163000004
+      },
+      "second_factor_only": {
+        "cav_events": 0,
+        "bv_only": 0,
+        "cpu_s": 6.773883999999987,
+        "wall_s": 6.7851458869999774
+      },
+      "fixed_dual": {
+        "cav_events": 6,
+        "bv_only": 0,
+        "cpu_s": 6.689392000000013,
+        "wall_s": 6.6945462510000215
+      },
+      "selected_fixed": {
+        "cav_events": 6,
+        "bv_only": 0,
+        "cpu_s": 6.648689000000033,
+        "wall_s": 6.651560329999984
+      },
+      "ppo": {
+        "cav_events": 6,
+        "bv_only": 0,
+        "cpu_s": 6.650916000000006,
+        "wall_s": 6.653663910999987
+      }
+    },
+    "wall_s": 44.129021917,
+    "population_acceleration": null,
+    "interpretation": "Fixed-state conditional evidence. Source generalization and population acceleration are separate questions."
+  },
+  "artifact_hashes": {
+    "training_summary": "57fcb756f3987c07098ab5614a637dbf3422a129f8aac7b6801a29e33429a688",
+    "training_policy": "d42616149ad0947465f0681c567d838fab961c011343e1cc2ed6ad7da3751cb0",
+    "last_policy": "f5d637ca50d9c3270a38ef7523bb0a4b564b0bc99feb3535917dc26e1735c339",
+    "fixed_policy": "8bfe679f28b568367334efc9dcff4806b13e03373c1690cbda54f30a32f60f21",
+    "comparison": "c03f92c3979da586b6503e908947b69175e26ee88c80924e8aff5492fe4dbfb0",
+    "evaluation_protocol": "8afb30955e817e370d41e70f4911f6dde1facce4b7196102633bd6de2a069377"
+  },
+  "audit": {
+    "source_splits_disjoint": true,
+    "conditional_laws_distinct": true,
+    "target_masses_normalized": true,
+    "native_smoke_continuations": 864,
+    "native_statistics_reproduced": true,
+    "maximum_full_vs_factor_log_error": 1.4210854715202004e-14,
+    "last_portable_objectives_match_trainer_rtol": 0.000001,
+    "regression_tests_passed": 114,
+    "frozen_assets_verified": true
+  },
+  "decision": "Training and evaluation pipeline is ready. Training fits its sparse source pool, while validation selected iteration 0. Native smoke precision/source guards fail. Preserve this baseline; improve independent training source coverage before claiming advantage."
+}

@@ -118,3 +118,67 @@ python -m scenario_reconstruction.highd_v46_workflow verify
 
 Raw banks, labels, checkpoints, policy weights and curves stay in ignored
 `outputs/`. Only code, protocol, documentation and compact evidence are tracked.
+
+## Completed baseline run, 2026-10-04
+
+Protocol/code commit `7b8b56ea83d7788962715f67916e430007478056` preceded
+opening validation sources. The prepared data directories in the commands
+above now exist locally. Seed 7 completed **100 PPO iterations / 102,400 steps**;
+114 relevant regression tests and frozen-code/asset verification passed.
+
+| Split | Selected states / source episodes | Continuations | CAV events |
+| --- | ---: | ---: | ---: |
+| Training | 21 / 16 | 1,344 | 31, from 2 sources |
+| Validation | 9 / 7 | 1,152 | 1, from 1 source |
+| Test smoke | 9 / 7 | 144 per arm | See below |
+
+The fresh validation discovery evaluated 462 pairs at 160 bank states, finding
+12 strict-positive pairs / ten states / seven source episodes. The two-state
+cap retained nine states for native labels. Its single CAV event occurred at
+source 210024, 15 s, pair [18,20]. The fixed continuation budget was not expanded.
+
+The last trained policy's training second moment was **0.174316** of the
+initial fixed policy, while its validation ratio was **1.079237**. Consequently
+the prespecified checkpoint rule selected iteration **0**, whose output remains
+epsilon=(0.1,0.1), up to float32 rounding. This run demonstrates successful
+optimization on training data and no validation improvement. The single
+validation event also makes checkpoint/grid selection statistically fragile.
+The fixed grid selected (0.0501,0.0501), with validation objective ratio
+0.928080 relative to (0.1,0.1). Numerical reward scales differ between the PPO
+and fixed-grid tools; the report compares normalized ratios, not their raw
+scaled loss values.
+
+The actual 100-iteration model is retained at
+`outputs/v46_conditional_baseline_v1/seed7/ppo/last_iteration/`.
+The default selected model is at `outputs/v46_conditional_baseline_v1/seed7/ppo/`,
+and the fixed comparator at `outputs/v46_conditional_baseline_v1/seed7/selected_fixed/`.
+Last-model portable objectives reproduce trainer measurements within 1e-6
+relative tolerance on both training and validation; the restored initial
+model's reported export discrepancy is zero. Curves are available at
+`outputs/v46_conditional_baseline_v1/curves_reviewed/training_curves.png`.
+
+After locking these policies, the test discovery evaluated 476 pairs at 160
+states and selected nine states from seven new sources. The six-arm smoke
+completed all **864 native continuations** (16 per case/arm):
+
+| Arm | CAV events / 144 | Event-bearing source episodes |
+| --- | ---: | ---: |
+| Natural | 0 | 0 |
+| First factor only | 2 | 1 |
+| Second factor only | 0 | 0 |
+| Fixed dual (0.1,0.1) | 6 | 1 |
+| Validation-selected fixed | 6 | 1 |
+| Validation-selected PPO (iteration 0) | 6 | 1 |
+
+No arm meets the precision/source guards. The selected PPO correctly reproduces
+the initial fixed policy's behavior; it must not be presented as a learned
+improvement. The six-arm report is
+`outputs/v46_conditional_baseline_v1/native_smoke/comparison.json`.
+All source splits, normalized target masses, continuation schedules and native
+summary statistics were checked; full-versus-factor log-likelihood error was
+at most 1.42e-14. The smoke is a functional held-out evaluation, not a paper
+acceleration benchmark. Training, checkpoint selection, policy exports,
+fixed comparisons, plots and native evaluation are now runnable end to end.
+
+Compact evidence:
+[highd_v46_conditional_baseline_v1.json](../results/highd_v46_conditional_baseline_v1.json).
