@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "scope": "Training-only native real-Q discovery calibration; no production selector, NDE, Q or PPO change",
+  "discovery_config": "configs/highd_v46_discovery_v2.json",
+  "bank_method": "mixed5_top2",
+  "source": {"split": "train", "seed_start": 200000, "episodes": 64},
+  "forbidden_source_ranges": [[100000, 101023], [120000, 120031], [140000, 140007], [160000, 160015], [170000, 170007], [180000, 180031], [190000, 190031]],
+  "cases": {"maximum_source_episodes": 16, "maximum_states_per_source": 2, "abstention_control_episodes": 4, "selection_seed": 107, "secondary_rule": "Different state; prefer a different mechanism, then highest interaction mass"},
+  "replicates_per_case_arm": 64,
+  "continuation_seed_start": 2500000,
+  "arms": {"natural": [1.0, 1.0], "first_factor_only": [0.1, 1.0], "second_factor_only": [1.0, 0.1], "dual": [0.1, 0.1]},
+  "horizon_s": 4,
+  "later_actions": "Unchanged natural NDE; only initial decision is tilted",
+  "conditional_law": "Uniform selected source episode, then uniform selected eligible cases within source; controls retained separately",
+  "ranker": {"target": "CAV first-event frequency under fixed dual Q, not natural risk or variance", "features": ["intercept", "dual_Q_expected_proxy_risk", "maximum_supported_proxy_risk", "is_lateral"], "ridge": 4.0, "maximum_iterations": 100, "minimum_dual_events": 20, "minimum_event_source_episodes": 3, "minimum_zero_event_source_episodes": 3, "validation": "Leave one complete source episode out; training diagnostic only, never deploy without fresh validation"},
+  "statistics": {"confidence": 0.9, "rhw_target": 0.3, "minimum_events": 20, "minimum_event_source_episodes": 3, "bootstrap_repeats": 200, "bootstrap_seed": 109},
+  "fixed_budget_rule": "Freeze before opening source episodes. Retain every selected case and continuation, no replacement or event-conditioned budget increase. No consumed validation labels enter fitting.",
+  "environment": {"python": "3.9.19", "numpy": "1.23.1", "scipy": "1.13.1", "OPENBLAS_NUM_THREADS": 1, "OMP_NUM_THREADS": 1}
+}
