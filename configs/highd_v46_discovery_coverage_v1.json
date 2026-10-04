@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "scope": "Training-only missed-state and missed-pair audit; no NDE, Q, proxy, gate or PPO change",
+  "source_summary_sha256": "77dd136342ab59daebf150eb05096283358796a1f2bdbb78c91195cee9cd73e3",
+  "source_method": "geometry_1s",
+  "omitted_states_per_episode": 2,
+  "omitted_state_seed": 61,
+  "minimum_remaining_s": 4,
+  "candidate_universe": "All pairs among the unchanged nearest eight BVs within 115 m, including zero-score pairs",
+  "selection_rule": "Uniform without replacement from remaining-horizon-eligible states outside the source method bank; no event label or score used",
+  "environment": {"python": "3.9.19", "numpy": "1.23.1", "scipy": "1.13.1", "OPENBLAS_NUM_THREADS": 1, "OMP_NUM_THREADS": 1}
+}

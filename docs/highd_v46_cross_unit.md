@@ -162,3 +162,7 @@ and validation distribution (split by source episode), along with improved
 state discovery/candidate-screening cost. Any eventual trained policy still
 requires independent original-initialization evaluation. Do not enlarge the
 current dataset by appending only collision episodes or relax precision guards.
+
+The next-stage [state-discovery pilot](highd_v46_state_discovery.md) and
+[training-only coverage audit](highd_v46_discovery_coverage.md) investigate
+temporal-bank and pair-budget misses without changing this sampler or NDE.

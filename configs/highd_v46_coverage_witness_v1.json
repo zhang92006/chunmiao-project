@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "method": "missed_by_v1",
+  "view": "production_strict",
+  "pair_selection": "exhaustive",
+  "maximum_source_episodes": 2,
+  "replicates_per_corner": 16,
+  "horizon_s": 4,
+  "source_horizon_s": 60,
+  "clearance_scale_m": 2,
+  "train_continuation_seed_start": 2000000,
+  "selection": "Top interaction mass among newly audited strict-positive pairs; one state per source episode, before native outcomes",
+  "scope": "Forced-corner conditional confirmation only; not sampling Q or estimating population risk"
+}
