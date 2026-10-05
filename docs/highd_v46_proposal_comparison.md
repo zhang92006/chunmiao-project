@@ -1,4 +1,4 @@
-# Fixed-bank proposal-score comparison
+# Fixed-bank proposal comparison and fresh validation
 
 This training-only experiment follows the collision-action coverage audit at
 `3995790`. It adds an opt-in proposal family; it does not replace production Q.
@@ -111,8 +111,9 @@ The separate protocol is
 [highd_v46_proposal_validation_v1.json](../configs/highd_v46_proposal_validation_v1.json).
 Its entry point first requires the checksum-locked complete training comparison.
 All three candidates are retained for validation; this avoids declaring a
-training winner from a few event-bearing sources. Sources 250000–250255 are
-reserved and have not been opened by implementation tests or training.
+training winner from a few event-bearing sources. At the pre-run declaration,
+sources 250000–250255 were reserved and had not been opened by implementation
+tests or training. Their completed validation evidence is recorded below.
 
 The mixed5 bank and rank-1/rank-2/audit budget are unchanged. The old strict B
 selector selects at most one state/pair per source by maximum supported proxy
@@ -221,7 +222,121 @@ The fresh protocol was frozen after review at `5536040`, verifying all training
 artifacts without opening source 250000 or any other reserved fresh source.
 The local lock is `outputs/v46_proposal_validation_v1_lock.json`. Its compact
 [freeze record](../results/highd_v46_proposal_validation_v1_rule_lock.json)
-records status **frozen, not started**; it contains no validation result. With
-that existing lock, the next native step is the `run` command above, not another
+records the historical status **frozen, not started**; it contains no validation
+result. The completed run below used that existing lock, without another
 `freeze` into the already existing output. Any code/config/environment change
 requires an explicitly versioned protocol and lock before opening sources.
+
+## Completed fresh validation evidence, 2026-10-05
+
+The frozen protocol completed on code `94b49d2`, without changing any score,
+epsilon, selector, gate, discovery budget, native dynamics or PPO. All 256
+natural source episodes (250000–250255) were retained. There were 1,276 bank
+states and 3,720 bounded pair audits; early natural endpoints reduced the bank
+without backfill. Discovery found 77 strict-positive pairs, 75 positive states
+and 57 eligible sources (22.2656% of all sources). This is offline selected-state
+coverage, not online time-step intervention rate or global collision recall.
+Natural source rollouts had zero CAV events and 11 BV-only competing endpoints.
+
+Every candidate used the same 57 selected states/pairs and 64 continuations per
+case: 3,648 draws per candidate, 10,944 total. All endpoints were retained. The
+conditional target is identical across these three proposals, unlike the old
+A/B selector comparison. No sample was added after seeing events.
+
+| Metric | Interaction | Absolute risk | 50/50 mixture |
+| --- | ---: | ---: | ---: |
+| Native CAV events / 3,648 | 20 | 2 | 9 |
+| Independent effective-dual event sources | 5 | 2 | 4 |
+| Raw conditional event rate | 0.5482% | 0.0548% | 0.2467% |
+| Conditional IS event mean | 8.3395e-5 | 3.3108e-5 | 5.0462e-5 |
+| Conditional event M2 | 1.5861e-5 | 2.5791e-6 | 5.1614e-6 |
+| M2 ratio to interaction, point only | 1 | 0.1626 | 0.3254 |
+| Stratified variance ratio, point only | 1 | 0.1635 | 0.3252 |
+| Mean second-factor Q/P TV | 0.5615 | 0.0275 | 0.2865 |
+| Largest source M2 share | 99.8642% | 91.7443% | 99.3938% |
+| Largest single-event M2 share | 98.4272% | 91.7443% | 96.2104% |
+| Effective M2 sources, descriptive | 1.0027 | 1.1785 | 1.0122 |
+
+Mixture's M2 point estimate is about 67.46% below interaction on this matched
+conditional target. This is not a supported generalization or acceleration
+claim: mixture has only four observed event sources, and risk-only only two.
+Interaction meets the point minimum of 20 events/five sources, but 1,808 of
+2,000 whole-source bootstrap replicates fail the distinct-source/event guard;
+risk and mixture each censor all 2,000. Every M2/variance-ratio interval remains
+undefined. Fixed-state MCSE cannot repair this source-level evidence gap.
+
+Source 250200 dominates all proposals. Interaction's event sources were
+250089, 250096, 250162, 250188 and 250200; risk retained two, and mixture four,
+of that observed set. Their union is five independent sources, not eleven
+independent replications. Zero events at other cases do not establish zero
+true risk. No proposal meets the maximum-share <=80% and effective-M2-sources
+>=3 checks, and no proposal passes the complete readiness decision. The smaller
+risk-only M2 point is especially sparse and must not be treated as an optimal Q.
+Its weak second-factor tilt also persists from training.
+
+### New-source collision-action coverage witness
+
+At source 250200, 51 s, actors [7,25], interaction sampled actions [0,21] at
+continuation seed 4212853 and observed a CAV event. The raw clearance-risk score
+was 0.569548; its four-corner contrast was negative (about -0.002457), so positive
+interaction and H2 were zero. The natural modal reference was [19,20]; this
+extends the earlier reference-column witness to an excluded negative-contrast
+action. The first factor LR was 0.0238647 and the second factor LR 10, yielding
+a full weight 0.238647. That one event contributes 98.4272% of interaction's M2.
+
+Mixture independently sampled the same initial actions at seed 4212852 and
+observed a CAV event with H2=0.0455786, Q2=0.0635551 and full weight 0.134592.
+Risk-only sampled [0,20] at seed 4212839, another original-H_I-zero cell, with
+positive implemented H factors and weight 0.0929076. Thus **both new scores
+actually exercised the repaired action region on fresh data**; this is no
+longer only an old-training action replay. These are different continuations,
+not a paired counterfactual native outcome comparison.
+
+All nine mixture events and both risk events have positive implemented H1/H2.
+Nevertheless their respective largest events still account for 96.2104% and
+91.7443% of their M2. Positive H mass repairs a structural omission but does not
+ensure adequate allocation to the native collision region, eliminate source
+risk heterogeneity, or prove a lower true estimator variance. The training and
+fresh-validation point orderings differ; their sparse tail realizations are
+not evidence for choosing or retuning lambda on this consumed cohort.
+
+### Native confirmation, cost and independent verification
+
+The outcome-blind eligible-source confirmation subset measured all 16 planned
+cases with 16 draws at each supported action corner (1,024 separate forced
+continuations). Fourteen passed the predeclared native-interaction mean >=0.05
+threshold: 87.5% descriptive confirmation. The two remaining means were
+0.020424 (source 250087, MCSE 0.017746) and -0.012115 (250146, MCSE 0.060780).
+No case was replaced. This fixes the previous design's missing eligible-rule
+confirmation coverage, but confirms minimum-clearance interaction, not collision
+probability calibration, real-Q event rates or population testing efficiency.
+
+Local total wall time was 2,208.78 s, with 1,578.71 s common discovery wall time,
+1,390.01 s recorded proxy CPU and 20.81 s selection/re-audit CPU. Native Q CPU
+was 183.02/182.50/181.66 s for interaction/risk/mixture. These are local profiles,
+not controlled timing benchmarks or acceleration factors.
+
+Independent read-only reconstruction verified all 248 artifact hashes, bounded
+screening, outcome-blind case/probe schedules, all 10,944 initial action draws
+including correlated natural partners, complete/factor likelihoods, event
+counts, IS means/M2/stratified variance, source contributions, confirmations
+and paired whole-source bootstrap censoring. Maximum replayed full-likelihood
+log error was 6.39e-14. Eight protected old-manifest/summary/protocol/code hashes
+remained unchanged. All 180 regression tests in the 14 relevant modules and
+frozen code/assets verified. Raw outputs remain ignored; no PPO or training
+manifest was exported.
+
+**Decision:** fresh native evidence supports structural action-coverage repair,
+but does not establish a successful variance/source-diversity baseline. Keep
+production unchanged; do not launch PPO, add continuations from these cases,
+select a winner automatically or retune parameters on sources 250000–250255.
+These sources are now consumed validation. The next design work belongs on
+declared training data: calibrate absolute risk against native collision actions
+and audit proposal mass/tails across independent sources. Any source-balanced
+training law must be explicit; do not clip weights, discard the dominant source
+or rescale primary IS contributions to manufacture balance. A revised proposal
+needs a separately versioned fresh validation and later independent
+original-initialization evaluation.
+
+Compact reproducible evidence:
+[highd_v46_proposal_validation_v1.json](../results/highd_v46_proposal_validation_v1.json).

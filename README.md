@@ -46,8 +46,10 @@ Its [collision-action coverage audit](docs/highd_v46_source_selector_validation.
 decomposes observed likelihood tails and reconstructs the interaction score
 of the dominant collision action before changing the proposal.
 The opt-in [fixed-bank proposal comparison](docs/highd_v46_proposal_comparison.md)
-tests normalized absolute-risk/interaction H scores on training cases only,
-with matched-state IS moments and source-cluster uncertainty before fresh validation.
+tests normalized absolute-risk/interaction H scores on locked training cases,
+then on a separate fresh matched-source validation cohort. Native action-coverage
+repair is observed, but moment concentration and source diversity still fail
+readiness; no proposal replaces production or launches PPO.
 The frozen NDE tag is `nde-v46-frozen-20261003`; training code is on
 `feature/highd-v46-d2rl-handoff`. This path needs Python 3.9 and the V46 LFS
 archive, with no SUMO or raw highD tracks. The fixed IDM CAV does not change lanes.

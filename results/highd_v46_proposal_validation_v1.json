@@ -1,0 +1,603 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-05",
+  "status": "complete_consumed_validation",
+  "run_code_commit": "94b49d2e698d773a19a3ded9b07672bc9d9b4124",
+  "freeze_code_commit": "55360408c7c5c48239eb219cd0813c45b35c305f",
+  "protocol": "configs/highd_v46_proposal_validation_v1.json",
+  "config_sha256": "d7f7694298015541ca1fd46f71fe16b89196b75b3420543f5d82436f27c301de",
+  "implementation_sha256": "4cbf6ac915f9d1e66cabd0a723eade97ed61529b862723471c2da781df1ab378",
+  "rule_lock_sha256": "a6b7a6d19b111a16efed9b87f31ca0a6d59fbf469e555c5334dfe73a547fd594",
+  "summary_path": "outputs/v46_proposal_validation_v1/summary.json",
+  "summary_sha256": "d7b00b9923483509ed753b4dbc021d17f6c0100635f16c5003881474e55016c4",
+  "training_summary_sha256": "5c9ff17e6f2f1b4bbd3b59118b20ce5f934fb879ade5e3533dbae7a667631c5f",
+  "natural_target_sha256": "106a9fbc795c75c9d4f60a880da7264cb626f9163e5ec073b720e6b48c6f9db5",
+  "physical_target_sha256": "ab84bb18d3d649be86ff4d3f568e1562079fae656dd7004b726645affe4e07fe",
+  "proposal_structure_sha256": "5c278e03659dfbc91ae714338a2d916dfbda68c93db856d16420c9df04ad30ae",
+  "conditional_target_sha256": "a7a6d46ac43b4a11a87c54d3a9bfc7f197291ddaa443e8c3087a7af278100493",
+  "source": {
+    "split": "validation",
+    "seed_start": 250000,
+    "episodes": 256
+  },
+  "conditional_law": "Uniform selected source and its one fixed strict-B state, shared by every candidate; no population initial-state correction",
+  "sampling": {
+    "interaction_fractions": {
+      "interaction": 1,
+      "absolute_risk": 0,
+      "mixed": 0.5
+    },
+    "epsilon": [
+      0.1,
+      0.1
+    ],
+    "replicates_per_case_candidate": 64,
+    "continuation_seed_start": 4200000,
+    "horizon_s": 4,
+    "later_actions": "Unchanged natural NDE; initial decision only tilted"
+  },
+  "environment": {
+    "python": "3.9.19",
+    "numpy": "1.23.1",
+    "scipy": "1.13.1",
+    "OPENBLAS_NUM_THREADS": 1,
+    "OMP_NUM_THREADS": 1
+  },
+  "counts": {
+    "natural_sources": 256,
+    "selected_sources": 57,
+    "bank_states": 1276,
+    "bounded_pair_audits": 3720,
+    "strict_positive_pairs": 77,
+    "strict_positive_states": 75,
+    "natural_CAV_events": 0,
+    "natural_BV_only_events": 11,
+    "probabilistic_continuations": 10944,
+    "confirmation_continuations": 1024
+  },
+  "reports": {
+    "interaction": {
+      "continuations": 3648,
+      "events": 20,
+      "event_sources": [
+        250089,
+        250096,
+        250162,
+        250188,
+        250200
+      ],
+      "effective_dual_event_sources": [
+        250089,
+        250096,
+        250162,
+        250188,
+        250200
+      ],
+      "source_weighted_raw_event_rate": 0.005482456140350877,
+      "observed_event_source_yield_all_sources": 0.01953125,
+      "effective_pair_source_coverage_all_sources": 0.22265625,
+      "conditional_IS_mean": 0.00008339459397629576,
+      "conditional_M2": 0.000015861411746742644,
+      "fixed_state_stratified_estimator_variance": 4.32539498786765e-9,
+      "fixed_state_mean_MCSE": 0.00006576773515841678,
+      "descriptive_relative_half_width": 1.297185975177893,
+      "maximum_source_M2_share": 0.9986415513801145,
+      "maximum_single_event_M2_share": 0.984272178022511,
+      "effective_second_moment_sources_descriptive": 1.0027211285427808,
+      "source_weighted_factor_TV": [
+        0.641245925104336,
+        0.5615056093808409
+      ],
+      "factor_TV_min": [
+        0.28771270176864794,
+        0.3955771508719481
+      ],
+      "factor_TV_max": [
+        0.8899372724339487,
+        0.8481310066968567
+      ],
+      "event_H_categories": {
+        "H1_positive_H2_positive": {
+          "events": 19,
+          "M2_contribution": 2.4946546026441723e-7,
+          "M2_share": 0.015727821977488753
+        },
+        "H1_zero_H2_positive": {
+          "events": 0,
+          "M2_contribution": 0,
+          "M2_share": 0
+        },
+        "H1_positive_H2_zero": {
+          "events": 1,
+          "M2_contribution": 0.000015611946286478223,
+          "M2_share": 0.984272178022511
+        },
+        "H1_zero_H2_zero": {
+          "events": 0,
+          "M2_contribution": 0,
+          "M2_share": 0
+        }
+      },
+      "mean_weight": 1.0483977125613988,
+      "mean_weight_MCSE": 0.06699779824447497,
+      "event_interval_guard": true,
+      "engineering_readiness_checks_passed": false,
+      "maximum_full_vs_factor_log_weight_error": 1.4210854715202004e-14,
+      "native_CPU_s": 183.0244500000049
+    },
+    "absolute_risk": {
+      "continuations": 3648,
+      "events": 2,
+      "event_sources": [
+        250089,
+        250200
+      ],
+      "effective_dual_event_sources": [
+        250089,
+        250200
+      ],
+      "source_weighted_raw_event_rate": 0.0005482456140350877,
+      "observed_event_source_yield_all_sources": 0.0078125,
+      "effective_pair_source_coverage_all_sources": 0.21875,
+      "conditional_IS_mean": 0.00003310791924836931,
+      "conditional_M2": 0.0000025791015677730064,
+      "fixed_state_stratified_estimator_variance": 7.069905613412842e-10,
+      "fixed_state_mean_MCSE": 0.00002658929411137656,
+      "descriptive_relative_half_width": 1.3209980527342042,
+      "maximum_source_M2_share": 0.9174430178338218,
+      "maximum_single_event_M2_share": 0.9174430178338218,
+      "effective_second_moment_sources_descriptive": 1.1785262898729656,
+      "source_weighted_factor_TV": [
+        0.1293093560637481,
+        0.027476352477722545
+      ],
+      "factor_TV_min": [
+        0.0011075475123628077,
+        0.0009494951484789326
+      ],
+      "factor_TV_max": [
+        0.805147849638762,
+        0.06243882852195373
+      ],
+      "event_H_categories": {
+        "H1_positive_H2_positive": {
+          "events": 2,
+          "M2_contribution": 0.000002579101567773006,
+          "M2_share": 0.9999999999999999
+        },
+        "H1_zero_H2_positive": {
+          "events": 0,
+          "M2_contribution": 0,
+          "M2_share": 0
+        },
+        "H1_positive_H2_zero": {
+          "events": 0,
+          "M2_contribution": 0,
+          "M2_share": 0
+        },
+        "H1_zero_H2_zero": {
+          "events": 0,
+          "M2_contribution": 0,
+          "M2_share": 0
+        }
+      },
+      "mean_weight": 1.0022835045468046,
+      "mean_weight_MCSE": 0.00941668223276216,
+      "event_interval_guard": false,
+      "engineering_readiness_checks_passed": false,
+      "maximum_full_vs_factor_log_weight_error": 1.432187701766452e-14,
+      "native_CPU_s": 182.50285000001054
+    },
+    "mixed": {
+      "continuations": 3648,
+      "events": 9,
+      "event_sources": [
+        250089,
+        250096,
+        250188,
+        250200
+      ],
+      "effective_dual_event_sources": [
+        250089,
+        250096,
+        250188,
+        250200
+      ],
+      "source_weighted_raw_event_rate": 0.0024671052631578946,
+      "observed_event_source_yield_all_sources": 0.015625,
+      "effective_pair_source_coverage_all_sources": 0.22265625,
+      "conditional_IS_mean": 0.00005046232184960252,
+      "conditional_M2": 0.000005161353343625506,
+      "fixed_state_stratified_estimator_variance": 1.4065351739272225e-9,
+      "fixed_state_mean_MCSE": 0.00003750380212628078,
+      "descriptive_relative_half_width": 1.22246188226809,
+      "maximum_source_M2_share": 0.9939378552983678,
+      "maximum_single_event_M2_share": 0.9621044203001494,
+      "effective_second_moment_sources_descriptive": 1.0122102646281854,
+      "source_weighted_factor_TV": [
+        0.3724317473576237,
+        0.28653555876105763
+      ],
+      "factor_TV_min": [
+        0.1464384921506036,
+        0.1970887833193644
+      ],
+      "factor_TV_max": [
+        0.8466425664486723,
+        0.4308502063880919
+      ],
+      "event_H_categories": {
+        "H1_positive_H2_positive": {
+          "events": 9,
+          "M2_contribution": 0.000005161353343625507,
+          "M2_share": 1.0000000000000002
+        },
+        "H1_zero_H2_positive": {
+          "events": 0,
+          "M2_contribution": 0,
+          "M2_share": 0
+        },
+        "H1_positive_H2_zero": {
+          "events": 0,
+          "M2_contribution": 0,
+          "M2_share": 0
+        },
+        "H1_zero_H2_zero": {
+          "events": 0,
+          "M2_contribution": 0,
+          "M2_share": 0
+        }
+      },
+      "mean_weight": 0.9949805349245434,
+      "mean_weight_MCSE": 0.01726921859295203,
+      "event_interval_guard": false,
+      "engineering_readiness_checks_passed": false,
+      "maximum_full_vs_factor_log_weight_error": 1.454392162258955e-14,
+      "native_CPU_s": 181.66138900000033
+    }
+  },
+  "observed_event_source_M2_contributions": {
+    "interaction": [
+      {
+        "source_seed": 250089,
+        "events": 7,
+        "source_M2": 0.0000010171070568126243,
+        "M2_contribution": 1.7843983452853058e-8,
+        "share": 0.001124993395150817
+      },
+      {
+        "source_seed": 250096,
+        "events": 2,
+        "source_M2": 1.8447036542769207e-7,
+        "M2_contribution": 3.2363222004858256e-9,
+        "share": 0.00020403746224862036
+      },
+      {
+        "source_seed": 250162,
+        "events": 2,
+        "source_M2": 1.9251927941509787e-8,
+        "M2_contribution": 3.3775312178087347e-10,
+        "share": 0.000021294013873023356
+      },
+      {
+        "source_seed": 250188,
+        "events": 1,
+        "source_M2": 7.344684935626958e-9,
+        "M2_contribution": 1.2885412167766593e-10,
+        "share": 0.00000812374861299013
+      },
+      {
+        "source_seed": 250200,
+        "events": 8,
+        "source_M2": 0.0009028722955292132,
+        "M2_contribution": 0.000015839864833845846,
+        "share": 0.9986415513801145
+      }
+    ],
+    "absolute_risk": [
+      {
+        "source_seed": 250089,
+        "events": 1,
+        "source_M2": 0.000012136602001717716,
+        "M2_contribution": 2.1292284213539852e-7,
+        "share": 0.08255698216617828
+      },
+      {
+        "source_seed": 250200,
+        "events": 1,
+        "source_M2": 0.00013487218736134366,
+        "M2_contribution": 0.000002366178725637608,
+        "share": 0.9174430178338218
+      }
+    ],
+    "mixed": [
+      {
+        "source_seed": 250089,
+        "events": 4,
+        "source_M2": 0.000001418663088394394,
+        "M2_contribution": 2.488882611218235e-8,
+        "share": 0.004822151179190459
+      },
+      {
+        "source_seed": 250096,
+        "events": 1,
+        "source_M2": 3.3602313135749893e-7,
+        "M2_contribution": 5.895142655394718e-9,
+        "share": 0.0011421699432137258
+      },
+      {
+        "source_seed": 250188,
+        "events": 1,
+        "source_M2": 2.877941729085948e-8,
+        "M2_contribution": 5.049020577343769e-10,
+        "share": 0.00009782357922810161
+      },
+      {
+        "source_seed": 250200,
+        "events": 3,
+        "source_M2": 0.0002924136749496111,
+        "M2_contribution": 0.000005130064472800195,
+        "share": 0.9939378552983678
+      }
+    ]
+  },
+  "matched_comparison": {
+    "bootstrap_unit": "Whole source episode with all states and draws retained",
+    "same_conditional_target": true,
+    "comparisons": {
+      "interaction": {
+        "M2_ratio_to_interaction": 1,
+        "fixed_state_variance_ratio_to_interaction": 1,
+        "M2_ratio_source_interval": {
+          "interval": null,
+          "censored_replicates": 1808,
+          "status": "insufficient_event_sources_or_replicates"
+        },
+        "variance_ratio_source_interval": {
+          "interval": null,
+          "censored_replicates": 1808,
+          "status": "insufficient_event_sources_or_replicates"
+        }
+      },
+      "absolute_risk": {
+        "M2_ratio_to_interaction": 0.16260227077849232,
+        "fixed_state_variance_ratio_to_interaction": 0.16345109829838203,
+        "M2_ratio_source_interval": {
+          "interval": null,
+          "censored_replicates": 2000,
+          "status": "insufficient_event_sources_or_replicates"
+        },
+        "variance_ratio_source_interval": {
+          "interval": null,
+          "censored_replicates": 2000,
+          "status": "insufficient_event_sources_or_replicates"
+        }
+      },
+      "mixed": {
+        "M2_ratio_to_interaction": 0.32540314986057023,
+        "fixed_state_variance_ratio_to_interaction": 0.3251807471623815,
+        "M2_ratio_source_interval": {
+          "interval": null,
+          "censored_replicates": 2000,
+          "status": "insufficient_event_sources_or_replicates"
+        },
+        "variance_ratio_source_interval": {
+          "interval": null,
+          "censored_replicates": 2000,
+          "status": "insufficient_event_sources_or_replicates"
+        }
+      }
+    }
+  },
+  "native_confirmation": {
+    "planned_source_episodes": 16,
+    "measured_source_episodes": 16,
+    "confirmation_count": 14,
+    "confirmation_rate_among_measured": 0.875,
+    "confirmed_source_yield_in_planned_subset": 0.875,
+    "unmeasured_reasons": {},
+    "scope": "Preselected supported four-corner native clearance-risk confirmations, separate from real-Q event estimates",
+    "source_selection_seed": 139,
+    "continuation_seed_start": 4300000,
+    "replicates_per_corner": 16,
+    "minimum_native_interaction": 0.05,
+    "selection": "Uniform eligible-source subset, saved before outcomes; no substitution"
+  },
+  "independent_audit": {
+    "artifacts_verified": 248,
+    "probabilistic_samples_verified": 10944,
+    "confirmation_continuations_verified": 1024,
+    "maximum_replayed_full_likelihood_error": 6.394884621840902e-14,
+    "complete_source_plan_verified": true,
+    "bounded_screening_verified": true,
+    "outcome_blind_probe_schedule_verified": true,
+    "protected_artifacts_verified": 8,
+    "protected_hashes_unchanged": true,
+    "bootstrap_repeats": 2000,
+    "bootstrap_seed": 137,
+    "independent_bootstrap_censored": {
+      "interaction": 1808,
+      "absolute_risk": 2000,
+      "mixed": 2000
+    },
+    "scope": "Read-only reconstruction from retained files: hashes, source plan, exact P/H/Q and natural-partner draw replay, every event and moment, forced-corner confirmation and paired whole-source bootstrap"
+  },
+  "collision_coverage_witnesses": {
+    "largest_events": {
+      "interaction": {
+        "source": 250200,
+        "case_id": 48,
+        "time_s": 51,
+        "actor_ids": [
+          7,
+          25
+        ],
+        "seed": 4212853,
+        "actions": [
+          0,
+          21
+        ],
+        "weight": 0.2386469778838034,
+        "H_category": "H1_positive_H2_zero",
+        "original_H_joint_zero": true,
+        "M2_contribution": 0.00001561194628647822,
+        "p_factors": [
+          0.021529607767830472,
+          0.2253433204923533
+        ],
+        "h_factors": [
+          1,
+          0
+        ],
+        "q_factors": [
+          0.9021529607767831,
+          0.022534332049235332
+        ],
+        "proxy_R": 0.5695480746139117,
+        "four_corner": [
+          0.5695480746139117,
+          0.571967403734206,
+          0.03679650991122127,
+          0.036759245476966365
+        ],
+        "baseline_actions": [
+          19,
+          20
+        ],
+        "own_M2_share": 0.984272178022511
+      },
+      "absolute_risk": {
+        "source": 250200,
+        "case_id": 48,
+        "time_s": 51,
+        "actor_ids": [
+          7,
+          25
+        ],
+        "seed": 4212839,
+        "actions": [
+          0,
+          20
+        ],
+        "weight": 0.09290758844747825,
+        "H_category": "H1_positive_H2_positive",
+        "original_H_joint_zero": true,
+        "M2_contribution": 0.000002366178725637608,
+        "p_factors": [
+          0.021529607767830472,
+          0.2528089922440783
+        ],
+        "h_factors": [
+          0.2555850868330062,
+          0.2522668471770474
+        ],
+        "q_factors": [
+          0.2321795389264886,
+          0.2523210616837505
+        ],
+        "proxy_R": 0.571967403734206,
+        "four_corner": [
+          0.571967403734206,
+          0.571967403734206,
+          0.036759245476966365,
+          0.036759245476966365
+        ],
+        "baseline_actions": [
+          19,
+          20
+        ],
+        "own_M2_share": 0.9174430178338218
+      },
+      "mixed": {
+        "source": 250200,
+        "case_id": 48,
+        "time_s": 51,
+        "actor_ids": [
+          7,
+          25
+        ],
+        "seed": 4212852,
+        "actions": [
+          0,
+          21
+        ],
+        "weight": 0.1345923312877721,
+        "H_category": "H1_positive_H2_positive",
+        "original_H_joint_zero": true,
+        "M2_contribution": 0.000004965760866633057,
+        "p_factors": [
+          0.021529607767830472,
+          0.2253433204923533
+        ],
+        "h_factors": [
+          0.6277925434165031,
+          0.04557858320013277
+        ],
+        "q_factors": [
+          0.5671662498516359,
+          0.06355505692935483
+        ],
+        "proxy_R": 0.5695480746139117,
+        "four_corner": [
+          0.5695480746139117,
+          0.571967403734206,
+          0.03679650991122127,
+          0.036759245476966365
+        ],
+        "baseline_actions": [
+          19,
+          20
+        ],
+        "own_M2_share": 0.9621044203001493
+      }
+    },
+    "original_H_zero_action_coverage": {
+      "interaction": {
+        "events_in_original_H_zero_cells": 1,
+        "own_M2_share_in_original_H_zero_cells": 0.984272178022511
+      },
+      "absolute_risk": {
+        "events_in_original_H_zero_cells": 1,
+        "own_M2_share_in_original_H_zero_cells": 0.9174430178338218
+      },
+      "mixed": {
+        "events_in_original_H_zero_cells": 1,
+        "own_M2_share_in_original_H_zero_cells": 0.9621044203001493
+      }
+    },
+    "scope": "Descriptive initial-action coverage; differing continuation seeds are not a matched counterfactual native event comparison"
+  },
+  "local_timing_s": {
+    "wall_s": 2208.7769660000004,
+    "proxy_CPU_s": 1390.0125549999925,
+    "selector_reaudit_CPU_s": 20.813681000000088,
+    "discovery_wall_s": 1578.709119333
+  },
+  "timing_scope": "Local implementation profile, not controlled timing or population testing acceleration",
+  "tests": {
+    "relevant_regression_tests_passed": 180,
+    "modules": [
+      "tests/test_highd_v46_proposal_validation.py",
+      "tests/test_highd_v46_proposal_comparison.py",
+      "tests/test_highd_v46_collision_coverage.py",
+      "tests/test_highd_v46_cross_unit.py",
+      "tests/test_highd_v46_source_selector_validation.py",
+      "tests/test_highd_v46_selector_ranking.py",
+      "tests/test_highd_v46_multistate_q.py",
+      "tests/test_highd_v46_discovery_v2.py",
+      "tests/test_highd_v46_conditional_baseline.py",
+      "tests/test_highd_v46_d2rl.py",
+      "tests/test_highd_v46_validation.py",
+      "tests/test_highd_v46_training_expansion.py",
+      "tests/test_highd_v46_native_calibration.py",
+      "tests/test_highd_v46_state_discovery.py"
+    ],
+    "frozen_code_and_assets_verified": true
+  },
+  "ppo_trained": false,
+  "training_exported": false,
+  "automatically_selected_candidate": null,
+  "population_acceleration": null,
+  "decision": "Absolute-risk and mixed H sampled native events in original H_I zero-mass cells, confirming structural action-coverage repair. Mixed conditional M2 ratio is a favorable point diagnostic, but four event sources, 99.3938% maximum source share and 96.2104% single-event share fail readiness. Risk-only has two events/sources and weak second-factor tilt. All ratios lack supported source-bootstrap intervals. No winner, production replacement or PPO launch.",
+  "validation_boundary": "Sources 250000-250255 are now consumed validation. Do not fit parameters, relabel as training, append event-selected trajectories or pool shared source cases. Further design work belongs on declared training data before separately versioned fresh validation and independent original-initialization evaluation."
+}
