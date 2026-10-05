@@ -50,3 +50,19 @@ def test_stratified_variance_not_iid_pooled_variance():
     r = summarize(rows, plans, 'equal_state_stratified')
     assert r['mean'] == 1 and r['estimator_variance'] == 0
     assert summarize(rows, plans, 'target_iid')['estimator_variance'] > 0
+
+
+def test_updated_floor_bounds_true_second_moment_even_with_wrong_pilot():
+    a = np.array([.2,.3,.5]); pilot = [100,0,0]
+    q,_ = state_allocation(a,pilot,.5,.01)
+    true = np.array([0.,1e4,2.])
+    assert np.max(a/q) <= 2+1e-12
+    assert np.sum(a*a*true/q) <= 2*np.sum(a*true)*(1+1e-12)
+
+
+def test_update_deduplicates_shared_physical_draws_not_distinct_sources():
+    from scenario_reconstruction.highd_v47_state_allocation_update import add_observation
+    table={}; s={'seed':1,'event_result':False,'generation_log_weight':0.}
+    add_observation(table,0,s);add_observation(table,0,s);add_observation(table,1,s)
+    assert len(table)==2
+    with pytest.raises(ValueError):add_observation(table,0,dict(s,event_result=True))

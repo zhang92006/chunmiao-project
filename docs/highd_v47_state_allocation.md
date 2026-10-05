@@ -82,3 +82,57 @@ implementation, allocation, complete schedules and target identities are
 locked before new samples. Outputs are exclusive-create; interruptions retain
 their artifacts and cannot be selectively restarted or pooled. No validation
 cohort is opened and no production selector, action Q or PPO code is modified.
+
+## First complete run: zero-pilot states were underestimated
+
+The `2f660eb` implementation completed all 6,336 draws in 305.64 s. No sample
+was dropped or substituted. The fitted 0.0626 M2-ratio prediction did not hold:
+
+| Arm | Events | Conditional mean | Estimator variance |
+| --- | ---: | ---: | ---: |
+| Target IID | 64 | 5.02730e-5 | 6.71362e-10 |
+| Allocated IID | 516 | 6.60644e-4 | 1.70921e-7 |
+| Equal-state stratified | 66 | 1.90700e-4 | 1.38647e-8 |
+
+Allocated variance is 254.59 times target-IID and 12.33 times stratified, as
+point estimates in this run. Source 200053, state 19, had zero pilot events.
+Its Q_S was only 0.013238 versus target mass 0.04. Two new native events at
+seeds 4800284 and 4800566 had action LRs 0.180826 and 0.225464; multiplying
+by state LR 3.02161 gives full weights 0.546387 and 0.681264. This source now
+supplies 99.96% of allocated M2. The nominal state floor preserved unbiased
+support, but did not prevent a materially mistaken allocation. Baseline IID
+missed this source's events in its finite run; the empirical ratio is not
+evidence violating the theoretical M2 bound from the floor. Stratified
+sampling also observed an event there. The old 99.54% concentration at 200051
+was not enough evidence to treat all other sources as negligible.
+
+The first run remains immutable at summary SHA
+`a816d1183722f8df0d39be0522d259d0172de1e39026b624eb13673e20414ffd`.
+It is failed development evidence, not a promoted proposal or hidden restart.
+
+## Explicit update and second fixed comparison
+
+The separate [update protocol](../configs/highd_v47_state_allocation_update_v1.json)
+fits tabular J on **all** original teacher and all completed first-run samples,
+including every negative. Identical state/seed samples shared between arms
+are deduplicated and checked for matching labels; repeats are not extra data.
+Use action P_A/Q_A to estimate conditional J_k, not the total state/action
+weight (which targets the global distribution). Fitting from this accumulated
+adaptive development design is not a new unbiased primary risk estimate.
+
+The state floor becomes 0.5 alpha. This explicitly chosen conservative limit
+caps the state LR at 2 and true IID M2 at twice target-IID M2 for **any** native
+conditional risk, holding Q_A fixed. It is not a centered variance-ratio bound
+or a promise of improvement. All constants, updated masses and schedules are
+frozen before this update's new outcomes. No model is changed during the run.
+
+The same three arms receive 2,112 new draws each, using continuation seeds
+4900000-4902111 and state RNG seed 490017. The previous experiment is not
+pooled into these evaluation estimates. This remains development on the same
+fixed training bank, not a fresh source-generalization evaluation. There is no
+repeat-until-positive rule or automatic subsequent run.
+
+```bash
+python -m scenario_reconstruction.highd_v47_state_allocation_update freeze --output outputs/v47_state_allocation_update_v1_lock.json
+python -m scenario_reconstruction.highd_v47_state_allocation_update run --lock outputs/v47_state_allocation_update_v1_lock.json --output outputs/v47_state_allocation_update_v1
+```
