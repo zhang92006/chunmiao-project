@@ -39,6 +39,9 @@ The [multi-state real-Q pilot](docs/highd_v46_multistate_q.md) compares actual
 natural/single-factor/dual samples under a declared conditional state law.
 The [training-only native calibration](docs/highd_v46_native_calibration.md)
 builds endpoint-labelled discovery cases without changing NDE, Q or PPO.
+The [fresh source-selector validation](docs/highd_v46_source_selector_validation.md)
+compares absolute-risk ranking with and without the dual gate, using paired
+source-episode uncertainty and per-source second-moment contributions.
 The frozen NDE tag is `nde-v46-frozen-20261003`; training code is on
 `feature/highd-v46-d2rl-handoff`. This path needs Python 3.9 and the V46 LFS
 archive, with no SUMO or raw highD tracks. The fixed IDM CAV does not change lanes.
