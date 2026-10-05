@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "purpose": "First paired natural/behavior data collection, not final policy evaluation",
+  "freeze_contract": "configs/highd_dual_ndd_research_freeze_v1.json",
+  "duration_s": 8.0,
+  "epsilon_natural_mass": [0.1, 0.1],
+  "criticality": {
+    "horizon_s": 4.0,
+    "step_s": 0.1,
+    "nominal_lane_change_s": 4.0,
+    "near_clearance_m": 2.0,
+    "minimum_critical_mass": 0.000001,
+    "minimum_action_contrast": 0.000001
+  },
+  "initial_distribution": "Uniform over four configured diagnostic scenes, not an empirical traffic exposure distribution",
+  "scenarios": [
+    {"id": "spaced_reference", "actors": [
+      {"id": 100, "front_x": 150.0, "lane": 1, "speed": 30.0},
+      {"id": 1, "front_x": 230.0, "lane": 0, "speed": 30.0},
+      {"id": 2, "front_x": 205.0, "lane": 1, "speed": 30.0},
+      {"id": 3, "front_x": 280.0, "lane": 0, "speed": 30.0},
+      {"id": 4, "front_x": 280.0, "lane": 1, "speed": 30.0}
+    ]},
+    {"id": "rear_closing_pair", "actors": [
+      {"id": 100, "front_x": 200.0, "lane": 1, "speed": 30.0},
+      {"id": 1, "front_x": 175.0, "lane": 1, "speed": 32.0},
+      {"id": 2, "front_x": 140.0, "lane": 1, "speed": 32.0},
+      {"id": 3, "front_x": 240.0, "lane": 1, "speed": 28.0},
+      {"id": 4, "front_x": 295.0, "lane": 0, "speed": 30.0}
+    ]},
+    {"id": "front_closing_pair", "actors": [
+      {"id": 100, "front_x": 200.0, "lane": 1, "speed": 32.0},
+      {"id": 1, "front_x": 240.0, "lane": 1, "speed": 28.0},
+      {"id": 2, "front_x": 275.0, "lane": 1, "speed": 28.0},
+      {"id": 3, "front_x": 215.0, "lane": 0, "speed": 30.0},
+      {"id": 4, "front_x": 265.0, "lane": 0, "speed": 30.0}
+    ]},
+    {"id": "adjacent_approach_pair", "actors": [
+      {"id": 100, "front_x": 200.0, "lane": 1, "speed": 30.0},
+      {"id": 1, "front_x": 195.0, "lane": 0, "speed": 32.0},
+      {"id": 2, "front_x": 245.0, "lane": 0, "speed": 30.0},
+      {"id": 3, "front_x": 300.0, "lane": 1, "speed": 30.0},
+      {"id": 4, "front_x": 355.0, "lane": 1, "speed": 30.0}
+    ]}
+  ]
+}

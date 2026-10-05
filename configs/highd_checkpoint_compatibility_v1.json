@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "source_policy_sha256": "e4d8858c599cc9a8681c3333f7f680b296788201ee6982a89cd9b6c954d6bfc8",
+  "packaged_policy_lf_sha256": "fc91c94de95400f955885af8d2cd8bce395c0e27cb9f7da8b81fb3923a263cc8",
+  "reason": "The earlier minimal package consolidated the standalone legacy Beta registration into this policy module after the 200-iteration run. This is an explicit source-version migration, NOT a claim of byte-identical code.",
+  "guard": "Only this exact source/destination pair and mean_precision distribution; restore must reproduce the recorded deterministic objective on the entire training pool before use. Frozen NDD file checks remain exact.",
+  "scope": "Trusted team checkpoint only; no arbitrary pickle/checkpoint imports. Numerical replay compatibility is not cross-platform validation."
+}

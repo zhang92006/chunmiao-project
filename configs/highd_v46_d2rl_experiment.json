@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "horizon_s": 60,
+  "generation_epsilon": 0.1,
+  "epsilon_min": 0.05,
+  "cav": {"accel": 2.0, "decel": 4.0, "emergency_decel": 9.0, "tau": 0.2, "min_gap": 2.0, "desired_speed": 40.0},
+  "criticality": {"horizon_s": 4.0, "step_s": 0.2, "clearance_scale_m": 2.0, "observation_m": 115.0, "max_candidates": 4, "minimum_critical_mass": 0.000001, "minimum_action_contrast": 0.000001}
+}

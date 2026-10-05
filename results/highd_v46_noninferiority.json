@@ -1,0 +1,309 @@
+{
+  "protocol": {
+    "schema_version": 1,
+    "date": "2026-10-05",
+    "base_comparison_commit": "c5c5d06eee2b416d5aa403077edc92bd2b7fdfdb",
+    "model_change": false,
+    "new_rollouts": false,
+    "noninferiority": {
+      "margin": 0.01,
+      "margin_status": "User-specified after seeing existing 100-seed results; post-hoc sensitivity analysis, not preregistered confirmation or externally validated practical margin",
+      "estimand": "Mean paired per-episode H_Dual-H_Single on the previous common pre-terminal exposure",
+      "co_primary": [
+        "speed_h",
+        "gap_h"
+      ],
+      "alpha": 0.05,
+      "method": "One-sample t test of paired differences; one-sided 95% upper bound; 5000 paired-seed percentile bootstrap sensitivity",
+      "joint_claim": "Both co-primary NI tests must reject (intersection-union); also report Bonferroni simultaneous one-sided 95% bounds",
+      "equivalence": "Secondary paired TOST with symmetric bounds (-0.01,+0.01), each one-sided alpha=.05, equivalent to a 90% t CI contained in bounds",
+      "secondary_margins": [
+        0.002,
+        0.005,
+        0.01
+      ],
+      "secondary_timepoint_s": 60,
+      "bootstrap_replicates": 5000,
+      "bootstrap_seed": 20261005
+    },
+    "temporal": {
+      "lags_s": [
+        -2,
+        -1,
+        -0.5,
+        0,
+        0.5,
+        1,
+        2
+      ],
+      "window_s": 6,
+      "window_grid": "Nonoverlapping global multiples of 6 s",
+      "anchor_s_in_window": 3,
+      "acceleration": "Unquantized forward 1 s velocity increment; highD half-frame endpoints linearly interpolated; simulated endpoints use frozen exact observation interpolation",
+      "auxiliary": "Instantaneous signed highD xAcceleration versus executed simulation held acceleration (respecting speed bounds), plus within-window centering sensitivity",
+      "eligibility": "Same follower/leader and leader's preceding identity, same lanes, quiet lateral motion throughout full 6 s; both speeds 20..40, gap (0,115], abs(relative speed)<=20; complete endpoints; every sampled 1 s action within [-4,2] without clipping",
+      "simulation_matching": "Intersection of identical follower/leader IDs and window starts passing in both arms, before their earlier collision",
+      "autocorrelation": "Each role separately: Corr(a_role(t),a_role(t+lag))",
+      "cross_correlation": "Corr(a_front(t),a_rear(t+lag)); positive lag means rear measured later; negative lags retained as directional control",
+      "centering": "Subtract each actor's mean of eleven forward-1s accelerations at 0,.5,...,5 s within its 6s window; sensitivity only, short-window demeaning can bias lag correlations",
+      "bootstrap": "Whole recording for highD (10 blocks), paired episode seed for simulations (100 blocks); percentile 95% pointwise intervals, no independent-window or causal-response claim",
+      "bootstrap_replicates": 2000,
+      "bootstrap_seed": 20261005,
+      "interpretation": "0.5s lag overlaps the 1s measurement windows and simulation holds controls for 1s; do not infer reaction delay from that point. No lag-peak tuning or refitting."
+    }
+  },
+  "protocol_sha256": "9d586cd76688084b34994c5a6767235a927018c2a6f71c46b724d5b6691c0ce5",
+  "implementation_sha256": "86825a7191c8e5ea307401d07b1d06b7ab12b87e549c4b1caa0ae4560c4b0b09",
+  "episode_metrics_sha256": "a824b48e220a43175e2527d4700e951a137374bc60057e5fecd82658fb49d57c",
+  "reference_sha256": "ea74090ad4501416a34d33ca432f12ce4578df8411fc3ee94265a60714dbd841",
+  "primary_common_exposure": {
+    "speed_h": {
+      "n": 100,
+      "mean_delta": -0.0009781906757321066,
+      "standard_error": 0.001995218398492854,
+      "margin": 0.01,
+      "one_sided_95_upper": 0.002334652307406708,
+      "ci90": [
+        -0.004291033658870922,
+        0.002334652307406708
+      ],
+      "ci95": [
+        -0.004937136843983634,
+        0.00298075549251942
+      ],
+      "bonferroni_two_endpoint_simultaneous_95_upper": 0.00298075549251942,
+      "ni_p": 1.4727691628503526e-07,
+      "noninferior_at_alpha_0_05": true,
+      "tost_lower_p": 8.519911573295866e-06,
+      "tost_upper_p": 1.4727691628503526e-07,
+      "tost_p": 8.519911573295866e-06,
+      "equivalent_at_alpha_0_05": true,
+      "bootstrap_one_sided_95_upper": 0.002286266299391213,
+      "bootstrap_ci90": [
+        -0.0043312058779019745,
+        0.002286266299391213
+      ],
+      "bootstrap_ci95": [
+        -0.004986575412326456,
+        0.002951131498672707
+      ],
+      "margin_sensitivity": [
+        {
+          "n": 100,
+          "mean_delta": -0.0009781906757321066,
+          "standard_error": 0.001995218398492854,
+          "margin": 0.002,
+          "one_sided_95_upper": 0.002334652307406708,
+          "ci90": [
+            -0.004291033658870922,
+            0.002334652307406708
+          ],
+          "ci95": [
+            -0.004937136843983634,
+            0.00298075549251942
+          ],
+          "bonferroni_two_endpoint_simultaneous_95_upper": 0.00298075549251942,
+          "ni_p": 0.06935260855299298,
+          "noninferior_at_alpha_0_05": false,
+          "tost_lower_p": 0.3048506441868746,
+          "tost_upper_p": 0.06935260855299298,
+          "tost_p": 0.3048506441868746,
+          "equivalent_at_alpha_0_05": false
+        },
+        {
+          "n": 100,
+          "mean_delta": -0.0009781906757321066,
+          "standard_error": 0.001995218398492854,
+          "margin": 0.005,
+          "one_sided_95_upper": 0.002334652307406708,
+          "ci90": [
+            -0.004291033658870922,
+            0.002334652307406708
+          ],
+          "ci95": [
+            -0.004937136843983634,
+            0.00298075549251942
+          ],
+          "bonferroni_two_endpoint_simultaneous_95_upper": 0.00298075549251942,
+          "ni_p": 0.0017270582840980015,
+          "noninferior_at_alpha_0_05": true,
+          "tost_lower_p": 0.023269409922056603,
+          "tost_upper_p": 0.0017270582840980015,
+          "tost_p": 0.023269409922056603,
+          "equivalent_at_alpha_0_05": true
+        },
+        {
+          "n": 100,
+          "mean_delta": -0.0009781906757321066,
+          "standard_error": 0.001995218398492854,
+          "margin": 0.01,
+          "one_sided_95_upper": 0.002334652307406708,
+          "ci90": [
+            -0.004291033658870922,
+            0.002334652307406708
+          ],
+          "ci95": [
+            -0.004937136843983634,
+            0.00298075549251942
+          ],
+          "bonferroni_two_endpoint_simultaneous_95_upper": 0.00298075549251942,
+          "ni_p": 1.4727691628503526e-07,
+          "noninferior_at_alpha_0_05": true,
+          "tost_lower_p": 8.519911573295866e-06,
+          "tost_upper_p": 1.4727691628503526e-07,
+          "tost_p": 8.519911573295866e-06,
+          "equivalent_at_alpha_0_05": true
+        }
+      ]
+    },
+    "gap_h": {
+      "n": 100,
+      "mean_delta": -0.0023926013186514384,
+      "standard_error": 0.0023672533678470915,
+      "margin": 0.01,
+      "one_sided_95_upper": 0.0015379652373245403,
+      "ci90": [
+        -0.006323167874627417,
+        0.0015379652373245403
+      ],
+      "ci95": [
+        -0.007089745579649656,
+        0.0023045429423467797
+      ],
+      "bonferroni_two_endpoint_simultaneous_95_upper": 0.0023045429423467797,
+      "ni_p": 4.6360524210024625e-07,
+      "noninferior_at_alpha_0_05": true,
+      "tost_lower_p": 0.0008848687835279486,
+      "tost_upper_p": 4.6360524210024625e-07,
+      "tost_p": 0.0008848687835279486,
+      "equivalent_at_alpha_0_05": true,
+      "bootstrap_one_sided_95_upper": 0.0015332229488373777,
+      "bootstrap_ci90": [
+        -0.006250929174693081,
+        0.0015332229488373777
+      ],
+      "bootstrap_ci95": [
+        -0.006932975785896392,
+        0.0023025394536779127
+      ],
+      "margin_sensitivity": [
+        {
+          "n": 100,
+          "mean_delta": -0.0023926013186514384,
+          "standard_error": 0.0023672533678470915,
+          "margin": 0.002,
+          "one_sided_95_upper": 0.0015379652373245403,
+          "ci90": [
+            -0.006323167874627417,
+            0.0015379652373245403
+          ],
+          "ci95": [
+            -0.007089745579649656,
+            0.0023045429423467797
+          ],
+          "bonferroni_two_endpoint_simultaneous_95_upper": 0.0023045429423467797,
+          "ni_p": 0.033245038590882514,
+          "noninferior_at_alpha_0_05": true,
+          "tost_lower_p": 0.5656921205434238,
+          "tost_upper_p": 0.033245038590882514,
+          "tost_p": 0.5656921205434238,
+          "equivalent_at_alpha_0_05": false
+        },
+        {
+          "n": 100,
+          "mean_delta": -0.0023926013186514384,
+          "standard_error": 0.0023672533678470915,
+          "margin": 0.005,
+          "one_sided_95_upper": 0.0015379652373245403,
+          "ci90": [
+            -0.006323167874627417,
+            0.0015379652373245403
+          ],
+          "ci95": [
+            -0.007089745579649656,
+            0.0023045429423467797
+          ],
+          "bonferroni_two_endpoint_simultaneous_95_upper": 0.0023045429423467797,
+          "ni_p": 0.0011743857028507054,
+          "noninferior_at_alpha_0_05": true,
+          "tost_lower_p": 0.1366869309231081,
+          "tost_upper_p": 0.0011743857028507054,
+          "tost_p": 0.1366869309231081,
+          "equivalent_at_alpha_0_05": false
+        },
+        {
+          "n": 100,
+          "mean_delta": -0.0023926013186514384,
+          "standard_error": 0.0023672533678470915,
+          "margin": 0.01,
+          "one_sided_95_upper": 0.0015379652373245403,
+          "ci90": [
+            -0.006323167874627417,
+            0.0015379652373245403
+          ],
+          "ci95": [
+            -0.007089745579649656,
+            0.0023045429423467797
+          ],
+          "bonferroni_two_endpoint_simultaneous_95_upper": 0.0023045429423467797,
+          "ni_p": 4.6360524210024625e-07,
+          "noninferior_at_alpha_0_05": true,
+          "tost_lower_p": 0.0008848687835279486,
+          "tost_upper_p": 4.6360524210024625e-07,
+          "tost_p": 0.0008848687835279486,
+          "equivalent_at_alpha_0_05": true
+        }
+      ]
+    }
+  },
+  "both_primary_noninferior": true,
+  "both_primary_equivalent": true,
+  "secondary_60s_common_survivors": {
+    "speed_h": {
+      "n": 91,
+      "mean_delta": 0.005948497495151359,
+      "standard_error": 0.004589444259719536,
+      "margin": 0.01,
+      "one_sided_95_upper": 0.013575975251978373,
+      "ci90": [
+        -0.001678980261675656,
+        0.013575975251978373
+      ],
+      "ci95": [
+        -0.0031692345716124925,
+        0.01506622956191521
+      ],
+      "bonferroni_two_endpoint_simultaneous_95_upper": 0.01506622956191521,
+      "ni_p": 0.18985158003621738,
+      "noninferior_at_alpha_0_05": false,
+      "tost_lower_p": 0.0003939531726907573,
+      "tost_upper_p": 0.18985158003621738,
+      "tost_p": 0.18985158003621738,
+      "equivalent_at_alpha_0_05": false
+    },
+    "gap_h": {
+      "n": 91,
+      "mean_delta": -0.007398618650464898,
+      "standard_error": 0.0033574053111580845,
+      "margin": 0.01,
+      "one_sided_95_upper": -0.0018187416801155234,
+      "ci90": [
+        -0.012978495620814273,
+        -0.0018187416801155234
+      ],
+      "ci95": [
+        -0.014068690304966276,
+        -0.0007285469959635209
+      ],
+      "bonferroni_two_endpoint_simultaneous_95_upper": -0.0007285469959635209,
+      "ni_p": 6.669604618184905e-07,
+      "noninferior_at_alpha_0_05": true,
+      "tost_lower_p": 0.22023877747572612,
+      "tost_upper_p": 6.669604618184905e-07,
+      "tost_p": 0.22023877747572612,
+      "equivalent_at_alpha_0_05": false
+    }
+  },
+  "secondary_complete_seed_count": 91,
+  "scope": "Fixed empirical train reference; user margin selected after original results; exploratory post-hoc NI/equivalence of mean episode distances, not all-time fidelity, safety or D2RL efficiency."
+}
