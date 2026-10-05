@@ -37,6 +37,13 @@ def test_zero_component_mass_declared_natural_fallback():
     np.testing.assert_allclose(h, .5*p+.5*(p*np.array([[.1, .1], [.8, .8]]))/(p*np.array([[.1, .1], [.8, .8]])).sum())
 
 
+def test_component_normalization_preserves_score_scale_invariance():
+    p = np.array([[.4, .1], [.2, .3]])
+    risk = np.array([[.1, .2], [.3, 1.]])
+    for lam in (0., .5, 1.):
+        np.testing.assert_allclose(build_h(p, risk, lam)[0], build_h(p, 7*risk, lam)[0])
+
+
 @pytest.mark.parametrize('lam', [0., .5, 1.])
 def test_no_support_expansion_and_exact_enumeration(lam):
     p = np.array([[.6, 0.], [.1, .3]])
