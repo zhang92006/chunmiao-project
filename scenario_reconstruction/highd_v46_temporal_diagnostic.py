@@ -123,7 +123,8 @@ def curves(groups,settings):
     result={}; boot={}
     for name,blocks in groups.items():
         blocks=np.asarray(blocks)
-        weights=bootstrap_weights(len(blocks),settings['bootstrap_replicates'],settings['bootstrap_seed'])
+        weights=bootstrap_weights(len(blocks),settings['bootstrap_replicates'],
+                                  settings['bootstrap_seed']+int(name=='highd'))
         samples=(weights@blocks.reshape(len(blocks),-1)).reshape(-1,3,3,len(settings['lags_s']),6)
         boot[name]=np.moveaxis(np.asarray([rho(samples[:,i,j,k]) for i in range(3) for j in range(3)
                                           for k in range(len(settings['lags_s']))]).reshape(3,3,-1,len(samples)), -1,0)

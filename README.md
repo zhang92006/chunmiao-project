@@ -33,6 +33,11 @@ reports distribution fidelity, rollout drift, interaction fidelity and paired
 bootstrap intervals on frozen V46. It improves joint acceleration fidelity but
 does not establish comprehensive NDE superiority or D2RL efficiency.
 
+The [post-hoc non-inferiority and temporal-correlation analysis](docs/highd_v46_ni_temporal.md)
+reuses those trajectories: mean episode speed/gap H pass the 0.01 margin, while
+60 s speed non-inferiority remains unestablished. Synchronous coupling improves,
+but the 1–2 s front-to-rear correlation advantage does not persist.
+
 ## Clone and install
 
 Git LFS is required for the runtime probability tables, and the Autoware message

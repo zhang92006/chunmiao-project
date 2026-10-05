@@ -1,5 +1,6 @@
 """Post-hoc user-margin paired NI and TOST on existing frozen NDE rollouts."""
 import argparse
+import hashlib
 from pathlib import Path
 import numpy as np
 import pandas as pd
@@ -14,6 +15,8 @@ def paired_test(delta, margin=.01, alpha=.05):
     if len(delta) < 2 or not np.isfinite(delta).all():
         raise ValueError('Need finite independent-seed paired differences')
     n = len(delta); mean = float(delta.mean()); se = float(delta.std(ddof=1)/np.sqrt(n))
+    if np.ptp(delta) == 0:
+        mean = float(delta[0]); se = 0.
     if se == 0:
         p_upper = float(mean >= margin); p_lower = float(mean <= -margin)
     else:
@@ -53,7 +56,15 @@ def main():
         primary[key] = result
     # Prevent a pooled-exposure claim from silently extending to the endpoint.
     base_cfg = read(ROOT/'configs/highd_v46_matched_fidelity_v1.json')
-    with np.load(Path(args.reference)/'reference.npz') as source:
+    reference_path = Path(args.reference)/'reference.npz'
+    reference_info = read(Path(args.reference)/'reference_summary.json')
+    if digest(reference_path) != reference_info['reference_sha256']:
+        raise ValueError('Modified empirical reference')
+    config_bytes = (ROOT/'configs/highd_v46_matched_fidelity_v1.json').read_bytes()
+    config_lf_sha256 = hashlib.sha256(config_bytes.replace(b'\r\n', b'\n')).hexdigest()
+    if config_lf_sha256 != reference_info['config_sha256']:
+        raise ValueError('Reference comparison configuration differs')
+    with np.load(reference_path) as source:
         refs = {k: source[k] for k in ('speed','gap')}
     differences = {k: [] for k in settings['co_primary']}; complete_seeds = []
     root = Path(args.rollout)
@@ -74,7 +85,8 @@ def main():
             differences[key].append(scores['dual'][key]-scores['single'][key])
     secondary = {k: paired_test(v,settings['margin']) for k,v in differences.items()}
     report = {'protocol': cfg, 'protocol_sha256': digest(args.config), 'implementation_sha256': digest(__file__),
-        'episode_metrics_sha256': digest(path), 'primary_common_exposure': primary,
+        'episode_metrics_sha256': digest(path), 'reference_sha256': digest(reference_path),
+        'primary_common_exposure': primary,
         'both_primary_noninferior': all(r['noninferior_at_alpha_0_05'] for r in primary.values()),
         'both_primary_equivalent': all(r['equivalent_at_alpha_0_05'] for r in primary.values()),
         'secondary_60s_common_survivors': secondary, 'secondary_complete_seed_count':len(complete_seeds),
