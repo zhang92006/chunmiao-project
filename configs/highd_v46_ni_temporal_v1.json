@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-05",
+  "base_comparison_commit": "c5c5d06eee2b416d5aa403077edc92bd2b7fdfdb",
+  "model_change": false,
+  "new_rollouts": false,
+  "noninferiority": {
+    "margin": 0.01,
+    "margin_status": "User-specified after seeing existing 100-seed results; post-hoc sensitivity analysis, not preregistered confirmation or externally validated practical margin",
+    "estimand": "Mean paired per-episode H_Dual-H_Single on the previous common pre-terminal exposure",
+    "co_primary": ["speed_h", "gap_h"],
+    "alpha": 0.05,
+    "method": "One-sample t test of paired differences; one-sided 95% upper bound; 5000 paired-seed percentile bootstrap sensitivity",
+    "joint_claim": "Both co-primary NI tests must reject (intersection-union); also report Bonferroni simultaneous one-sided 95% bounds",
+    "equivalence": "Secondary paired TOST with symmetric bounds (-0.01,+0.01), each one-sided alpha=.05, equivalent to a 90% t CI contained in bounds",
+    "secondary_margins": [0.002, 0.005, 0.01],
+    "secondary_timepoint_s": 60,
+    "bootstrap_replicates": 5000,
+    "bootstrap_seed": 20261005
+  },
+  "temporal": {
+    "lags_s": [-2, -1, -0.5, 0, 0.5, 1, 2],
+    "window_s": 6,
+    "window_grid": "Nonoverlapping global multiples of 6 s",
+    "anchor_s_in_window": 3,
+    "acceleration": "Unquantized forward 1 s velocity increment; highD half-frame endpoints linearly interpolated; simulated endpoints use frozen exact observation interpolation",
+    "auxiliary": "Instantaneous signed highD xAcceleration versus executed simulation held acceleration (respecting speed bounds), plus within-window centering sensitivity",
+    "eligibility": "Same follower/leader and leader's preceding identity, same lanes, quiet lateral motion throughout full 6 s; both speeds 20..40, gap (0,115], abs(relative speed)<=20; complete endpoints; every sampled 1 s action within [-4,2] without clipping",
+    "simulation_matching": "Intersection of identical follower/leader IDs and window starts passing in both arms, before their earlier collision",
+    "autocorrelation": "Each role separately: Corr(a_role(t),a_role(t+lag))",
+    "cross_correlation": "Corr(a_front(t),a_rear(t+lag)); positive lag means rear measured later; negative lags retained as directional control",
+    "centering": "Subtract each actor's mean of eleven forward-1s accelerations at 0,.5,...,5 s within its 6s window; sensitivity only, short-window demeaning can bias lag correlations",
+    "bootstrap": "Whole recording for highD (10 blocks), paired episode seed for simulations (100 blocks); percentile 95% pointwise intervals, no independent-window or causal-response claim",
+    "bootstrap_replicates": 2000,
+    "bootstrap_seed": 20261005,
+    "interpretation": "0.5s lag overlaps the 1s measurement windows and simulation holds controls for 1s; do not infer reaction delay from that point. No lag-peak tuning or refitting."
+  }
+}
