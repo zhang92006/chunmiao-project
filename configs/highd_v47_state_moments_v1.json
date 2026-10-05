@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "bank_config": "configs/highd_v47_state_allocation_v1.json",
+  "updated_config": "configs/highd_v47_state_allocation_update_v1.json",
+  "completed_update_path": "outputs/v47_state_allocation_update_v1",
+  "completed_update_summary_sha256": "0a50edb8530818ba30d45626b56aed74caecd95d953f4fa22a5694df8c0cb0d3",
+  "singleton_rule": "Every distinct event action in teacher, first allocation and completed update training draws is isolated; all remaining supported actions stay in risk-by-log-LR strata. No new outcomes or validation labels enter design.",
+  "draws_per_state_per_arm": 128,
+  "risk_boundaries": [0.2, 0.4, 0.6, 0.8],
+  "log10_action_lr_boundaries": [-6, -3, -1, 0],
+  "confidence": 0.95,
+  "action_schedule_seed": 5000017,
+  "direct_seed_start": 5100000,
+  "stratified_seed_start": 5200000,
+  "epsilon": [0.1, 0.1],
+  "horizon_s": 4,
+  "scope": "Measure conditional J on all 33 locked training states. Frozen teacher Q_A is the estimand, not the measurement proposal. No new source or population claim.",
+  "budget": "128 direct Q_A draws and 128 risk-by-log-LR stratified moment probes per state; 8448 native continuations. Equal deterministic stratum counts; all action schedules fixed before outcomes. No extension or weight clipping.",
+  "decision": "Use simultaneous exact binomial bounds for all state/stratum cells. Certify candidate Q_S only if the upper bound on its same-target IID M2 difference against alpha is strictly negative; otherwise retain alpha. No production change or PPO launch."
+}
