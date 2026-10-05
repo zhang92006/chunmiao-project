@@ -167,5 +167,114 @@ python -m scenario_reconstruction.highd_v46_workflow verify
 ```
 
 Implementation checks on 2026-10-05 passed 162 relevant regression tests and
-frozen-code/asset verification. The full fresh validation cohort has not been
-opened by implementation tests; source-generality results remain pending.
+frozen-code/asset verification. Implementation tests did not open fresh sources.
+
+## Completed evidence, 2026-10-05
+
+The locked full cohort completed: all 256 natural sources, 1,280 bank states,
+3,736 bounded pair audits and 257 distinct selected cases. A/B shared 46 cases;
+only one of B's 47 cases differed from A's choice in the same source. All
+65,792 probabilistic continuations were retained. Natural source episodes had
+zero CAV events and 11 BV-only competing endpoints; these are separate from
+the selected-state continuations below. No PPO or training export was produced.
+
+| Metric | A: absolute risk only | B: absolute risk + frozen strict gate |
+| --- | ---: | ---: |
+| Selected sources / 256 | 256 | 47 |
+| Effective dual-pair sources / 256 | 177 | 47 |
+| Natural fallback sources | 78 | 0 |
+| Dual continuations | 16,384 | 3,008 |
+| Dual CAV events | 63 | 63 |
+| Raw conditional dual event rate | 0.3845% | 2.0944% |
+| Independent dual event sources | 3 | 3 |
+| Observed event-source yield / all sources | 1.1719% | 1.1719% |
+| Second-factor dual Q/P TV, mean | 0.4097 | 0.5460 |
+| Second-factor TV, min–max | 0–0.8941 | 0.4253–0.6947 |
+| Largest source second-moment share | 99.9247% | 99.9247% |
+| Effective second-moment sources, descriptive | 1.0015 | 1.0015 |
+
+Strict discovery found 65 positive pairs, 61 positive states and 47 distinct
+sources. B's effective-pair source coverage was 18.3594%, with a predeclared
+90% source-cluster bootstrap interval of 14.4531–22.2656%. This is offline
+selected-state coverage, not a time-step online intervention rate or global
+collision-source recall. No exhaustive native reference establishes recall.
+
+All observed dual events came from the same three physical cases in both rules:
+
+| Source | Dual CAV events / 64 | Share of dual second moment |
+| --- | ---: | ---: |
+| 240022 | 47 | 99.9247% |
+| 240099 | 14 | 0.07214% |
+| 240151 | 2 | 0.003181% |
+
+B retained all observed event sources while requiring 81.64% fewer selected
+cases than A. That improves *conditional event density / screening economy*,
+not source diversity or a same-target variance comparison between A and B.
+The all-source event yield was identical. Adding A's non-strict candidates
+introduced no observed additional event source in this fixed cohort; zero
+observed events do not establish zero true risk in those candidates.
+
+The historical two-event-source / 99.2555% training result and this three-source
+/ 99.9247% validation result use different cohorts, budgets and state laws.
+They are not a matched improvement estimate. The larger fresh source budget
+still did not reach the predeclared five-effective-event-source guard, maximum
+share <=80% or effective second-moment source count >=3. Both diversity and
+concentration checks failed. With only three event sources, all event/moment
+generalization intervals and paired event-rate comparisons remain censored,
+despite 63 events and 2,000 bootstrap replicates.
+
+Within each rule's fixed state law, the four native arms observed respectively
+4 natural, 35 first-factor-only, 4 second-factor-only and 63 dual CAV events,
+all from the same three sources. The empirical dual/first-factor second-moment
+ratio was 0.3385, a favorable point diagnostic but not a supported generalization
+or precision/acceleration claim. These factor arms are not the paper's agent.
+
+### The remaining likelihood-weight tail
+
+At source 240022, continuation seed 2901420 produced a real CAV event with
+second-factor `P2=0.23889344`, `H2=0`, `Q2=0.02388934`. Its full weight was
+0.19425933, whereas the other dual event weights at this state were approximately
+0.00880–0.00954. This one observation accounted for **91.0754% of the entire
+dual event second moment**. It is not a likelihood failure: the unchanged
+epsilon mixture preserves support and the full/factor logs agree. It shows
+that substantial factor TV alone does not ensure coverage of actual collision
+actions. More trajectories from the same dominant state would not create
+independent source diversity.
+
+### Native confirmation is incomplete, not negative evidence for B
+
+The outcome-blind uniform confirmation sample selected 16 sources, none in B's
+47-source eligible set. B therefore has no measured native interaction cases;
+its confirmation rate is **undefined**, not a measured zero. A measured nine
+supported contrasts and confirmed none at the frozen 0.05 threshold; seven
+cases had no positive supported contrast. These non-strict A probes cannot
+be transferred to B. No case was substituted or added after seeing outcomes.
+A future separately versioned confirmation design should predeclare coverage
+of each candidate rule before native outcomes, on independently reserved data.
+
+### Cost, verification and decision
+
+Local total wall time was 4,987.61 s; common discovery wall time was 1,600.73 s,
+including 1,405.55 s of recorded proxy CPU. Selection plus selected-pair
+re-audit CPU was 98.78 s. Dual continuation CPU for the rule-specific case sets
+was 802.42 s (A) and 148.90 s (B). This is an offline implementation profile,
+not a controlled online timing benchmark or population testing acceleration.
+
+An independent read-only reconstruction verified all 1,049 artifact hashes,
+the complete source and continuation schedules, outcome-blind case/probe
+selection, every arm's event counts and moments, source summaries, confirmations
+and the paired source bootstrap. Maximum full-versus-factor log-weight error
+was 1.47e-14. The old training/validation manifests remain unchanged. The 58
+entry-point/ranking/sampler/likelihood regression tests passed; frozen code and
+assets verified.
+
+**Decision: screening density improved, but the source-diversity and
+concentration bottlenecks did not. Do not restart PPO or append more
+continuations from these validation cases.** Keep NDE/Q/PPO frozen. The next
+training-side diagnostic should audit actual collision-action coverage and
+native risk calibration, then test a separately declared source-discovery rule
+and source-balanced confirmation design on fresh episodes. This consumed
+validation cohort must not become fitting data.
+
+Compact reproducible evidence is recorded in
+[highd_v46_source_selector_validation_pilot_v1.json](../results/highd_v46_source_selector_validation_pilot_v1.json).
