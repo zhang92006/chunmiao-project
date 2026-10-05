@@ -194,3 +194,10 @@ design, not an extra run or an analysis substituted for the results above.
 
 Compact evidence:
 [highd_v47_state_allocation_v1.json](../results/highd_v47_state_allocation_v1.json).
+
+The next [state-moment measurement experiment](highd_v47_state_moments.md)
+implements action-stratified probes, zero-event uncertainty bounds and common-
+measurement Q_S comparisons. It improves some known-tail measurements but
+discovers another unmeasured action region; no precise state model or new
+production allocation is promoted. The original allocation results above
+remain unchanged.

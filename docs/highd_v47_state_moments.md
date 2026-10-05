@@ -61,7 +61,8 @@ budget; C-heavy low-event strata can remain expensive to measure.
 ## Zero-event uncertainty and a safe allocation decision
 
 Use exact Clopper–Pearson binomial intervals, implemented by SciPy 1.13.1
-`binomtest(...).proportion_ci(method="exact")`. Bonferroni over each state's
+[`binomtest(...).proportion_ci(method="exact")`](https://docs.scipy.org/doc/scipy-1.13.1/reference/generated/scipy.stats._result_classes.BinomTestResult.proportion_ci.html).
+Bonferroni over each state's
 nonempty strata gives a 95% state J interval. A second Bonferroni over **all**
 state/stratum cells gives simultaneous 95% bank intervals `[L_s,U_s]`.
 These probabilities integrate random action draws and native continuations;
@@ -117,3 +118,109 @@ candidate proposals are verified before exclusive output creation. Retain all
 negative endpoints and incomplete attempts. This estimator can prevent an
 unsupported allocation; it cannot manufacture information about rare failures
 or certify precision when its intervals remain wide.
+
+## Completed evidence: local improvement, unresolved unknown-action tail
+
+Implementation `b5ae6a1` was committed and frozen before outcomes. The full
+8,448-draw run completed in 397.98 s. All 33 states and 359 nonempty strata
+were retained, including 124 historical-event-action singleton strata. The
+historical design read 14,784 old rows, representing 14,194 unique state/seed
+draws; none became a new evaluation observation. Direct sampling observed 127
+events and probes 266, each spanning eight source episodes. These are different
+measurement designs, not improved natural collision rates or new sources.
+
+The following relative SEs are **empirical point diagnostics**, not verified
+relative-error guarantees:
+
+| State / source | Direct J | Stratified J | Direct relative MCSE | Stratified relative MCSE |
+| --- | ---: | ---: | ---: | ---: |
+| 18 / 200051 | 1.27063e-4 | 3.84143e-5 | 41.78% | 63.24% |
+| 19 / 200053 | 1.85267e-5 | 7.15003e-5 | 100.00% | 49.95% |
+| 32 / 230053 | 6.77080e-2 | 5.62542e-5 | 99.60% | 57.23% |
+
+The known 200053 tail was deliberately remeasured and its empirical relative
+noise fell. Improvement is not uniform: 200051's relative MCSE increased, and
+the huge 230053 discrepancy prevents a claim of overall stabilization.
+
+### The new unanticipated event region
+
+At source 230053, direct continuation seed **5104146**, initial actions `[2,16]`
+produced a CAV event. Their natural probability is 0.00948884, clearance proxy
+score 0.312239 and full action LR about 2.93803. This observation contributes
+99.6010% of that state's direct J estimate. It is not an astronomically small-P
+witness and was not among the historical event-action singletons.
+
+Its remaining-support stratum has coefficient mass **8.14354**, but equal
+stratum allocation gave it only **three probes**. The action's conditional G
+probability is 0.00342339; none of those probes selected it and the stratum had
+zero observed events. Thus isolating known tail actions helps those actions,
+but equal counts across strata still undersample a high-coefficient region
+whose native collision probability is unknown. The new estimator did not
+demonstrate comprehensive tail coverage. The direct event is retained and is
+not dismissed because the stratified point estimate is smaller.
+
+Across the declared target, direct measurement estimates M2=9.08596e-4 with
+empirical MCSE=8.99150e-4; stratification estimates 5.19805e-6 with MCSE=1.78096e-6.
+These measure the **same** true quantity, not two improved testing proposals.
+Their different tail realizations rule out interpreting that gap as variance
+reduction or a natural-risk change.
+
+### Uncertainty guard outcome
+
+None of the 33 states passes the predeclared relative-precision check. For
+example, the 95% state interval at 230053 is approximately
+`[5.04315e-7, 7.56121]`. The large upper bound reflects unmeasured event
+probability in coefficient-heavy zero-event strata. It is conservative, but
+it correctly prevents treating the small empirical MCSE as a precision proof.
+
+On the common stratified measurements, first-allocation and updated-allocation
+M2 ratios to target-IID are 1.78381 and 0.44601, respectively. The diagnostic
+measurement-fitted candidate gives 0.17827. **None is certified**: every
+nontrivial simultaneous M2-difference interval includes zero. The fitted
+candidate is not deployed and its in-sample contrast MCSE remains undefined.
+The self-comparison has only floating-point roundoff (difference below 1e-21),
+not evidence of a target-law change.
+
+An additional, explicitly **post-hoc** same-probe diagnostic estimates what
+the direct estimator's variance would be using those same measurements:
+
+`T_hat = sum_h C_h * mean_Gh(Y*w_A^2)`
+
+`V_direct_hat = (T_hat - J_hat^2 + V_hat(J_hat))/128`.
+
+The `+V_hat` term removes the bias from squaring J_hat. This is not another
+native experiment and not a new primary estimate. Its stratified/direct
+variance point ratio is 0.04763 at 200053, but 0.70588 at 200051. It shares the
+probe design's missed-region limitation, particularly at 230053, and provides
+no variance-ratio confidence claim. Negative finite variance reconstructions
+are retained, with ratios suppressed rather than clipped into success.
+
+### Verification and decision
+
+The independent read-only auditor reconstructs all 35 artifact hashes, all
+8,448 measurement records, coefficient corrections, direct likelihoods, J and
+variance estimates, beta-quantile confidence bounds and common-probe contrasts.
+Maximum direct log-weight discrepancy is 1.42e-14. Eight protected training,
+validation and prior-experiment artifacts are unchanged. All 110 relevant
+regression tests and frozen-code/assets verification passed.
+Sixty-six existing-seed native replays (one direct draw and one probe per
+state, prioritizing the largest observed contributions) also reproduced their
+stored endpoints. They add no new observations and are not pooled as data.
+
+```bash
+python -m scenario_reconstruction.highd_v47_state_moments_audit
+```
+
+**Decision:** known-action weight noise and false zero-event certainty are
+addressed by the implementation, but reliable state-level second moments are
+**not yet established**. Do not promote the fitted state proposal, use the
+smaller stratified M2 as a variance win, or append favorable repeats. The next
+measurement design must handle uncertainty in the *remaining action region*,
+not only replay known tails: coefficient/uncertainty-aware measurement budgets
+or explicit action coverage are candidates, with a declared cost cap and
+independent measurements. They are not implemented or validated results here.
+NDE, Q_A, production Q_S and PPO remain unchanged.
+
+Compact evidence: [highd_v47_state_moments_v1.json](../results/highd_v47_state_moments_v1.json).
+The immutable summary SHA is
+`931b50da9a07f9a06490a034bae3384fb5f48a76e4b6d2afbd66d06ebe2e0ee9`.

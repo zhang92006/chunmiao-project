@@ -123,6 +123,18 @@ def test_incomplete_or_duplicate_measurement_rejected():
             estimate_state(h, rows, .95, 1)
 
 
+def test_same_probe_direct_variance_subtracts_unbiased_J_squared():
+    from scenario_reconstruction.highd_v47_state_moments_audit import implied_direct_variance
+    n, probability = 4, .2
+    strata = [{'stratum_id': 0, 'draws': n, 'coefficient_mass': 1.}]
+    values = []
+    for k in range(n+1):
+        phat = k/n
+        probes = [{'stratum_id': 0, 'event_result': j < k, 'P_action': 1., 'target_QA_action': 1.} for j in range(n)]
+        values.append(implied_direct_variance(strata, probes, phat, phat*(1-phat)/(n-1), n))
+    assert np.isclose(binom.pmf(np.arange(n+1), n, probability)@values, probability*(1-probability)/n)
+
+
 def test_two_state_run_saves_complete_fixed_plan_before_outcomes(tmp_path, monkeypatch):
     from scenario_reconstruction import highd_v47_state_moments as module
     from scenario_reconstruction.highd_v46_assets import save, read
