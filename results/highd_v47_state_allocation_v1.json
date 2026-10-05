@@ -1,0 +1,39 @@
+{
+  "scope": "Fixed 25-source/33-state training target, unchanged action teacher Q. Two separate pre-frozen development experiments; no population acceleration or source-generalization claim",
+  "target_sha256": "4bd0e5ff538d62c3717ad7f0a11b864e7b6b68e7c3878748a5549e299b2e02c0",
+  "first_experiment": {
+    "code_commit": "2f660eb015a9015ea870e52352a3d76b2e6da12b",
+    "summary_sha256": "a816d1183722f8df0d39be0522d259d0172de1e39026b624eb13673e20414ffd",
+    "state_floor": 0.2,
+    "draws_per_arm": 2112,
+    "events": {"target_iid": 64, "allocated_iid": 516, "equal_state_stratified": 66},
+    "means": {"target_iid": 0.00005027295078268657, "allocated_iid": 0.0006606438128904787, "equal_state_stratified": 0.0001907003182538436},
+    "estimator_variances": {"target_iid": 6.713624868006208e-10, "allocated_iid": 1.7092054022719014e-7, "equal_state_stratified": 1.3864675051414911e-8},
+    "allocated_variance_ratios": {"target_iid": 254.58756422586598, "equal_state_stratified": 12.327771086834627},
+    "failure": "Zero pilot events at state 19/source 200053 led to low Q_S. Two independent new native events had total weights 0.546387 and 0.681264. State LR was 3.02161; likelihood remained valid.",
+    "wall_s": 305.642664292
+  },
+  "explicit_update": {
+    "code_commit": "2dd0fa792a77916892a71e38d08532f894b11bee",
+    "summary_sha256": "0a50edb8530818ba30d45626b56aed74caecd95d953f4fa22a5694df8c0cb0d3",
+    "state_floor": 0.5,
+    "raw_fitting_rows": 8448,
+    "unique_state_seed_fitting_rows": 8135,
+    "duplicate_CRN_rows_not_counted": 313,
+    "source_Q": {"200051": 0.14410928285914912, "200053": 0.39589071714085095, "each_other_source": 0.02},
+    "target_mass_each_source": 0.04,
+    "maximum_state_LR": 2.0,
+    "draws_per_arm": 2112,
+    "events": {"target_iid": 63, "allocated_iid": 116, "equal_state_stratified": 60},
+    "means": {"target_iid": 0.00007904698480150062, "allocated_iid": 0.00011591176799487083, "equal_state_stratified": 0.00011352659568998985},
+    "estimator_variances": {"target_iid": 6.14475745179596e-10, "allocated_iid": 1.358694833719169e-9, "equal_state_stratified": 2.4408720227575865e-9},
+    "allocated_variance_ratios": {"target_iid": 2.211144775652709, "equal_state_stratified": 0.5566432082679112},
+    "maximum_source_M2_shares": {"target_iid": 0.6529943456294366, "allocated_iid": 0.6278222831872616, "equal_state_stratified": 0.9074203526969822},
+    "wall_s": 302.742292666
+  },
+  "verification": {"native_draws_reconstructed": 12672, "artifact_hashes_verified": 10, "maximum_full_state_action_log_error": 2.842170943040401e-14, "tests_passed": 51, "frozen_assets_verified": true},
+  "decision": "State allocation and complete likelihood implemented. Updated allocation improves the fixed-stratum variance point but not target-IID; no stable winner, source generalization or PPO readiness. Both outcomes retained without selective restart.",
+  "production_Q_A_changed": false,
+  "validation_used_for_fitting": false,
+  "ppo_trained": false
+}

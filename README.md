@@ -57,6 +57,10 @@ The [V47 event-source diagnosis and action teacher](docs/highd_v47_event_source_
 separates strict cooperative testing eligibility from collision-label access.
 Risk-bin exploration expands labelled event sources, without claiming that
 natural-risk concentration or probability-model generalization is solved.
+The [V47 state-allocation experiment](docs/highd_v47_state_allocation.md)
+adds Q_S with complete state/action likelihood correction while keeping the
+conditional target and action proposal fixed. Its guarded update has mixed
+fixed-bank variance results and is not a validated production policy.
 The frozen NDE tag is `nde-v46-frozen-20261003`; training code is on
 `feature/highd-v46-d2rl-handoff`. This path needs Python 3.9 and the V46 LFS
 archive, with no SUMO or raw highD tracks. The fixed IDM CAV does not change lanes.

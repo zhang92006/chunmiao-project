@@ -136,3 +136,61 @@ repeat-until-positive rule or automatic subsequent run.
 python -m scenario_reconstruction.highd_v47_state_allocation_update freeze --output outputs/v47_state_allocation_update_v1_lock.json
 python -m scenario_reconstruction.highd_v47_state_allocation_update run --lock outputs/v47_state_allocation_update_v1_lock.json --output outputs/v47_state_allocation_update_v1
 ```
+
+## Completed update: mixed evidence, not a validated winner
+
+Implementation `2dd0fa7` froze the update before opening any 4900000-series
+continuation. The fitting input contained 8,448 rows, of which 313 repeated
+the same physical state/seed across CRN arms; only 8,135 unique rows entered
+the tabular fit. All negative observations and states were retained. The
+resulting source probabilities are 0.395891 for 200053, 0.144109 for 200051,
+and 0.02 for each of the other 23 sources. Target mass remains 0.04/source.
+The largest state LR is exactly two. These are fitted bank lookup values,
+not predictions for new episodes.
+
+The complete second comparison retained all 6,336 draws in 302.74 s:
+
+| Arm (2,112 draws each) | CAV events | Conditional mean | Conditional MCSE | Estimator variance | Largest source M2 share |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Target IID | 63 | 7.90470e-5 | 2.47886e-5 | 6.14476e-10 | 65.30% |
+| Updated allocated IID | 116 | 1.15912e-4 | 3.68605e-5 | 1.35869e-9 | 62.78% |
+| Equal-state stratified | 60 | 1.13527e-4 | 4.94052e-5 | 2.44087e-9 | 90.74% |
+
+Updated allocation's variance point estimate is 0.55664 times the old fixed-
+stratum design (44.34% lower), but **2.21114 times target-IID**, which had no
+observed event from 200053 in this schedule. Allocated IID observed that source;
+the stratified arm's seven event sources instead include 200034 and not 200053.
+Thus source-tail realizations still differ materially even with matched target
+and budget. The point ordering does not establish a universally better state
+proposal, and no variance-ratio confidence or acceleration claim is made.
+
+In particular, comparing the old pilot's 99.54% directly to this allocated
+arm's 62.78% would overstate the intervention: target-IID also had 65.30% in
+this batch. State concentration alone is not a stable objective or a reliable
+estimate of which sources dominate true natural conditional risk. All reported
+means retain exact target and action correction; changing the target to make
+sources look balanced was never performed. The stratified pooled M2 uses its
+fixed-design weights, while its variance uses within-stratum variances, as
+specified above; these two quantities must not be interchanged.
+
+Independent reconstruction verified all five artifacts in each experiment,
+all 12,672 scheduled native draws, initial action/partner likelihood replay,
+endpoint labels, full state/action log weights, means and estimator variances.
+Maximum full log-weight reconstruction error was 2.84e-14 in each run. The
+teacher pilot, failed first run and consumed validation summaries are unchanged.
+All 51 allocation/teacher regression tests and frozen-code/asset verification
+passed. The completed update summary SHA is
+`0a50edb8530818ba30d45626b56aed74caecd95d953f4fa22a5694df8c0cb0d3`.
+
+**Decision:** Q_S and its full likelihood are now implemented and exercised;
+the earlier omission of state allocation is addressed. Stable variance
+superiority and source generalization are **not** established. Retain both
+experiments and all baselines, keep production/PPO unchanged, and do not repeat
+this comparison until a favorable ordering appears. A later design should
+predeclare a common-draw, correctly reweighted moment comparison to reduce
+tail-realization mismatch, and assess state-moment uncertainty on independent
+sources before proposing a transferable state model. This is a next research
+design, not an extra run or an analysis substituted for the results above.
+
+Compact evidence:
+[highd_v47_state_allocation_v1.json](../results/highd_v47_state_allocation_v1.json).
