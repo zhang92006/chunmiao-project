@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "contract": "normalized_risk_interaction_H_v1",
+  "scope": "Training-only opt-in proposal score comparison; frozen selected pairs and source-then-state target; no PPO or validation fitting",
+  "split": "train",
+  "discovery_config": "configs/highd_v46_discovery_v2.json",
+  "training_locks": [
+    {"path": "outputs/v46_native_calibration_v1_train", "config": "configs/highd_v46_native_calibration_v1.json", "summary_sha256": "f8b1334db8901e009a9e1b190a5c4e157a8bc2e64964f8af41d81d96b27ac131"},
+    {"path": "outputs/v46_training_expansion_v1", "config": "configs/highd_v46_training_expansion_v1.json", "summary_sha256": "6cd41910ab556c0aa5ad4da262808f0bff1e9d65296b08484fff0e266eccdef3"}
+  ],
+  "expected_cases": 31,
+  "expected_sources": 24,
+  "conditional_law": "Uniform source, then uniform locked eligible cases within source",
+  "candidates": {"interaction": 1.0, "absolute_risk": 0.0, "mixed": 0.5},
+  "score": "H_R=P*R/sum(P*R), H_I=P*positive_interaction/sum(P*positive_interaction), H_lambda=(1-lambda)*H_R+lambda*H_I",
+  "zero_component_mass": "Use P for that component before mixing",
+  "epsilon": [0.1, 0.1],
+  "replicates_per_case_candidate": 64,
+  "continuation_seed_start": 4100000,
+  "forbidden_continuation_ranges": [[1300000, 3999999]],
+  "horizon_s": 4,
+  "later_actions": "Unchanged natural NDE; only initial decision is tilted",
+  "fixed_budget": "Every locked eligible training case including zero-event cases; no substitutions or outcome-dependent extension. All three proposals share the case-indexed 64-seed block, different cases use disjoint blocks. Shared seeds are a pairing device, not independent replications across candidates.",
+  "statistics": {"confidence": 0.9, "bootstrap_repeats": 2000, "bootstrap_seed": 137, "minimum_events": 20, "minimum_event_sources": 5, "minimum_effective_factor_tv": 0.001, "maximum_source_share": 0.8, "minimum_effective_second_moment_sources": 3.0},
+  "environment": {"python": "3.9.19", "numpy": "1.23.1", "scipy": "1.13.1", "OPENBLAS_NUM_THREADS": 1, "OMP_NUM_THREADS": 1}
+}

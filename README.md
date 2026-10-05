@@ -45,6 +45,9 @@ source-episode uncertainty and per-source second-moment contributions.
 Its [collision-action coverage audit](docs/highd_v46_source_selector_validation.md#post-hoc-collision-action-coverage-audit-2026-10-05)
 decomposes observed likelihood tails and reconstructs the interaction score
 of the dominant collision action before changing the proposal.
+The opt-in [fixed-bank proposal comparison](docs/highd_v46_proposal_comparison.md)
+tests normalized absolute-risk/interaction H scores on training cases only,
+with matched-state IS moments and source-cluster uncertainty before fresh validation.
 The frozen NDE tag is `nde-v46-frozen-20261003`; training code is on
 `feature/highd-v46-d2rl-handoff`. This path needs Python 3.9 and the V46 LFS
 archive, with no SUMO or raw highD tracks. The fixed IDM CAV does not change lanes.
