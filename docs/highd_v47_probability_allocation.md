@@ -139,3 +139,79 @@ and per-case Q matrices stay in ignored outputs. Only compact evidence is
 committed. Later native comparison must freeze the model and sampler identity
 before its outcomes, use a fixed budget and held-out sources, and keep the
 original-initialization evaluation separate from this conditional target.
+
+## Completed training audit, 2026-10-05
+
+Implementation/configuration `b37161b` was committed and frozen before the
+audit. All 13,888 observations, 31 states and 24 complete source folds were
+retained; no continuation was generated. The seven component event counts were
+0/12/2/31/30/1/18 in protocol order. They are correlated behavior observations,
+not 94 independent accidents or new-Q event counts. Their union contains only
+two event-bearing sources, 200017 and 200051; the least supported held-out fits
+contain only one event-bearing source. The source-diversity review guard fails.
+
+| Candidate | Predicted conditional M2 | Corrected off-policy M2 | Off-policy ratio to fixed mixture |
+| --- | ---: | ---: | ---: |
+| V46 interaction | 2.06103e-4 | 3.78644e-6 | 1.2735 |
+| V46 absolute risk | 2.98650e-5 | 7.87901e-6 | 2.6501 |
+| V46 50/50 mixture | 4.57943e-5 | 2.97314e-6 | 1 |
+| Calibrated-linear H | 2.97212e-5 | 1.01634e-5 | 3.4184 |
+| Optimized first factor | 2.92787e-5 | 9.90271e-6 | 3.3307 |
+| Optimized two factors | 2.88300e-5 | 5.08457e-5 | 17.1017 |
+
+The allocation minimizes its fitted objective on every case, but the corrected
+held-out observations favor the fixed mixture over this first calibrated
+candidate. These are training-only point diagnostics; they neither measure new-Q
+event rates nor establish a statistically significant population ordering.
+They must not be compared directly with the previous single-component/native
+M2 table as though the same samples or estimator were used. The record retains
+each component's separate estimate; their differences show substantial sampling
+uncertainty. No source interval or acceleration estimate is reported.
+
+The weighted held-out Brier score of the bin calibrator was 1.04080e-4 versus
+9.93434e-5 for the held-out global-probability baseline. Its log loss was
+0.00120224 versus 0.00124734. Neither metric alone warrants promotion: allocation
+depends particularly on errors in the event-producing action region. The raw
+clearance score had Brier 0.00719550 and log loss 0.0604078; that large scale
+miscalibration is consistent with its original role as a clearance score.
+
+At source 200051, case 18, actions [0,20], the held-out model assigns probability
+1e-6 despite a raw proxy score 0.488306. Its fitting events come only from source
+200017. The optimized Q for that action is 0.00177333, compared with 0.0244907
+under the fixed mixture and natural P=0.00184777. A retained old-dual event at
+seed 2501188 then has candidate LR 1.04198 and a large corrected M2 contribution.
+Actions [0,23] at seed 2501211 exhibit the same problem. The probability floor
+is a regularization output, not evidence that the native event probability is
+1e-6. Coarse score bins and these two event sources do not identify a transferable
+state/action collision model. Optimizing that estimate can intensify incorrect
+probability allocation even though its numerical solution is exact.
+
+Independent reconstruction verified all 34 output artifact hashes, all source
+exclusions, all 186 Q matrices, all corrected sample/component/source moments,
+and the bin fits. Maximum bin-probability reconstruction error was 5.72e-15;
+maximum relative allocation KKT residual was 9.27e-16. Six protected earlier
+training/validation manifests and summaries remained unchanged. All 35 new
+tests and 100 relevant regression tests passed; frozen code/assets verified.
+Local audit wall time was 4.01 s, excluding implementation tests and the later
+independent audit. This is an offline calculation cost, not testing acceleration.
+
+**Decision:** the probability-allocation implementation is ready for further
+research, while this coarse probability calibrator is not a validated proposal.
+Keep the failed candidate and all observations in the record. Do not promote
+it, start PPO, reinterpret the fitting artifacts as independent validation, or
+retune on consumed V46 validation cohorts.
+
+The next V47 experiment should measure native conditional collision probabilities
+across predeclared action/risk strata on independent training sources and compare
+state/action features that can distinguish the mechanisms hidden by coarse bins.
+It should also test uncertainty-aware protection of a frozen reference Q. For
+example, a pointwise joint bound `Q_new >= rho*Q_reference` guarantees
+`J(Q_new) <= J(Q_reference)/rho` for any true conditional event probabilities.
+This bounds M2, not the ratio of centered variances. A convex **joint-Q** mixture
+can enforce the bound while preserving the linear factor-floor constraints;
+it is different from adding a per-factor natural-H floor. No rho has been
+selected or evaluated here. Such a candidate needs its own versioned protocol,
+training-side assessment and subsequently frozen native evaluation.
+
+Compact reproducible evidence:
+[highd_v47_probability_allocation_v1.json](../results/highd_v47_probability_allocation_v1.json).

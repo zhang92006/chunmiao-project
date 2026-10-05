@@ -1,0 +1,395 @@
+{
+  "date": "2026-10-05",
+  "status": "completed_training_audit_no_native_promotion",
+  "code_commit": "b37161b23806af09574c566a8b149277ec7505c5",
+  "config_sha256": "b650ca3ab53e28e1e3c223e43b1d0a161d73805b60f33714bcfe355f6e0d427d",
+  "implementation_sha256": "1341868b934393a64ecb453e7fa46d2b67cef363e695395c12bf6a679d05c236",
+  "allocation_sha256": "445e0f96c78e71ee54240e017ff67051622076284d484e85b4700886e441a593",
+  "rule_lock_sha256": "e43240b6ab9db98c906759a11b9dd4a5cc9750111cca205a235d31f148550d6b",
+  "proposal_structure_sha256": "13180383d92eb89bebb5362c78c65299784223b1edcf5058e446199548f8fc49",
+  "conditional_target_sha256": "526d6412475043a31bd72cb1620a1cd90fad6d087084a5c1e75d956c9c124257",
+  "observation_table_sha256": "227dba58e431483de2b7d185c91e9b095a95a888e34a9978020bec598c3891d8",
+  "natural_target_sha256": "106a9fbc795c75c9d4f60a880da7264cb626f9163e5ec073b720e6b48c6f9db5",
+  "physical_target_sha256": "ab84bb18d3d649be86ff4d3f568e1562079fae656dd7004b726645affe4e07fe",
+  "summary_path": "outputs/v47_probability_allocation_v1_train/summary.json",
+  "summary_sha256": "c6eaecc6333d57a96a07163903e0d3ea2027c0f65bb2e8c67fa40aa5ae6b1c6f",
+  "protocol": "configs/highd_v47_probability_allocation_v1.json",
+  "environment": {
+    "python": "3.9.19",
+    "numpy": "1.23.1",
+    "scipy": "1.13.1",
+    "OPENBLAS_NUM_THREADS": 1,
+    "OMP_NUM_THREADS": 1
+  },
+  "cases": 31,
+  "source_episodes": 24,
+  "behavior_rows": 13888,
+  "behavior_components": {
+    "old_natural": {
+      "rows": 1984,
+      "events": 0,
+      "event_sources": []
+    },
+    "old_first_factor_only": {
+      "rows": 1984,
+      "events": 12,
+      "event_sources": [
+        200051
+      ]
+    },
+    "old_second_factor_only": {
+      "rows": 1984,
+      "events": 2,
+      "event_sources": [
+        200017,
+        200051
+      ]
+    },
+    "old_dual": {
+      "rows": 1984,
+      "events": 31,
+      "event_sources": [
+        200017,
+        200051
+      ]
+    },
+    "new_interaction": {
+      "rows": 1984,
+      "events": 30,
+      "event_sources": [
+        200017,
+        200051
+      ]
+    },
+    "new_absolute_risk": {
+      "rows": 1984,
+      "events": 1,
+      "event_sources": [
+        200051
+      ]
+    },
+    "new_mixed": {
+      "rows": 1984,
+      "events": 18,
+      "event_sources": [
+        200017,
+        200051
+      ]
+    }
+  },
+  "calibration": {
+    "metrics": {
+      "raw_clearance": {
+        "weighted_Brier": 0.0071954997892611245,
+        "weighted_log_loss": 0.06040778199837228
+      },
+      "source_held_out_global": {
+        "weighted_Brier": 0.00009934341344222326,
+        "weighted_log_loss": 0.0012473447523649356
+      },
+      "source_held_out_bins": {
+        "weighted_Brier": 0.00010408021012664069,
+        "weighted_log_loss": 0.0012022379837657898
+      }
+    },
+    "out_of_fold_bins": [
+      {
+        "weighted_mass": 0.9839620056176345,
+        "weighted_events": 0,
+        "weighted_prediction": 9.839620056176305e-7,
+        "observed_probability": 0,
+        "mean_prediction": 9.99999999999996e-7
+      },
+      {
+        "weighted_mass": 0.000023628841882744143,
+        "weighted_events": 0,
+        "weighted_prediction": 2.4192760915075488e-9,
+        "observed_probability": 0,
+        "mean_prediction": 0.0001023865707643639
+      },
+      {
+        "weighted_mass": 0.0016685391216641635,
+        "weighted_events": 0,
+        "weighted_prediction": 7.348043776300699e-8,
+        "observed_probability": 0,
+        "mean_prediction": 0.00004403878627054261
+      },
+      {
+        "weighted_mass": 0.00003897367331075084,
+        "weighted_events": 0.000004843063669821215,
+        "weighted_prediction": 6.401096228882117e-8,
+        "observed_probability": 0.12426500399912939,
+        "mean_prediction": 0.0016424154269072664
+      },
+      {
+        "weighted_mass": 0.007805190621600404,
+        "weighted_events": 0.00004387464100117839,
+        "weighted_prediction": 0.00018767591825838217,
+        "observed_probability": 0.005621213257720819,
+        "mean_prediction": 0.02404501406269312
+      },
+      {
+        "weighted_mass": 0.0001989432220126684,
+        "weighted_events": 0.00004135430029508029,
+        "weighted_prediction": 0.000005779806725388974,
+        "observed_probability": 0.20786986295239004,
+        "mean_prediction": 0.029052544072202292
+      },
+      {
+        "weighted_mass": 0,
+        "weighted_events": 0,
+        "weighted_prediction": 0,
+        "observed_probability": null,
+        "mean_prediction": null
+      },
+      {
+        "weighted_mass": 0.00021887708930208352,
+        "weighted_events": 0.000005406558844325187,
+        "weighted_prediction": 0.0000011750563809000557,
+        "observed_probability": 0.02470134659394761,
+        "mean_prediction": 0.00536856728425468
+      },
+      {
+        "weighted_mass": 0,
+        "weighted_events": 0,
+        "weighted_prediction": 0,
+        "observed_probability": null,
+        "mean_prediction": null
+      },
+      {
+        "weighted_mass": 0.000004843833122694757,
+        "weighted_events": 0.000003857514677266173,
+        "weighted_prediction": 3.8164044245023113e-11,
+        "observed_probability": 0.7963764604508364,
+        "mean_prediction": 0.000007878893281069809
+      }
+    ],
+    "event_sources": [
+      200017,
+      200051
+    ],
+    "minimum_fit_event_sources_across_folds": 1,
+    "source_diversity_review_guard_passed": false,
+    "shared_seed_blocks": 3968,
+    "scope": "Source-cross-fitted training diagnostics; smoothing is not a posterior and no source-bootstrap interval is asserted"
+  },
+  "reports": {
+    "interaction": {
+      "offpolicy_conditional_M2": 0.000003786437189122849,
+      "plugin_conditional_M2": 0.00020610312745521082,
+      "offpolicy_M2_ratio_to_interaction": 1,
+      "offpolicy_M2_ratio_to_mixed": 1.2735480883561432,
+      "maximum_source_M2_share": 0.9769598899418186,
+      "source_weighted_factor_TV": [
+        0.639025786779696,
+        0.5635267677872079
+      ],
+      "maximum_paired_seed_block_contribution_share": 0.3722331700545782,
+      "candidate_action_LR_range_at_logged_events": [
+        0.0007006725731389797,
+        0.11737380920036282
+      ],
+      "by_behavior_component_M2": {
+        "old_natural": 0,
+        "old_first_factor_only": 0.000005952860573775568,
+        "old_second_factor_only": 0.0000010750195843093167,
+        "old_dual": 0.000018452503829244918,
+        "new_interaction": 2.2297028346852456e-7,
+        "new_absolute_risk": 3.1886860732050697e-7,
+        "new_mixed": 4.828374457411154e-7
+      }
+    },
+    "absolute_risk": {
+      "offpolicy_conditional_M2": 0.000007879011572599521,
+      "plugin_conditional_M2": 0.000029865010265361043,
+      "offpolicy_M2_ratio_to_interaction": 2.0808509897465752,
+      "offpolicy_M2_ratio_to_mixed": 2.6500638001457397,
+      "maximum_source_M2_share": 0.5815912393848756,
+      "source_weighted_factor_TV": [
+        0.11936958601586486,
+        0.02439220145279219
+      ],
+      "maximum_paired_seed_block_contribution_share": 0.19291061348487476,
+      "candidate_action_LR_range_at_logged_events": [
+        0.028612425730356914,
+        0.44562057955654033
+      ],
+      "by_behavior_component_M2": {
+        "old_natural": 0,
+        "old_first_factor_only": 0.000004716685670177087,
+        "old_second_factor_only": 0.000016456910638167703,
+        "old_dual": 0.000016751954600503312,
+        "new_interaction": 0.0000047146560001775495,
+        "new_absolute_risk": 0.000001690798326466815,
+        "new_mixed": 0.000010822075772704142
+      }
+    },
+    "mixed": {
+      "offpolicy_conditional_M2": 0.000002973140334269015,
+      "plugin_conditional_M2": 0.00004579425414939978,
+      "offpolicy_M2_ratio_to_interaction": 0.7852078842902346,
+      "offpolicy_M2_ratio_to_mixed": 1,
+      "maximum_source_M2_share": 0.9436282000692862,
+      "source_weighted_factor_TV": [
+        0.37183388948918006,
+        0.28870124686970555
+      ],
+      "maximum_paired_seed_block_contribution_share": 0.31766236141905546,
+      "candidate_action_LR_range_at_logged_events": [
+        0.001366962548456121,
+        0.07923142606732178
+      ],
+      "by_behavior_component_M2": {
+        "old_natural": 0,
+        "old_first_factor_only": 0.000004310699362392162,
+        "old_second_factor_only": 0.0000019919238897692547,
+        "old_dual": 0.000012689145786417835,
+        "new_interaction": 4.0853143585011497e-7,
+        "new_absolute_risk": 5.364960228665455e-7,
+        "new_mixed": 8.751858425871932e-7
+      }
+    },
+    "calibrated_linear": {
+      "offpolicy_conditional_M2": 0.000010163355062423565,
+      "plugin_conditional_M2": 0.000029721244679174493,
+      "offpolicy_M2_ratio_to_interaction": 2.6841472748100617,
+      "offpolicy_M2_ratio_to_mixed": 3.4183906307007055,
+      "maximum_source_M2_share": 0.8439011646005038,
+      "source_weighted_factor_TV": [
+        0.1814140096169399,
+        0.11860349382203748
+      ],
+      "maximum_paired_seed_block_contribution_share": 0.19661511255646194,
+      "candidate_action_LR_range_at_logged_events": [
+        0.0010152443508746206,
+        0.3270320223028676
+      ],
+      "by_behavior_component_M2": {
+        "old_natural": 0,
+        "old_first_factor_only": 0.00001345263951713846,
+        "old_second_factor_only": 0.000004710895417999601,
+        "old_dual": 0.000034436997677892896,
+        "new_interaction": 0.000004681043381459203,
+        "new_absolute_risk": 0.000005521151477364141,
+        "new_mixed": 0.000008340757965110616
+      }
+    },
+    "allocated_first": {
+      "offpolicy_conditional_M2": 0.000009902708359446828,
+      "plugin_conditional_M2": 0.00002927865041225497,
+      "offpolicy_M2_ratio_to_interaction": 2.6153103471236636,
+      "offpolicy_M2_ratio_to_mixed": 3.3307234930373837,
+      "maximum_source_M2_share": 0.7589472732015827,
+      "source_weighted_factor_TV": [
+        0.10079383923949968,
+        0
+      ],
+      "maximum_paired_seed_block_contribution_share": 0.26728324525540487,
+      "candidate_action_LR_range_at_logged_events": [
+        0.08179672612644251,
+        0.4078727431269165
+      ],
+      "by_behavior_component_M2": {
+        "old_natural": 0,
+        "old_first_factor_only": 0.000007500619785608902,
+        "old_second_factor_only": 0.000023750349663235623,
+        "old_dual": 0.00002148840532386606,
+        "new_interaction": 0.000005060167585209626,
+        "new_absolute_risk": 0.0000027138523667532306,
+        "new_mixed": 0.000008805563791454372
+      }
+    },
+    "allocated_dual": {
+      "offpolicy_conditional_M2": 0.00005084567318824421,
+      "plugin_conditional_M2": 0.000028829951047736106,
+      "offpolicy_M2_ratio_to_interaction": 13.428368317928685,
+      "offpolicy_M2_ratio_to_mixed": 17.101672801040277,
+      "maximum_source_M2_share": 0.9872098863137091,
+      "source_weighted_factor_TV": [
+        0.068993123838635,
+        0.022991698251180387
+      ],
+      "maximum_paired_seed_block_contribution_share": 0.2460815658029042,
+      "candidate_action_LR_range_at_logged_events": [
+        0.006891755791525253,
+        1.0419777721768344
+      ],
+      "by_behavior_component_M2": {
+        "old_natural": 0,
+        "old_first_factor_only": 0.0000777932901615803,
+        "old_second_factor_only": 0.000006542503080778924,
+        "old_dual": 0.0001931716233842073,
+        "new_interaction": 0.000014083380718533374,
+        "new_absolute_risk": 0.00003457074600706083,
+        "new_mixed": 0.000029758168965548755
+      }
+    }
+  },
+  "wall_s": 4.0056417920000005,
+  "protected_previous_artifacts_verified": 6,
+  "previous_manifests_and_summaries_unchanged": true,
+  "new_native_continuations": 0,
+  "validation_sources_opened": false,
+  "ppo_trained": false,
+  "production_replaced": false,
+  "automatically_selected_candidate": null,
+  "new_Q_event_counts": null,
+  "source_generalization_intervals": null,
+  "population_acceleration": null,
+  "new_tests_passed": 35,
+  "relevant_regression_tests_passed": 100,
+  "frozen_code_and_assets_verified": true,
+  "scope": "Training-side source-cross-fitted allocation audit on fixed cases, averaging separately corrected behavior estimates. No new native event rate or statistical generalization claim.",
+  "decision": "Analytic probability allocation and exact natural-partner likelihood are verified. Coarse collision calibration does not transfer across the two event-bearing training sources; dual allocation has worse corrected held-out M2 than the V46 mixed comparator. Preserve as an opt-in research implementation, not a trained or validated baseline. Do not tune on consumed validation.",
+  "next_training_direction": "Measure source-disjoint native conditional collision probabilities across action/risk strata and independent sources; evaluate uncertainty-aware reference-proposal mass protection before promoting optimized allocations.",
+  "independent_audit": {
+    "artifact_hashes_verified": 34,
+    "observations_verified": 13888,
+    "source_folds_verified": 24,
+    "case_Q_matrices_verified": 186,
+    "max_calibration_reconstruction_error": 5.7245874707234634e-15,
+    "max_relative_KKT_residual": 9.270046618961755e-16
+  },
+  "allocation_error_witnesses": [
+    {
+      "source_seed": 200051,
+      "case_id": 18,
+      "component": "old_dual",
+      "seed": 2501188,
+      "action": [
+        0,
+        20
+      ],
+      "proxy_R": 0.4883061045897846,
+      "calibrated_probability": 0.000001,
+      "p": 0.001847770749661365,
+      "q_allocated": 0.0017733302945619645,
+      "q_mixed": 0.02449073672251114,
+      "candidate_LR": 1.0419777721768342,
+      "heldout_fit_event_sources": [
+        200017
+      ],
+      "offpolicy_contribution": 0.00001137471170224171
+    },
+    {
+      "source_seed": 200051,
+      "case_id": 18,
+      "component": "old_dual",
+      "seed": 2501211,
+      "action": [
+        0,
+        23
+      ],
+      "proxy_R": 0.45608865643079594,
+      "calibrated_probability": 0.000001,
+      "p": 0.00017018941115302054,
+      "q_allocated": 0.0001633330534464968,
+      "q_mixed": 0.0021654411337071184,
+      "candidate_LR": 1.0419777721768342,
+      "heldout_fit_event_sources": [
+        200017
+      ],
+      "offpolicy_contribution": 0.000011374711702241708
+    }
+  ]
+}
