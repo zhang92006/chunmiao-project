@@ -115,3 +115,52 @@ python -m scenario_reconstruction.highd_v47_action_teacher freeze --output outpu
 python -m scenario_reconstruction.highd_v47_action_teacher run --lock outputs/v47_action_teacher_v1_lock.json --output outputs/v47_action_teacher_v1_train
 python -m pytest tests/test_highd_v47_action_teacher.py tests/test_highd_v47_event_source_diagnosis.py tests/test_highd_v46_cross_unit.py tests/test_highd_v46_multistate_q.py -q
 ```
+
+## Completed teacher evidence
+
+The teacher design was committed/frozen on `839e162` before its new outcomes.
+All 33 cases from 25 training sources completed 64 draws each (2,112 total)
+in 118.79 s. Original negative cases were not dropped; two extra cases came
+from the declared whole-bank risk selection, not native event labels. This
+adds only one source to the old 24-source selected-case union: 230053 already
+had other, non-event states in that union, whereas 230013 was absent.
+
+| Source | Teacher CAV events | Share of teacher conditional M2 |
+| --- | ---: | ---: |
+| 200002 | 9 | 1.29e-21 |
+| 200017 | 10 | 2.00e-11 |
+| 200020 | 1 | 4.36e-7 |
+| 200041 | 5 | 3.44e-26 |
+| 200047 | 5 | 2.40e-28 |
+| 200051 | 21 | 0.995442 |
+| 230053 | 16 | 0.00455718 |
+
+Shares above are fractions, not percentages. All other source rows, with zero
+observed events, remain in the conditional target and artifacts. There are 67
+sampled events across **seven** source episodes, without forcing an adverse
+action. These are labels from existing independent traffic episodes, not seven
+newly generated source episodes or an independent validation cohort.
+
+The improvement is in action-conditioned label coverage, not natural-risk
+variance. Source 200051 still supplies **99.5442%** of empirical M2. At sources
+200002/200041/200047, even the largest natural probability of a sampled event
+action is only 3.48e-14/1.80e-16/3.90e-17. Giving their labels equal raw counting
+weight cannot be presented as balanced natural-risk contributions. Source
+200020's event action instead has P=5.55e-6; source 230053 has event actions up
+to P=2.93e-5. The teacher also samples a different, much lower-P event region
+at source 200017 than the old Q. No point-count source guard automatically
+promotes this teacher to a testing proposal or repairs the failed bin model.
+
+Teacher conditional IS mean is 9.59139e-5 and M2 2.71005e-6 under its explicit
+25-source/33-state law. They are not a same-target improvement comparison with
+the old 24-source/31-state bank. The new data can support action-conditional
+model development, but cross-source calibration, meaningful natural-risk
+coverage and an independent evaluation remain unresolved.
+
+Independent read-only reconstruction checked all 46 diagnostic and 68 teacher
+artifact hashes, action distributions, seeds, labels, case masses and moment
+calculations. Maximum reconstructed likelihood-log errors were 8.88e-16 and
+1.42e-14. Seven protected earlier artifacts remained unchanged; all 36 relevant
+tests and frozen-code/assets verification passed. No forced diagnostic label
+was included in the teacher data. Compact evidence:
+[highd_v47_event_source_repair_v1.json](../results/highd_v47_event_source_repair_v1.json).

@@ -53,6 +53,10 @@ readiness; no proposal replaces production or launches PPO.
 The [V47 probability-allocation audit](docs/highd_v47_probability_allocation.md)
 adds source-held-out collision calibration and constrained second-moment
 allocation with explicit Q factors on the frozen training bank.
+The [V47 event-source diagnosis and action teacher](docs/highd_v47_event_source_diagnosis.md)
+separates strict cooperative testing eligibility from collision-label access.
+Risk-bin exploration expands labelled event sources, without claiming that
+natural-risk concentration or probability-model generalization is solved.
 The frozen NDE tag is `nde-v46-frozen-20261003`; training code is on
 `feature/highd-v46-d2rl-handoff`. This path needs Python 3.9 and the V46 LFS
 archive, with no SUMO or raw highD tracks. The fixed IDM CAV does not change lanes.
