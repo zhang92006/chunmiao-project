@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "split": "train",
+  "diagnosis_config": "configs/highd_v47_event_source_diagnosis_v1.json",
+  "case_rule": "Union of all 31 original eligible cases and all pre-outcome absolute-risk diagnostic cases; deduplicate by source/state/ordered pair, never by event",
+  "teacher_H": "Uniform nonempty supported absolute-risk bin, then uniform supported action cell within bin",
+  "risk_edges": [0.0, 0.2, 0.4, 0.6, 0.8, 1.0],
+  "epsilon": [0.1, 0.1],
+  "replicates": 64,
+  "continuation_seed_start": 4600000,
+  "horizon_s": 4,
+  "scope": "Action-conditional collision-label exploration only. Training access no longer requires strict cooperative eligibility. Production unchanged. Very low P actions may add event sources without meaningful natural risk; never equate raw source yield with IS efficiency or PPO readiness.",
+  "budget_rule": "Freeze complete positive/negative state union and action distribution before outcomes. No forced witness labels, outcome-based case substitutions, extra draws, validation fitting, or PPO export."
+}
