@@ -201,3 +201,9 @@ measurement Q_S comparisons. It improves some known-tail measurements but
 discovers another unmeasured action region; no precise state model or new
 production allocation is promoted. The original allocation results above
 remain unchanged.
+
+The subsequent [v2 measurement](highd_v47_state_moments_v2.md) explicitly covers
+coefficient-heavy actions and compares protected uncertainty budgets on two
+independent batches. It retains the complete bank, but still finds rare native
+future outcomes in previously negative singleton actions; no state passes the
+simultaneous precision gate. Neither completed measurement promotes a Q_S fit.

@@ -1,0 +1,273 @@
+{
+  "experiment": "highd_v47_state_moments_v2",
+  "date": "2026-10-05",
+  "implementation_commit": "f9b23f63499e9e99d866ea3ab78d3a9f9e2f12cb",
+  "complete": true,
+  "environment": {
+    "python": "3.9.19",
+    "numpy": "1.23.1",
+    "scipy": "1.13.1",
+    "openblas_threads": 1,
+    "omp_threads": 1
+  },
+  "config_sha256": "98b0b03c74bdf640191370b45f5b36895fc7b08ff4abf7b51b62a1c647e0c0be",
+  "summary_sha256": "38fd9eeb002da1cc4ce4d503d5d23f7ec0446d00e222fde355c7aa102ac1818d",
+  "measurement_plan_sha256": "8f465b1318d6d8408cea3ca6f4b28c8f0c9d649cf92a2667b913dbc48c7ae574",
+  "locked_design_sha256": "57c87564668b5c96035f8abe6226bedb68053aede25e427942272cd5a60985c9",
+  "artifact_hashes_verified": 68,
+  "states": 33,
+  "sources": 25,
+  "strata": 1549,
+  "coefficient_singleton_actions": 1297,
+  "logical_draws": 33792,
+  "unique_native_draws": 22234,
+  "wall_s": 375.955281042,
+  "same_probe_certified_variance_improvements": 0,
+  "regression_tests_passed": 133,
+  "frozen_code_assets_verified": true,
+  "native_seed_replays_matched": 4,
+  "arms": {
+    "equal": {
+      "events": 100,
+      "event_sources": [
+        200017,
+        200020,
+        200041,
+        200051,
+        200053,
+        230053
+      ],
+      "target_M2": 0.0010608033213365755,
+      "target_M2_empirical_MCSE": 0.0010445081015226355,
+      "precise_states": 0,
+      "selected_state_diagnostics": [
+        {
+          "state_id": 6,
+          "source_seed": 200020,
+          "J": 0.05222233804012523,
+          "estimator_variance": 0.002727172590377111,
+          "bank_simultaneous_interval": [
+            2.107102256483306e-07,
+            8.314957278887984
+          ],
+          "batch_J": [
+            0.0,
+            0.10444467608025046
+          ],
+          "relative_empirical_MCSE": 1.0,
+          "relative_batch_gap": 2.0,
+          "events": 1
+        },
+        {
+          "state_id": 18,
+          "source_seed": 200051,
+          "J": 3.874678509110908e-05,
+          "estimator_variance": 2.222001797480562e-10,
+          "bank_simultaneous_interval": [
+            2.4768142391638825e-07,
+            7.699835612084867
+          ],
+          "batch_J": [
+            5.611415254660859e-05,
+            2.1379417635609574e-05
+          ],
+          "relative_empirical_MCSE": 0.3847127050554977,
+          "relative_batch_gap": 0.8964546304764088,
+          "events": 36
+        },
+        {
+          "state_id": 19,
+          "source_seed": 200053,
+          "J": 6.355666595696588e-05,
+          "estimator_variance": 2.019724893782673e-09,
+          "bank_simultaneous_interval": [
+            2.5644271353826623e-10,
+            4.262031538242221
+          ],
+          "batch_J": [
+            6.355666595696588e-05,
+            6.355666595696588e-05
+          ],
+          "relative_empirical_MCSE": 0.7071067811865476,
+          "relative_batch_gap": 0.0,
+          "events": 2
+        },
+        {
+          "state_id": 32,
+          "source_seed": 230053,
+          "J": 0.0009198316777289924,
+          "estimator_variance": 7.005988994525016e-07,
+          "bank_simultaneous_interval": [
+            1.4150110543024463e-06,
+            7.552567072028361
+          ],
+          "batch_J": [
+            0.00011854125932732858,
+            0.0017211220961306562
+          ],
+          "relative_empirical_MCSE": 0.9099685096285377,
+          "relative_batch_gap": 1.7422544532930209,
+          "events": 45
+        }
+      ],
+      "state_proposal_comparisons": {
+        "target": {
+          "target_M2": 0.0010608033213365755,
+          "candidate_M2": 0.0010608033213365755,
+          "M2_ratio_point_only": 1.0,
+          "difference_empirical_MCSE": 0.0,
+          "M2_difference_interval": [
+            0.0,
+            0.0
+          ],
+          "certified_improvement": false
+        },
+        "first_allocation": {
+          "target_M2": 0.0010608033213365755,
+          "candidate_M2": 0.0031664988497550573,
+          "M2_ratio_point_only": 2.9850008819404694,
+          "difference_empirical_MCSE": 0.002108038762044283,
+          "M2_difference_interval": [
+            -0.3387412072809325,
+            17.417415128934053
+          ],
+          "certified_improvement": false
+        },
+        "updated_allocation": {
+          "target_M2": 0.0010608033213365755,
+          "candidate_M2": 0.0021141094254424307,
+          "M2_ratio_point_only": 1.9929325096557258,
+          "difference_empirical_MCSE": 0.0010445077233533606,
+          "M2_difference_interval": [
+            -0.37576072914652836,
+            8.54611081418586
+          ],
+          "certified_improvement": false
+        }
+      }
+    },
+    "uncertainty_allocated": {
+      "events": 100,
+      "event_sources": [
+        200017,
+        200020,
+        200041,
+        200051,
+        200053,
+        230053
+      ],
+      "target_M2": 0.0015797954527553794,
+      "target_M2_empirical_MCSE": 0.001174474394868192,
+      "precise_states": 0,
+      "selected_state_diagnostics": [
+        {
+          "state_id": 6,
+          "source_seed": 200020,
+          "J": 0.026111169020062615,
+          "estimator_variance": 0.0006817931475942776,
+          "bank_simultaneous_interval": [
+            1.0535513408089927e-07,
+            6.364602358478981
+          ],
+          "batch_J": [
+            0.0,
+            0.05222233804012523
+          ],
+          "relative_empirical_MCSE": 1.0,
+          "relative_batch_gap": 2.0,
+          "events": 1
+        },
+        {
+          "state_id": 18,
+          "source_seed": 200051,
+          "J": 0.02633832852529464,
+          "estimator_variance": 0.0006916682219098267,
+          "bank_simultaneous_interval": [
+            3.5379678569000605e-07,
+            6.274352070478509
+          ],
+          "batch_J": [
+            5.611415254660859e-05,
+            0.05262054289804267
+          ],
+          "relative_empirical_MCSE": 0.99852904254539,
+          "relative_batch_gap": 1.9957389739069646,
+          "events": 37
+        },
+        {
+          "state_id": 19,
+          "source_seed": 200053,
+          "J": 6.355666595696588e-05,
+          "estimator_variance": 2.019724893782673e-09,
+          "bank_simultaneous_interval": [
+            2.5644271353826623e-10,
+            3.1591765495416984
+          ],
+          "batch_J": [
+            6.355666595696588e-05,
+            6.355666595696588e-05
+          ],
+          "relative_empirical_MCSE": 0.7071067811865476,
+          "relative_batch_gap": 0.0,
+          "events": 2
+        },
+        {
+          "state_id": 32,
+          "source_seed": 230053,
+          "J": 0.0001122498436226043,
+          "estimator_variance": 2.579331049619485e-09,
+          "bank_simultaneous_interval": [
+            1.4117525683562566e-06,
+            5.228306464158548
+          ],
+          "batch_J": [
+            0.00017622384611081567,
+            4.827584113439293e-05
+          ],
+          "relative_empirical_MCSE": 0.4524470890736985,
+          "relative_batch_gap": 1.1398501846167137,
+          "events": 44
+        }
+      ],
+      "state_proposal_comparisons": {
+        "target": {
+          "target_M2": 0.0015797954527553794,
+          "candidate_M2": 0.0015797954527553794,
+          "M2_ratio_point_only": 1.0,
+          "difference_empirical_MCSE": 0.0,
+          "M2_difference_interval": [
+            0.0,
+            0.0
+          ],
+          "certified_improvement": false
+        },
+        "first_allocation": {
+          "target_M2": 0.0015797954527553794,
+          "candidate_M2": 0.0016484818754202897,
+          "M2_ratio_point_only": 1.0434780480885115,
+          "difference_empirical_MCSE": 0.0014448706375199513,
+          "M2_difference_interval": [
+            -0.26997249244308247,
+            12.912878199718286
+          ],
+          "certified_improvement": false
+        },
+        "updated_allocation": {
+          "target_M2": 0.0015797954527553794,
+          "candidate_M2": 0.0013401231256550319,
+          "M2_ratio_point_only": 0.8482890131869122,
+          "difference_empirical_MCSE": 0.0009221177800102725,
+          "M2_difference_interval": [
+            -0.2949110948797445,
+            6.330977327194234
+          ],
+          "certified_improvement": false
+        }
+      }
+    }
+  },
+  "decision": "No precise full-bank state moments; do not promote Q_S or PPO.",
+  "production_changed": false,
+  "validation_opened": false,
+  "ppo_launched": false
+}
