@@ -225,7 +225,8 @@ despite 63 events and 2,000 bootstrap replicates.
 
 Within each rule's fixed state law, the four native arms observed respectively
 4 natural, 35 first-factor-only, 4 second-factor-only and 63 dual CAV events,
-all from the same three sources. The empirical dual/first-factor second-moment
+each from three sources, but **not the same three across arms** (see the
+post-hoc support audit below). The empirical dual/first-factor second-moment
 ratio was 0.3385, a favorable point diagnostic but not a supported generalization
 or precision/acceleration claim. These factor arms are not the paper's agent.
 
@@ -278,3 +279,121 @@ validation cohort must not become fitting data.
 
 Compact reproducible evidence is recorded in
 [highd_v46_source_selector_validation_pilot_v1.json](../results/highd_v46_source_selector_validation_pilot_v1.json).
+
+## Post-hoc collision-action coverage audit, 2026-10-05
+
+The checksum-locked diagnostic in
+[highd_v46_collision_coverage_v1.json](../configs/highd_v46_collision_coverage_v1.json)
+rechecks all 65,792 existing probabilistic sequences, including zero-event
+cases, and reports each selector and sampling arm separately. It verifies
+the logged factor mixtures, the product likelihood and the full likelihood.
+The zero test is exact equality in the logged effective H factors; tiny
+positive values are not reclassified using a tuned threshold. Natural
+fallback is a separate category. No native continuation or parameter search
+is performed. This is an explanatory audit of consumed validation data.
+
+The dual-arm event counts and unnormalized sums are identical for A and B
+because their observed events come from shared physical cases. Those cases
+are read once, and are not counted as independent A/B replications.
+
+| Effective H category | CAV events | Sum of I w^2 | Share of dual second moment |
+| --- | ---: | ---: | ---: |
+| H1 > 0, H2 > 0 | 62 | 0.003697867905 | 8.9246% |
+| H1 = 0, H2 > 0 | 0 | 0 | 0% |
+| H1 > 0, H2 = 0 | 1 | 0.037736689194 | 91.0754% |
+| H1 = 0, H2 = 0 | 0 | 0 | 0% |
+
+There were no natural-fallback CAV events. Dividing each sum by K*64 gives
+its conditional M2 contribution; K is 256 for A and 47 for B. Arms are not
+pooled because they were sampled under different Q. These are contributions
+to the uncentered second moment, not an exact decomposition of centered
+stratified estimator variance.
+
+The implemented proposal mixes each factor separately:
+`Qij = q1 * q2`, `ql = eps_l * Pl + (1-eps_l) * Hl`.
+For the dominant event, `P1/Q1 = 0.0194259335` and `P2/Q2 = 10`, giving a full
+weight of 0.1942593349. The factor's multiplier is ten; the trajectory weight
+is their product and remains below one in this case. When H1 is zero, the
+sampler defines its otherwise undefined H2 row as P2. Thus the logged
+`H1=0,H2>0` category denotes natural conditional fallback, not supported mass
+in the original joint H; a naturally supported draw cannot have both logged
+factors zero in this implementation.
+
+### The risk score was high; the interaction contrast removed it
+
+The audit reconstructs the frozen proxy at source 240022, 34 seconds, actors
+[15,2], without a new native rollout. The collision actions were [32,21]; the
+natural modal reference actions were [19,21]. All four corners have natural
+support. Recomputed P/H/Q factors match the generation record.
+
+`R11 = R10 = 0.8884343432`,
+`R01 = R00 = 0.0380021667`,
+`I = R11 - R10 - R01 + R00 = 0`.
+
+R is a clearance-risk proxy score, not collision probability. The proxy already
+assigns high absolute risk to this action. The second action equals its natural
+reference, so the four-corner interaction cancels. Algebraically, this contrast
+is zero on the reference row and column, even if those actions have high
+absolute risk (floating-point residuals can be tiny rather than exact zero).
+Pure interaction-weighted H therefore omits some dangerous actions by design.
+The demonstrated defect lies in using cooperative gain alone as the proposal
+score for a target event that also includes collisions without positive gain;
+this witness does not demonstrate a failure of the raw absolute-risk proxy.
+The epsilon mixture still preserves Q support, so the ordinary IS likelihood
+remains valid.
+
+### Both factor coverage and source concentration need attention
+
+| Native arm | Observed event sources |
+| --- | --- |
+| Natural | 240012, 240022, 240111 |
+| First factor only | 240022, 240099, 240141 |
+| Second factor only | 240012, 240022, 240111 |
+| Dual | 240022, 240099, 240151 |
+
+The union contains six independent source episodes, not three. This corrects
+the earlier prose that all arms shared three sources; the stored per-arm
+counts and likelihood estimates were correct. The two natural events at
+240012 and 240111 had H1=0 and H2=P2. They demonstrate first-factor adversarial
+coverage gaps as well. A dual zero in 64 draws does not establish a zero event
+probability, and the six-source union cannot be substituted for the dual arm's
+three-event-source evidence guard. Source 240141's first-factor event had both
+H factors positive, so zero-support categories do not capture every coverage
+or finite-sampling issue.
+
+As a descriptive sensitivity check only, excluding the single largest event
+from the moment calculation leaves 0.003697867905 in summed I w^2; source
+240022 still contributes **99.1561%**. Every original observation remains in
+the dataset and in all primary estimates. This is not a corrected estimate
+or a new Q evaluation. It rules out attributing all source concentration to
+that one observed tail point. Conditional risk heterogeneity and source
+coverage can still matter alongside proposal quality.
+
+### Concrete direction for the next proposal experiment
+
+Hold the training state/pair bank fixed when comparing proposal scores. The
+first candidate family should include normalized absolute-risk and interaction
+components: `H_R = P*R/sum(P*R)`, `H_I = P*I_positive/sum(P*I_positive)`, and
+`H_lambda = (1-lambda)*H_R + lambda*H_I`. A zero component mass uses an explicitly
+declared fallback. Normalization makes the component balance interpretable;
+parameters, fallback behavior and acceptance criteria must be chosen on
+training data and locked before a new source-disjoint validation cohort.
+No lambda has been chosen or tested on this consumed cohort.
+
+A per-factor floor `H_l_new=(1-delta_l)*H_l+delta_l*P_l` is algebraically an
+epsilon ablation with `eps_l_new=eps_l+(1-eps_l)*delta_l`. It should not be
+reported as an independent new mechanism. Smoothing the joint H before
+factorization is a different operation and needs its own likelihood checks.
+Any adaptive epsilon must use information available before the sampled action.
+Success should include event-action coverage, per-source and per-event M2
+concentration, and matched-state variance evidence as well as event yield.
+
+```bash
+export OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1
+python -m scenario_reconstruction.highd_v46_collision_coverage --output outputs/v46_collision_coverage_v1_complete.json
+python -m pytest tests/test_highd_v46_collision_coverage.py tests/test_highd_v46_cross_unit.py tests/test_highd_v46_source_selector_validation.py -q
+```
+
+All 46 relevant tests passed. The original validation summary, all 1,049
+artifacts, NDE, selector, Q and PPO code remain unchanged. Compact evidence:
+[highd_v46_collision_coverage_v1.json](../results/highd_v46_collision_coverage_v1.json).

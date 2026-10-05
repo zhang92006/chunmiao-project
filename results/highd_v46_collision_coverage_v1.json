@@ -1,0 +1,413 @@
+{
+  "scope": "Post-hoc explanatory audit of consumed validation; no proposal fitting or new sampling",
+  "post_hoc": true,
+  "config_sha256": "ac9cb813429255e375bbe1f9bad83e289a78f22f2e4c8e56d3a05dac83f6cd8b",
+  "implementation_sha256": "fcaee8641bafae20ed3f670b435bca76f57d8b8e55984dbd7f1af1402a11dcb0",
+  "source_summary_sha256": "1983dc59c2848247e90e8cf8d2688c816e57d60c638d21371660980327b22cfc",
+  "source_config_sha256": "8de723ceda7b20029110936ec70aa95af31639cbd323cdae571beccf99607593",
+  "natural_target_sha256": "106a9fbc795c75c9d4f60a880da7264cb626f9163e5ec073b720e6b48c6f9db5",
+  "environment_of_source_run": {
+    "python": "3.9.19",
+    "numpy": "1.23.1",
+    "scipy": "1.13.1",
+    "OPENBLAS_NUM_THREADS": 1,
+    "OMP_NUM_THREADS": 1
+  },
+  "audit_python": "3.9.19",
+  "verified_artifact_hashes": 1049,
+  "proxy_witness": {
+    "source_seed": 240022,
+    "case_id": 22,
+    "state_index": 113,
+    "time_s": 34,
+    "actor_ids": [
+      15,
+      2
+    ],
+    "action_indices": [
+      32,
+      21
+    ],
+    "baseline_action_indices": [
+      19,
+      21
+    ],
+    "four_corner_risk": {
+      "R11": 0.8884343432416083,
+      "R10": 0.8884343432416083,
+      "R01": 0.038002166653046406,
+      "R00": 0.038002166653046406
+    },
+    "raw_interaction": 0,
+    "positive_interaction": 0,
+    "all_corners_naturally_supported": true,
+    "first_action_is_baseline": false,
+    "second_action_is_baseline": true,
+    "reproduced_p_h_q_factors": [
+      [
+        0.01751736926550174,
+        0.23889344284609254
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        0.9017517369265502,
+        0.023889344284609256
+      ]
+    ],
+    "scope": "Largest observed B dual event contribution selected post hoc; proxy clearance score is not collision probability."
+  },
+  "unique_physical_sequences_checked": 65792,
+  "zero_semantics": "Exact logged effective H factors. H1=0 uses H2=P2; original H conditional is undefined in that row. Natural fallback is separate.",
+  "weighting": "Arms and A/B targets reported separately; shared physical cases read once; all zero-event cases retained.",
+  "proposal_changed": false,
+  "new_continuations": 0,
+  "ppo_trained": false,
+  "date": "2026-10-05",
+  "report_sha256": "14f28644c652f358488226379d0db4f184c1362a0c1e6e37b83987a7622c0db5",
+  "tests_passed": 46,
+  "A_B_category_event_counts_and_sums_identical": true,
+  "B_by_arm": {
+    "natural": {
+      "collision_events": 4,
+      "event_sources": [
+        240012,
+        240022,
+        240111
+      ],
+      "sum_Iw2": 4,
+      "categories": {
+        "H1_positive_H2_positive": {
+          "collision_events": 1,
+          "event_sources": [
+            240022
+          ],
+          "sum_Iw2": 1,
+          "second_moment_share": 0.25,
+          "factor_lr_range": [
+            [
+              1,
+              1
+            ],
+            [
+              1,
+              1
+            ]
+          ]
+        },
+        "H1_zero_H2_positive": {
+          "collision_events": 2,
+          "event_sources": [
+            240012,
+            240111
+          ],
+          "sum_Iw2": 2,
+          "second_moment_share": 0.5,
+          "factor_lr_range": [
+            [
+              1,
+              1
+            ],
+            [
+              1,
+              1
+            ]
+          ]
+        },
+        "H1_positive_H2_zero": {
+          "collision_events": 1,
+          "event_sources": [
+            240022
+          ],
+          "sum_Iw2": 1,
+          "second_moment_share": 0.25,
+          "factor_lr_range": [
+            [
+              1,
+              1
+            ],
+            [
+              1,
+              1
+            ]
+          ]
+        },
+        "H1_zero_H2_zero": {
+          "collision_events": 0,
+          "event_sources": [],
+          "sum_Iw2": 0,
+          "second_moment_share": 0,
+          "factor_lr_range": null
+        },
+        "natural_fallback": {
+          "collision_events": 0,
+          "event_sources": [],
+          "sum_Iw2": 0,
+          "second_moment_share": 0,
+          "factor_lr_range": null
+        }
+      }
+    },
+    "first_factor_only": {
+      "collision_events": 35,
+      "event_sources": [
+        240022,
+        240099,
+        240141
+      ],
+      "sum_Iw2": 0.1223998553086381,
+      "categories": {
+        "H1_positive_H2_positive": {
+          "collision_events": 28,
+          "event_sources": [
+            240022,
+            240099,
+            240141
+          ],
+          "sum_Iw2": 0.11975828706509124,
+          "second_moment_share": 0.9784185345898817,
+          "factor_lr_range": [
+            [
+              0.010201763823181277,
+              0.3338898281329608
+            ],
+            [
+              1,
+              1
+            ]
+          ]
+        },
+        "H1_zero_H2_positive": {
+          "collision_events": 0,
+          "event_sources": [],
+          "sum_Iw2": 0,
+          "second_moment_share": 0,
+          "factor_lr_range": null
+        },
+        "H1_positive_H2_zero": {
+          "collision_events": 7,
+          "event_sources": [
+            240022
+          ],
+          "sum_Iw2": 0.002641568243546868,
+          "second_moment_share": 0.02158146541011838,
+          "factor_lr_range": [
+            [
+              0.019425933489417357,
+              0.019425933489417357
+            ],
+            [
+              1,
+              1
+            ]
+          ]
+        },
+        "H1_zero_H2_zero": {
+          "collision_events": 0,
+          "event_sources": [],
+          "sum_Iw2": 0,
+          "second_moment_share": 0,
+          "factor_lr_range": null
+        },
+        "natural_fallback": {
+          "collision_events": 0,
+          "event_sources": [],
+          "sum_Iw2": 0,
+          "second_moment_share": 0,
+          "factor_lr_range": null
+        }
+      }
+    },
+    "second_factor_only": {
+      "collision_events": 4,
+      "event_sources": [
+        240012,
+        240022,
+        240111
+      ],
+      "sum_Iw2": 2.446500496549281,
+      "categories": {
+        "H1_positive_H2_positive": {
+          "collision_events": 2,
+          "event_sources": [
+            240022
+          ],
+          "sum_Iw2": 0.446500496549281,
+          "second_moment_share": 0.18250578619503946,
+          "factor_lr_range": [
+            [
+              1,
+              1
+            ],
+            [
+              0.45293005723475793,
+              0.4912788004815594
+            ]
+          ]
+        },
+        "H1_zero_H2_positive": {
+          "collision_events": 2,
+          "event_sources": [
+            240012,
+            240111
+          ],
+          "sum_Iw2": 2,
+          "second_moment_share": 0.8174942138049605,
+          "factor_lr_range": [
+            [
+              1,
+              1
+            ],
+            [
+              1,
+              1
+            ]
+          ]
+        },
+        "H1_positive_H2_zero": {
+          "collision_events": 0,
+          "event_sources": [],
+          "sum_Iw2": 0,
+          "second_moment_share": 0,
+          "factor_lr_range": null
+        },
+        "H1_zero_H2_zero": {
+          "collision_events": 0,
+          "event_sources": [],
+          "sum_Iw2": 0,
+          "second_moment_share": 0,
+          "factor_lr_range": null
+        },
+        "natural_fallback": {
+          "collision_events": 0,
+          "event_sources": [],
+          "sum_Iw2": 0,
+          "second_moment_share": 0,
+          "factor_lr_range": null
+        }
+      }
+    },
+    "dual": {
+      "collision_events": 63,
+      "event_sources": [
+        240022,
+        240099,
+        240151
+      ],
+      "sum_Iw2": 0.04143455709808726,
+      "categories": {
+        "H1_positive_H2_positive": {
+          "collision_events": 62,
+          "event_sources": [
+            240022,
+            240099,
+            240151
+          ],
+          "sum_Iw2": 0.0036978679045605663,
+          "second_moment_share": 0.0892459860450945,
+          "factor_lr_range": [
+            [
+              0.010201763823181277,
+              0.01945023143584487
+            ],
+            [
+              0.04165324347452084,
+              0.4912788004815594
+            ]
+          ]
+        },
+        "H1_zero_H2_positive": {
+          "collision_events": 0,
+          "event_sources": [],
+          "sum_Iw2": 0,
+          "second_moment_share": 0,
+          "factor_lr_range": null
+        },
+        "H1_positive_H2_zero": {
+          "collision_events": 1,
+          "event_sources": [
+            240022
+          ],
+          "sum_Iw2": 0.03773668919352669,
+          "second_moment_share": 0.9107540139549055,
+          "factor_lr_range": [
+            [
+              0.019425933489417357,
+              0.019425933489417357
+            ],
+            [
+              10,
+              10
+            ]
+          ]
+        },
+        "H1_zero_H2_zero": {
+          "collision_events": 0,
+          "event_sources": [],
+          "sum_Iw2": 0,
+          "second_moment_share": 0,
+          "factor_lr_range": null
+        },
+        "natural_fallback": {
+          "collision_events": 0,
+          "event_sources": [],
+          "sum_Iw2": 0,
+          "second_moment_share": 0,
+          "factor_lr_range": null
+        }
+      }
+    }
+  },
+  "event_source_union": [
+    240012,
+    240022,
+    240099,
+    240111,
+    240141,
+    240151
+  ],
+  "largest_dual_event": {
+    "category": "H1_positive_H2_zero",
+    "weight": 0.1942593348941736,
+    "factor_lr": [
+      0.019425933489417357,
+      10
+    ],
+    "case_id": 22,
+    "source_seed": 240022,
+    "seed": 2901420,
+    "epsilon": [
+      0.1,
+      0.1
+    ],
+    "action_indices": [
+      32,
+      21
+    ],
+    "p_factors": [
+      0.01751736926550174,
+      0.23889344284609254
+    ],
+    "h_factors": [
+      1,
+      0
+    ],
+    "q_factors": [
+      0.9017517369265502,
+      0.023889344284609256
+    ],
+    "second_moment_share": 0.9107540139549055
+  },
+  "sensitivity_only": {
+    "excluded_observation": {
+      "case_id": 22,
+      "source_seed": 240022,
+      "seed": 2901420
+    },
+    "remaining_sum_Iw2": 0.0036978679045605663,
+    "remaining_maximum_source_share": 0.9915606059404953,
+    "scope": "Leave-one-observation-out sensitivity only; not a corrected IS estimate. No data removed."
+  }
+}

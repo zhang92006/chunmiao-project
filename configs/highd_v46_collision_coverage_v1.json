@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "scope": "Post-hoc explanatory audit of consumed validation; no proposal fitting or new sampling",
+  "collection": "outputs/v46_source_selector_validation_v1",
+  "summary_sha256": "1983dc59c2848247e90e8cf8d2688c816e57d60c638d21371660980327b22cfc",
+  "source_rule_lock": "outputs/v46_source_selector_validation_v1_rule_lock.json",
+  "replay_largest_dual_proxy": true,
+  "source_seed_range": [240000, 240255],
+  "zero_rule": "Exact zero in logged effective h_factors; no fitted tolerance",
+  "state_law": "Uniform selected source, one state per source and equal continuation counts within each selector",
+  "pool_arms": false,
+  "fit_on_validation": false,
+  "environment": {"python": "3.9.19", "numpy": "1.23.1", "scipy": "1.13.1", "OPENBLAS_NUM_THREADS": 1, "OMP_NUM_THREADS": 1}
+}
