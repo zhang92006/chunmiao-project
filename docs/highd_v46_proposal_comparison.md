@@ -216,3 +216,12 @@ unchanged. All 162 relevant regression tests and frozen code/assets passed.
 
 Compact evidence:
 [highd_v46_proposal_comparison_v1.json](../results/highd_v46_proposal_comparison_v1.json).
+
+The fresh protocol was frozen after review at `5536040`, verifying all training
+artifacts without opening source 250000 or any other reserved fresh source.
+The local lock is `outputs/v46_proposal_validation_v1_lock.json`. Its compact
+[freeze record](../results/highd_v46_proposal_validation_v1_rule_lock.json)
+records status **frozen, not started**; it contains no validation result. With
+that existing lock, the next native step is the `run` command above, not another
+`freeze` into the already existing output. Any code/config/environment change
+requires an explicitly versioned protocol and lock before opening sources.
