@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "parent_config": "configs/highd_v47_continuation_moments_v1.json",
+  "parent_path": "outputs/v47_continuation_moments_v1",
+  "parent_summary_sha256": "253603bd2ef930cc59ad68f4e7cccab0683edc9eb66e224a340e111e9209e6d1",
+  "arms": ["natural", "iid_defensive", "fixed_defensive"],
+  "batches": 2,
+  "minimum_draws_per_state_per_arm": 256,
+  "continuation_seed_starts": [6000000, 6100000],
+  "schedule_seed": 600017,
+  "workers": 4,
+  "confidence": 0.95,
+  "target": "Unchanged 25-source/33-state target and teacher-action J; P_future remains the estimand. Inherit the unchanged future T and path mixture G=(P+T)/2.",
+  "budget": "Retain every inherited action stratum. Equal even counts >=4, total max(256,4*strata). State 8 has 65 strata and gets 260 roots; all other states get 256. All three arms use identical counts/actions/seeds, two independent batches. No outcome-dependent extensions.",
+  "measurement": "IID selects one P/T component by fair coin per root. Fixed selects exactly half P, half T within every initial-action stratum, with random outcome-blind permutation. Balance weights P/G <=2 occur once in both estimators.",
+  "variance": "Fixed variance is sum C_h^2*(s_P^2/n_P+s_T^2/n_T)/4, not pooled s^2/n. Also predeclare same-fixed-draw unbiased estimate of the removed between-component term; retain finite negative estimates. True removed term C_h^2*(mu_P-mu_T)^2/(4*n_h) is nonnegative.",
+  "uncertainty": "Component-mean empirical Bernstein intervals in [0,2], Bonferroni over natural/IID/two fixed components, states/strata/batches. Only the combined fixed mean has known expectation <=1. Structural benefit is not a full-bank precision or source-generalization certificate.",
+  "scope": "Training estimator development only; no state/action target changes, fitted Q_S, PPO export, validation/test episodes or production mutation. Retain all original and new outcomes."
+}

@@ -213,3 +213,7 @@ then changes only the later-action measurement law with a complete path mixture
 and future likelihood bounded by two. It improves event-region access but still
 does not provide stable full-bank moments; primary and separate same-draw
 variance diagnostics are both retained, without selecting a production winner.
+
+The [fixed-component continuation design](highd_v47_fixed_mixture_moments.md)
+then removes random P/T count dispersion within each initial-action stratum,
+with correctly separated component variances and unchanged target correction.
