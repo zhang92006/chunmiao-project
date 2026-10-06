@@ -1,0 +1,310 @@
+{
+  "experiment": "highd_v47_continuation_moments_v1",
+  "date": "2026-10-06",
+  "implementation_commit": "5c421042d0eadfe688883eb9fb628d3b8624974a",
+  "complete": true,
+  "environment": {
+    "python": "3.9.19",
+    "numpy": "1.23.1",
+    "scipy": "1.13.1"
+  },
+  "config_sha256": "69630f727dd092262291aced495803a07f8c68307f01ad52dec714148288bb5b",
+  "summary_sha256": "253603bd2ef930cc59ad68f4e7cccab0683edc9eb66e224a340e111e9209e6d1",
+  "design_sha256": "46b05a3d81fcbfab757fefbfd34f913122ec7e13952cd4dd56335e7e02dca8a0",
+  "artifact_hashes_verified": 68,
+  "regression_tests_passed": 155,
+  "frozen_code_assets_verified": true,
+  "states": 33,
+  "sources": 25,
+  "logical_draws": 33792,
+  "native_paths_simulated": 25414,
+  "wall_s": 582.514503792,
+  "primary_measurement_variance_ratio_point_only": 237.3228134695522,
+  "arms": {
+    "natural": {
+      "events": 93,
+      "event_sources": [
+        200002,
+        200017,
+        200020,
+        200041,
+        200047,
+        200051,
+        200053,
+        230053
+      ],
+      "target_M2": 3.815554408062684e-05,
+      "empirical_MCSE": 2.9882640176656636e-05,
+      "relative_empirical_MCSE": 0.7831795063257739,
+      "batch_target_M2": [
+        9.988296168988136e-06,
+        6.632279199226555e-05
+      ],
+      "precise_states": 0,
+      "selected_state_diagnostics": [
+        {
+          "state_id": 6,
+          "source_seed": 200020,
+          "J": 1.1372048865429497e-11,
+          "estimator_variance": 1.2932349539771634e-22,
+          "bank_simultaneous_interval": [
+            0.0,
+            8.870577307313951
+          ],
+          "batch_J": [
+            0.0,
+            2.2744097730858994e-11
+          ],
+          "relative_batch_gap": 2.0,
+          "relative_empirical_MCSE": 1.0000000000000002,
+          "events": 1,
+          "precision_supported": false
+        },
+        {
+          "state_id": 18,
+          "source_seed": 200051,
+          "J": 5.978748433028394e-05,
+          "estimator_variance": 3.857606888503026e-10,
+          "bank_simultaneous_interval": [
+            0.0,
+            8.065903114950688
+          ],
+          "batch_J": [
+            5.493067784287532e-05,
+            6.464429081769257e-05
+          ],
+          "relative_batch_gap": 0.1624690030635233,
+          "relative_empirical_MCSE": 0.32851008320114594,
+          "events": 28,
+          "precision_supported": false
+        },
+        {
+          "state_id": 19,
+          "source_seed": 200053,
+          "J": 0.00011353986476639475,
+          "estimator_variance": 2.687762849335861e-09,
+          "bank_simultaneous_interval": [
+            0.0,
+            4.524050137482607
+          ],
+          "batch_J": [
+            0.00016352306357582361,
+            6.355666595696588e-05
+          ],
+          "relative_batch_gap": 0.8804519701035045,
+          "relative_empirical_MCSE": 0.45661176866920533,
+          "events": 4,
+          "precision_supported": false
+        },
+        {
+          "state_id": 32,
+          "source_seed": 230053,
+          "J": 0.0023388117591025374,
+          "estimator_variance": 4.99529857451739e-06,
+          "bank_simultaneous_interval": [
+            0.0,
+            8.171111912078793
+          ],
+          "batch_J": [
+            9.376098229469162e-05,
+            0.004583862535910383
+          ],
+          "relative_batch_gap": 1.9198216941318353,
+          "relative_empirical_MCSE": 0.9556204986845983,
+          "events": 44,
+          "precision_supported": false
+        }
+      ],
+      "state_proposal_comparisons": {
+        "target": {
+          "target_M2": 3.815554408062684e-05,
+          "candidate_M2": 3.815554408062684e-05,
+          "M2_ratio_point_only": 1.0,
+          "difference_empirical_MCSE": 0.0,
+          "M2_difference_interval": [
+            0.0,
+            0.0
+          ],
+          "certified_improvement": false
+        },
+        "first_allocation": {
+          "target_M2": 3.815554408062684e-05,
+          "candidate_M2": 2.9870070457906847e-05,
+          "M2_ratio_point_only": 0.7828500727125819,
+          "difference_empirical_MCSE": 1.522599313833252e-05,
+          "M2_difference_interval": [
+            -0.3565429164905644,
+            19.980461841665882
+          ],
+          "certified_improvement": false
+        },
+        "updated_allocation": {
+          "target_M2": 3.815554408062684e-05,
+          "candidate_M2": 6.35675754123408e-05,
+          "M2_ratio_point_only": 1.6660115048553772,
+          "difference_empirical_MCSE": 2.9863891040614412e-05,
+          "M2_difference_interval": [
+            -0.3957609108275776,
+            9.811720633244548
+          ],
+          "certified_improvement": false
+        }
+      }
+    },
+    "defensive": {
+      "events": 135,
+      "event_sources": [
+        200002,
+        200017,
+        200020,
+        200024,
+        200034,
+        200041,
+        200047,
+        200051,
+        200053,
+        230053
+      ],
+      "target_M2": 0.0018352192994401965,
+      "empirical_MCSE": 0.00046035059578513926,
+      "relative_empirical_MCSE": 0.2508422813151331,
+      "batch_target_M2": [
+        0.0006837548536066308,
+        0.0029866837452737624
+      ],
+      "precise_states": 0,
+      "selected_state_diagnostics": [
+        {
+          "state_id": 6,
+          "source_seed": 200020,
+          "J": 0.010943567326687838,
+          "estimator_variance": 7.99223905118575e-05,
+          "bank_simultaneous_interval": [
+            0.0,
+            8.870577307313951
+          ],
+          "batch_J": [
+            0.017274690069927413,
+            0.004612444583448261
+          ],
+          "relative_batch_gap": 1.1570491694787686,
+          "relative_empirical_MCSE": 0.816912080687964,
+          "events": 2,
+          "precision_supported": false
+        },
+        {
+          "state_id": 18,
+          "source_seed": 200051,
+          "J": 0.03525981067921663,
+          "estimator_variance": 0.00010220946596329636,
+          "bank_simultaneous_interval": [
+            0.0,
+            8.065903114950688
+          ],
+          "batch_J": [
+            0.0007546104622534675,
+            0.06976501089617979
+          ],
+          "relative_batch_gap": 1.9571971347708756,
+          "relative_empirical_MCSE": 0.2867250145572195,
+          "events": 41,
+          "precision_supported": false
+        },
+        {
+          "state_id": 19,
+          "source_seed": 200053,
+          "J": 0.0030789492135821052,
+          "estimator_variance": 8.97125085352618e-06,
+          "bank_simultaneous_interval": [
+            0.0,
+            4.524050137482607
+          ],
+          "batch_J": [
+            0.006065417968540233,
+            9.248045862397697e-05
+          ],
+          "relative_batch_gap": 1.9399272594585062,
+          "relative_empirical_MCSE": 0.972800925003972,
+          "events": 21,
+          "precision_supported": false
+        },
+        {
+          "state_id": 32,
+          "source_seed": 230053,
+          "J": 0.00462618718068877,
+          "estimator_variance": 1.0234250371628617e-05,
+          "bank_simultaneous_interval": [
+            0.0,
+            8.171111912078793
+          ],
+          "batch_J": [
+            0.004763473221067948,
+            0.004488901140309593
+          ],
+          "relative_batch_gap": 0.059351701527449875,
+          "relative_empirical_MCSE": 0.6915201156966873,
+          "events": 47,
+          "precision_supported": false
+        }
+      ],
+      "state_proposal_comparisons": {
+        "target": {
+          "target_M2": 0.0018352192994401965,
+          "candidate_M2": 0.0018352192994401965,
+          "M2_ratio_point_only": 1.0,
+          "difference_empirical_MCSE": 0.0,
+          "M2_difference_interval": [
+            0.0,
+            0.0
+          ],
+          "certified_improvement": false
+        },
+        "first_allocation": {
+          "target_M2": 0.0018352192994401965,
+          "candidate_M2": 0.0012133952349270402,
+          "M2_ratio_point_only": 0.6611717930915213,
+          "difference_empirical_MCSE": 0.0005784985161249921,
+          "M2_difference_interval": [
+            -0.3565429164905644,
+            19.980461841665882
+          ],
+          "certified_improvement": false
+        },
+        "updated_allocation": {
+          "target_M2": 0.0018352192994401965,
+          "candidate_M2": 0.0010072600180267728,
+          "M2_ratio_point_only": 0.5488499485233296,
+          "difference_empirical_MCSE": 0.00036191707283299496,
+          "M2_difference_interval": [
+            -0.3957609108275776,
+            9.811720633244548
+          ],
+          "certified_improvement": false
+        }
+      }
+    }
+  },
+  "likelihood_audit": {
+    "max_full_factor_log_error": 1.1546319456101628e-13,
+    "future_weight_min": 0.0002704237535119573,
+    "future_weight_max": 1.9999350397588593,
+    "future_weight_mean": 1.000381914804674,
+    "native_root_replays_matched": 66
+  },
+  "post_hoc_same_draw_variance": {
+    "natural_variance_same_draws_unbiased": 4.56469786916014e-06,
+    "defensive_variance_same_draws": 2.1192267103973266e-07,
+    "variance_difference": -4.3527751981204075e-06,
+    "variance_difference_interval": [
+      -0.007225381128779672,
+      0.05780304903023738
+    ],
+    "variance_ratio_point_only": 0.046426439846439245,
+    "certified_improvement": false,
+    "scope": "Separate explanatory calculation, not the primary comparison or independent validation."
+  },
+  "production_changed": false,
+  "ppo_launched": false,
+  "source_generalization_validated": false,
+  "decision": "Bounded future weight and improved event-region access; stable full-bank state moments and variance superiority remain unestablished."
+}

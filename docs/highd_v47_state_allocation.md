@@ -207,3 +207,9 @@ coefficient-heavy actions and compares protected uncertainty budgets on two
 independent batches. It retains the complete bank, but still finds rare native
 future outcomes in previously negative singleton actions; no state passes the
 simultaneous precision gate. Neither completed measurement promotes a Q_S fit.
+
+The [continuation measurement experiment](highd_v47_continuation_moments.md)
+then changes only the later-action measurement law with a complete path mixture
+and future likelihood bounded by two. It improves event-region access but still
+does not provide stable full-bank moments; primary and separate same-draw
+variance diagnostics are both retained, without selecting a production winner.
