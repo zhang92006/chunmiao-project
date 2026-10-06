@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "parent_config": "configs/highd_v47_fixed_mixture_moments_v1.json",
+  "parent_path": "outputs/v47_fixed_mixture_moments_v1",
+  "parent_summary_sha256": "b8a1610326e78bd12b3d2948987ab81e12e8ec939a44264c3d637dbc6a878dcb",
+  "roots_per_state": 256,
+  "batches": 2,
+  "fork_s": 2,
+  "horizon_s": 4,
+  "suffixes_per_component": 2,
+  "seed_starts": [6200000, 6300000],
+  "schedule_seed": 620017,
+  "workers": 4,
+  "confidence": 0.95,
+  "allocation_loss_cap": 1.1,
+  "target": "Unchanged 33-state/25-source conditional target, teacher Q_A and natural future endpoint law. All initial action strata retained.",
+  "measurement_budget": "Distribute 256 independent roots/state by exact integer minimization of sum(C_h^2/n_h), floor two per action stratum. This is a distribution-free root-variance upper-envelope design, not outcome-adaptive continuation extension.",
+  "branching": "Share the first two native seconds. Prefix P/T component chosen with probability half. At the unprepared boundary, clone all dynamic native state and draw two independent P suffixes and two T suffixes. Branch means use the posterior eta=P_prefix/(P_prefix+T_prefix), not half after an informative prefix. Full terminal P/G weight <=2 occurs once. Early endpoints are retained without splitting.",
+  "control": "Single suffix drawn from posterior component eta, sharing one of the measured branches. Arms are paired root estimators; variance and intervals use independent parent roots, never count leaves as independent sources.",
+  "allocation": "Batch0 intervals fit a water-filled upper-envelope candidate with q>=alpha/1.1. This caps true uncentered M2 loss at 10% for any J, not centered variance or observed estimates. Recommend alpha unless the interval upper bound on the allocation objective difference is strictly negative. Save the choice before opening batch1.",
+  "scope": "Training estimator/allocation development, not source-disjoint validation, population efficiency or PPO. No validation/test episodes opened, clipping, dropped negatives, extra batches or production policy mutation."
+}

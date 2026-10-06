@@ -196,6 +196,10 @@ decisions also need uncertainty-aware objective checks, rather than requiring
 every near-zero state to pass the same relative-error rule. These are separate
 prospective design tasks, not changed criteria for this completed experiment.
 
+The [branching and protected-allocation implementation](highd_v47_branching_moments.md)
+now targets within-prefix future uncertainty directly, with parent-root
+statistics and an explicit true-M2 loss cap, rather than another count-only run.
+
 Compact evidence:
 [highd_v47_fixed_mixture_moments_v1.json](../results/highd_v47_fixed_mixture_moments_v1.json).
 
