@@ -132,3 +132,22 @@ initialization evaluation, not an automatic formal D2RL training launch.
 Implementation checks on 2026-10-06 passed 284 relevant regression tests and
 frozen-code/asset verification. These checks used synthetic source fixtures;
 they did not open either new natural source cohort or establish transfer benefit.
+
+## Launch record, 2026-10-06
+
+Implementation/protocol `d431b24` was committed before freezing and opening new
+training sources. The complete 256-source training collection has started at
+`outputs/v47_source_transfer_v1_train`, using the new 50/60-million-series root
+seeds. It is not completed evidence: no fitted model, OOF benefit, transfer
+interval or native improvement result is yet reported. Validation 270000–270255
+remains unopened; its model lock cannot be created until training and the
+independent audit pass the declared checks. No PPO run is launched.
+
+The compact [historical lock/launch record](../results/highd_v47_source_transfer_v1_rule_lock.json)
+records this status. The local freeze lock is
+`outputs/v47_source_transfer_v1_train_lock.json`. Old fixed-bank/measurement and
+consumed validation summaries remain unchanged. The task is on
+`experiment/v47-source-transfer-allocation`; local main was refreshed read-only.
+Publication is still blocked: local HTTPS Git lacks authentication and the
+connected GitHub integration reports repository `push=false`. No remote branch
+or PR has been created, and no merge is claimed.
