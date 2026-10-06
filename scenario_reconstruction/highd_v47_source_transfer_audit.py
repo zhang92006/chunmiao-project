@@ -13,7 +13,9 @@ from .highd_v47_allocation_certificate_audit import reconstruct_natural
 from .highd_v47_decision_branching_audit import reconstruct_tree
 
 
-def audit(config,directory,replay=False):
+def audit(config,directory,replay=False,native=native):
+    # The prospective v2 validation adapter supplies the same reconstruction
+    # contract without mutating global modules or the frozen v1 collector.
     cfg,dc,base,physical,assets,current=native.protocol(config)
     root=Path(directory);summary=read(root/'summary.json');split=summary['split'];lock=summary['lock']
     assert summary['complete'] and summary['config']==cfg and split in ('train','validation')

@@ -113,10 +113,10 @@ export OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1
 python -m scenario_reconstruction.highd_v47_source_transfer freeze-train --output outputs/v47_source_transfer_v1_train_lock.json
 python -m scenario_reconstruction.highd_v47_source_transfer train --lock outputs/v47_source_transfer_v1_train_lock.json --output outputs/v47_source_transfer_v1_train
 python -m scenario_reconstruction.highd_v47_source_transfer_audit --run outputs/v47_source_transfer_v1_train --replay --output outputs/v47_source_transfer_v1_train_audit.json
-python -m scenario_reconstruction.highd_v47_source_transfer freeze-validation --training outputs/v47_source_transfer_v1_train --training-audit outputs/v47_source_transfer_v1_train_audit.json --output outputs/v47_source_transfer_v1_validation_lock.json
-python -m scenario_reconstruction.highd_v47_source_transfer validate --lock outputs/v47_source_transfer_v1_validation_lock.json --output outputs/v47_source_transfer_v1_validation
-python -m scenario_reconstruction.highd_v47_source_transfer_audit --run outputs/v47_source_transfer_v1_validation --replay --output outputs/v47_source_transfer_v1_validation_audit.json
-python -m pytest tests/test_highd_v47_state_features.py tests/test_highd_v47_source_transfer.py -q
+python -m scenario_reconstruction.highd_v47_source_transfer_validation freeze --training outputs/v47_source_transfer_v1_train --training-audit outputs/v47_source_transfer_v1_train_audit.json --output outputs/v47_source_transfer_validation_v2_lock.json
+python -m scenario_reconstruction.highd_v47_source_transfer_validation run --lock outputs/v47_source_transfer_validation_v2_lock.json --output outputs/v47_source_transfer_validation_v2
+python -m scenario_reconstruction.highd_v47_source_transfer_validation_audit --run outputs/v47_source_transfer_validation_v2 --replay --output outputs/v47_source_transfer_validation_v2_audit.json
+python -m pytest tests/test_highd_v47_state_features.py tests/test_highd_v47_source_transfer.py tests/test_highd_v47_source_transfer_validation.py -q
 python -m scenario_reconstruction.highd_v46_workflow verify
 ```
 
@@ -151,3 +151,30 @@ consumed validation summaries remain unchanged. The task is on
 Publication is still blocked: local HTTPS Git lacks authentication and the
 connected GitHub integration reports repository `push=false`. No remote branch
 or PR has been created, and no merge is claimed.
+
+## Prospective validation-only correction
+
+Before opening any 270000-series source, a synthetic multi-positive-source
+review reproduced a reporting-path error: v1's bootstrap passed the M2 loss cap
+`1.1` to water-filling as a probability floor. The valid floor is its reciprocal,
+`1/1.1`, exactly as used by the candidate and training OOF comparisons. Sparse
+bootstrap fixtures censored every replicate and therefore missed this path.
+This is a code defect, not a native experiment result.
+
+The separate [validation v2 declaration](../configs/highd_v47_source_transfer_validation_v2.json)
+and entry point correct that conversion without changing the frozen v1 training
+collector, feature/model implementation, model-selection criterion, sources,
+seeds, continuations, budgets or acceptance criteria. The exact parent config
+checksum is pinned; the original training loader still reproduces its complete
+fit and checks its original implementation/dependency locks. No lock is repinned
+to conceal a changed training implementation. V1 validation was never frozen or
+opened and should not be run.
+
+The shared reconstruction engine now accepts a declared validation backend;
+its default v1 training audit remains identical. V2 pins both this engine and
+its own adapter/auditor. Positive-source regression fixtures exercise all
+bootstrap replicates, check the protected floor and independent normalization,
+and retain abstention/censoring behavior. Training review and the independent
+audit/replays must still pass before any validation freeze or source opening.
+All 296 relevant regression tests and frozen-code/asset verification passed
+after this correction. These synthetic tests did not open validation sources.
