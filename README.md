@@ -61,6 +61,10 @@ The [V47 state-allocation experiment](docs/highd_v47_state_allocation.md)
 adds Q_S with complete state/action likelihood correction while keeping the
 conditional target and action proposal fixed. Its guarded update has mixed
 fixed-bank variance results and is not a validated production policy.
+The [fresh-source Q_S transfer protocol](docs/highd_v47_source_transfer.md)
+uses new, disjoint training/validation cohorts, outcome-blind features and
+source-grouped fitting. It tests prospective same-target objective benefit,
+without refining the old fixed-bank certificate or automatically launching PPO.
 The frozen NDE tag is `nde-v46-frozen-20261003`; training code is on
 `feature/highd-v46-d2rl-handoff`. This path needs Python 3.9 and the V46 LFS
 archive, with no SUMO or raw highD tracks. The fixed IDM CAV does not change lanes.

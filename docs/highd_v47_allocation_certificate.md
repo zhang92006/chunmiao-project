@@ -217,3 +217,8 @@ Compact reproducible evidence:
 [highd_v47_allocation_certificate_v2.json](../results/highd_v47_allocation_certificate_v2.json).
 Complete summary SHA:
 `274250eaff69cfe4eb50ff4b488937fbf8d4d051267399fe2de5a772e6e8d571`.
+
+The next [fresh-source transfer experiment](highd_v47_source_transfer.md) leaves
+this fixed-bank evidence unchanged. It learns Q_S from pre-outcome features on
+new training sources, then freezes the mapping before separate validation;
+it does not run another refinement of this certificate or authorize PPO.
