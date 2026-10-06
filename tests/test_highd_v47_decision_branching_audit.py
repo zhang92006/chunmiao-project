@@ -3,7 +3,16 @@ import copy
 import numpy as np
 import pytest
 
-from scenario_reconstruction.highd_v47_decision_branching_audit import reconstruct_tree
+from scenario_reconstruction.highd_v47_decision_branching_audit import reconstruct_tree,check_root_values
+
+
+def test_quadratic_roundoff_is_not_relative_error_at_a_near_zero_difference():
+    # Signals ~.17, almost equal quadratic variances; ~1e-21 D roundoff is
+    # legitimate despite 6e-8 relative error against D~1.8e-14.
+    values=(.17,.17,1.790983e-14)
+    check_root_values(values,[.17,.17,1.790983e-14+1.1e-21],.17**2)
+    with pytest.raises(AssertionError):check_root_values(values,[.17,.17,0.],.17**2)
+    with pytest.raises(AssertionError):check_root_values(values,[.17,.17+.001,values[2]],.17**2)
 
 
 def terminal_fixture():

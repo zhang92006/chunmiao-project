@@ -139,5 +139,5 @@ def audit(config, directory, replay=False):
 
 if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--config',default=native.DEFAULT)
-    p.add_argument('--run',default='outputs/v47_allocation_certificate_v1');p.add_argument('--replay',action='store_true')
+    p.add_argument('--run',default='outputs/v47_allocation_certificate_v2');p.add_argument('--replay',action='store_true')
     a=p.parse_args();print(audit(a.config,a.run,a.replay))

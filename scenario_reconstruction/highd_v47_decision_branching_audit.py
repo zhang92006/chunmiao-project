@@ -11,6 +11,16 @@ from .highd_v47_continuation_moments_audit import reconstruct_path
 from .highd_v47_decision_branching import inputs
 
 
+def check_root_values(values, stored, scale):
+    # Values/likelihoods keep the original tight check. Variance removal is
+    # a subtraction of two nearly equal quadratic terms in the frozen writer;
+    # relative error against a near-zero difference is ill-conditioned. Allow
+    # only floating-point roundoff at the original quadratic signal scale.
+    np.testing.assert_allclose(values[:2],stored[:2],rtol=1e-10,atol=1e-25)
+    np.testing.assert_allclose(values[2],stored[2],rtol=1e-10,
+        atol=128*np.finfo(float).eps*scale)
+
+
 def reconstruct_tree(node,schedule,cav_id):
     error=reconstruct_path(node['prefix']);prefix=node['prefix'];index=node['node_index']
     if node['status']=='stopped':
@@ -47,13 +57,16 @@ def reconstruct_tree(node,schedule,cav_id):
             value=reconstruct_tree(child,schedule,cav_id);error=max(error,value[3]);children.append(value[:3])
         children=np.array(children);p,t=children[:2,1],children[2:,1]
         mp,mt=p.sum()/2,t.sum()/2;sp=((p-mp)**2).sum();st=((t-mt)**2).sum()
-        vb=(eta**2*sp+(1-eta)**2*st)/2
-        vs=(eta*(sp+children[:2,2].mean())+(1-eta)*(st+children[2:,2].mean())
-            +eta*(1-eta)*((mp-mt)**2-(sp+st)/2))
+        # Algebraically identical NONNEGATIVE expression avoids vs-vb
+        # cancellation; it does not change the stored experiment or estimates.
+        removed=(eta*sp/2+(1-eta)*st/2+eta*(1-eta)*(mp-mt)**2
+                 +eta*children[:2,2].mean()+(1-eta)*children[2:,2].mean())
         selected=0 if schedule['control_uniforms'][index]<eta else 2
         assert selected==node['selected_child']
-        values=(children[selected,0],eta*mp+(1-eta)*mt,vs-vb)
-    np.testing.assert_allclose(values,[node[k] for k in ('single_value','branching_value','removed_conditional_variance_unbiased')],rtol=1e-10,atol=1e-25)
+        values=(children[selected,0],eta*mp+(1-eta)*mt,removed)
+    scale=max(values[0]**2,values[1]**2,
+              float(np.max(children[:,1]**2)) if node['status']=='branched' else 0.)
+    check_root_values(values,[node[k] for k in ('single_value','branching_value','removed_conditional_variance_unbiased')],scale)
     assert -1e-12<=values[1]<=2+1e-12
     return tuple(map(float,values))+(error,)
 
@@ -78,7 +91,8 @@ def audit(config,directory,replay=False):
             assert all(row[k]==v for k,v in planned.items())
             ss=[row['initial_seed']]+row['step_seeds']+row['terminal_seeds'];assert not set(ss)&seeds;seeds.update(ss)
             values=reconstruct_tree(row['tree'],row,ads[i]['state']['cav_id']);max_error=max(max_error,values[3])
-            np.testing.assert_allclose(values[:3],[row[k] for k in ('single_value','branching_value','removed_conditional_variance_unbiased')],rtol=1e-10,atol=1e-25)
+            check_root_values(values[:3],[row[k] for k in ('single_value','branching_value','removed_conditional_variance_unbiased')],
+                              max(values[0]**2,values[1]**2))
         for arm in ('single','branching'):
             e=estimates[(b,i,arm)];v=reconstruct_estimate(design['states'][i]['strata'],stored['rows'],arm,error)
             np.testing.assert_allclose(v[:2],[e['J'],e['estimator_variance']],rtol=1e-12,atol=1e-30)

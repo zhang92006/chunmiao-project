@@ -25,7 +25,7 @@ from .highd_v46_pair_witness import conditional_actions, restore_prepared_state
 from .highd_v47_allocation import waterfill
 from . import highd_v47_state_allocation as state_sampler
 
-DEFAULT = 'configs/highd_v47_allocation_certificate_v1.json'
+DEFAULT = 'configs/highd_v47_allocation_certificate_v2.json'
 
 
 def fit_and_design(old, pilot, cfg):
@@ -129,9 +129,9 @@ def natural_root(model, assets, physical, state, ids, schedule):
 
 def inputs(config):
     cfg=read(config)
-    required=dict(version=1,batches=2,confidence=.95,allocation_loss_cap=1.1,
+    required=dict(version=2,batches=2,confidence=.95,allocation_loss_cap=1.1,
         minimum_roots_per_stratum=2, maximum_loss_root_bound=1e-5,
-        maximum_natural_roots_per_batch=60000,loss_bet_support_fraction=.8,
+        maximum_natural_roots_per_batch=100000,loss_bet_support_fraction=.8,
         benefit_bet_grid=[1,9,81],seed_starts=[11000000,13000000],natural_seed_offset=1000000,
         schedule_seed=110017,workers=4,iid_draws_per_arm=2112,iid_state_rng_seed=150017,
         iid_continuation_seed_start=15000000)

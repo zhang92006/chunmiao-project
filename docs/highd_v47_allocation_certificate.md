@@ -43,7 +43,11 @@ Loss counts are `max(2,ceil(d_k*C_h/1e-5))`, set before outcomes. Thus an unseen
 event's single objective contribution is at most 1e-5. Benefit keeps inherited
 coefficient-minimax counts (256/state). This directs budget toward uncertainty
 in possible allocation harm rather than every state's relative error. A
-60,000-natural-root/batch cap is checked at freeze, not extended after events.
+100,000-natural-root/batch cap is checked at freeze, not extended after events.
+The unstarted v1 planning cap was 60,000; the completed training candidate
+requires 99,155 at the same 1e-5 bound. The explicitly versioned v2 declares
+the larger cap before any freeze or new outcome. No v1 evaluation was opened,
+extended or pooled. Actual benefit budget is 512 branching roots/batch.
 
 ## Non-IID fixed-bet bounds and proof
 
@@ -82,7 +86,7 @@ not all adaptive research experiments or source-population generalization.
 
 ## Exact Q_S/Q_A verification and reproduction
 
-The [protocol](../configs/highd_v47_allocation_certificate_v1.json) additionally
+The [protocol](../configs/highd_v47_allocation_certificate_v2.json) additionally
 predeclares 2,112 real draws each from alpha and q with unchanged teacher Q_A
 and natural continuation. Both run regardless of the certificate outcome.
 Full likelihood is `(alpha_k/q_k)*(P_A/Q_A)`. Shared state/seed physical paths
@@ -90,15 +94,15 @@ are executed once and not counted as independent A/B evidence. The finite
 IID variance ordering is descriptive; it cannot substitute for the primary
 common-target objective certificate. No training/PPO export is made.
 
-The parent checksum placeholder is intentionally non-runnable until its full
-measurement and independent audit complete. Fill it only with verified complete
-training evidence, commit code/configuration, then freeze before new outcomes.
+The protocol now pins the complete parent summary; its independent audit must
+also complete before freezing or opening new outcomes. Commit the reviewed
+code/configuration, then freeze the complete schedule and bets before new data.
 Use Python 3.9.19, NumPy 1.23.1 and SciPy 1.13.1; one BLAS/OMP thread.
 
 ```bash
 export OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1
-python -m scenario_reconstruction.highd_v47_allocation_certificate freeze --output outputs/v47_allocation_certificate_v1_lock.json
-python -m scenario_reconstruction.highd_v47_allocation_certificate run --lock outputs/v47_allocation_certificate_v1_lock.json --output outputs/v47_allocation_certificate_v1
+python -m scenario_reconstruction.highd_v47_allocation_certificate freeze --output outputs/v47_allocation_certificate_v2_lock.json
+python -m scenario_reconstruction.highd_v47_allocation_certificate run --lock outputs/v47_allocation_certificate_v2_lock.json --output outputs/v47_allocation_certificate_v2
 python -m scenario_reconstruction.highd_v47_allocation_certificate_audit --replay
 python -m pytest tests/test_highd_v47_objective_bounds.py tests/test_highd_v47_allocation_certificate.py tests/test_highd_v47_allocation_certificate_audit.py -q
 python -m scenario_reconstruction.highd_v46_workflow verify
@@ -110,3 +114,10 @@ not extra observations. A successful fixed-bank certificate would solve the
 bank allocation decision despite imperfect point J estimates; it would not
 produce a transferable state model, discover unseen sources, establish
 original-initialization acceleration or authorize PPO automatically.
+
+The new plain-natural collector was checked against 66 predetermined OLD
+training paths (one per state/batch). Every initial/future action, stopped
+endpoint and natural action log matched exactly; the maximum natural-log
+difference was zero. These are implementation replays, not new fitting or
+evaluation observations. All 233 relevant measurement/allocation/sampler tests
+and frozen-code/assets verification passed before the prospective freeze.
