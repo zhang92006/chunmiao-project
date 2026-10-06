@@ -56,6 +56,8 @@ def audit(config, directory, replay=False):
     family = 8*sum(len(s['strata']) for s in design['states']); error = (1-cfg['confidence'])/family
     estimates = {(e['batch'], e['state_id'], e['arm']): e for e in summary['state_batch_estimates']}
     measurements = {}; seen = set(); paths = 0; max_error = 0.; weights = []; replays = 0
+    event_counts = {a: 0 for a in ARMS}; event_sources = {a: set() for a in ARMS}
+    state_events = {}
     paired = {(x['batch'], x['state_id']): x for x in summary['paired_differences']}
     if replay:
         from . import highd_v47_fixed_mixture_moments as native
@@ -72,6 +74,9 @@ def audit(config, directory, replay=False):
                        for cell in by_stratum[row['stratum_id']]['cells'])
             for arm in ARMS:
                 max_error = max(max_error, reconstruct_path(row[arm]))
+                if row[arm]['event_result']:
+                    event_counts[arm] += 1; event_sources[arm].add(plans[i]['source_seed'])
+                    state_events[(i, arm)] = state_events.get((i, arm), 0)+1
             for arm, key in [('iid_defensive', 'iid_tilted_component'), ('fixed_defensive', 'fixed_tilted_component')]:
                 np.testing.assert_allclose(row[arm]['initial_cancelled_log_conditional'],
                                            row['natural']['initial_cancelled_log_conditional'], atol=1e-12)
@@ -112,14 +117,30 @@ def audit(config, directory, replay=False):
             j = (a['J']+b['J'])/2; v = (a['variance']+b['variance'])/4
             bounds = (np.array(a['bounds'])+b['bounds'])/2
             e = summary['arms'][arm]['states'][i]
+            assert e['events'] == state_events.get((i, arm), 0)
             np.testing.assert_allclose([j, v], [e['J'], e['estimator_variance']], rtol=1e-12, atol=1e-30)
             np.testing.assert_allclose(bounds, e['bank_simultaneous_interval'], rtol=1e-12, atol=1e-30)
             assert e['precision_supported'] == bool(bounds[0]>0 and (bounds[1]-bounds[0])/2 <= .5*j)
             js.append(j); vs.append(v)
         total = float(alpha@js); total_v = float((alpha*alpha)@vs)
         np.testing.assert_allclose([total, total_v], [summary['arms'][arm]['target_M2'], summary['arms'][arm]['target_measurement_variance']], rtol=1e-12)
+        bounds = np.array([e['bank_simultaneous_interval'] for e in summary['arms'][arm]['states']])
+        for name, q in design['state_proposals'].items():
+            d = alpha*(alpha/np.array(q)-1)
+            lo = float(np.where(d>=0, d*bounds[:, 0], d*bounds[:, 1]).sum())
+            hi = float(np.where(d>=0, d*bounds[:, 1], d*bounds[:, 0]).sum())
+            e = summary['arms'][arm]['state_proposal_comparisons'][name]
+            np.testing.assert_allclose([e['target_M2'], e['candidate_M2'], e['difference_empirical_MCSE']],
+                [total, total+d@js, np.sqrt((d*d)@vs)], rtol=1e-12, atol=1e-30)
+            np.testing.assert_allclose(e['M2_difference_interval'], [lo, hi], rtol=1e-12, atol=1e-30)
         info[arm] = dict(target_M2=total, variance=total_v,
-                         precise_states=sum(e['precision_supported'] for e in summary['arms'][arm]['states']))
+                         precise_states=sum(e['precision_supported'] for e in summary['arms'][arm]['states']),
+                         events=event_counts[arm], event_sources=sorted(event_sources[arm]))
+    if info['iid_defensive']['variance'] > 0:
+        np.testing.assert_allclose(summary['fixed_over_iid_variance_point_only'],
+                                   info['fixed_defensive']['variance']/info['iid_defensive']['variance'], rtol=1e-12)
+    else:
+        assert summary['fixed_over_iid_variance_point_only'] is None
     removed = float(sum(.25*alpha[i]**2*measurements[(b, i, 'fixed_defensive')]['removed']
                         for b in range(2) for i in range(len(alpha))))
     rb = [sum(.25*alpha[i]**2*measurements[(b, i, 'fixed_defensive')]['removed_bounds'][j]

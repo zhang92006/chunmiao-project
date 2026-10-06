@@ -217,3 +217,6 @@ variance diagnostics are both retained, without selecting a production winner.
 The [fixed-component continuation design](highd_v47_fixed_mixture_moments.md)
 then removes random P/T count dispersion within each initial-action stratum,
 with correctly separated component variances and unchanged target correction.
+Its complete matched run retains every state and source; sparse outcomes
+inside coefficient-heavy layers still dominate empirical measurement noise.
+It does not promote a precise state model or new production allocation.
