@@ -1,0 +1,33 @@
+{
+  "version": 2,
+  "complete": true,
+  "implementation_and_freeze_commit": "759da95c95b618258852a7b60ec03c6887b6b92a",
+  "protocol": "configs/highd_v47_allocation_certificate_v2.json",
+  "summary_sha256": "274250eaff69cfe4eb50ff4b488937fbf8d4d051267399fe2de5a772e6e8d571",
+  "measurement_design_sha256": "ba2f203c14d5c2915cfd458c6f222ef4f7b7a5b932824532071f490e6a0fbe82",
+  "target": {"states": 33, "sources": 25, "law": "Unchanged uniform locked source, then uniform locked states within source", "action_teacher_unchanged": true},
+  "measurement": {"batches": 2, "initial_action_strata": 1549, "independent_roots": 199334, "branching_roots": 1024, "natural_roots": 198310, "total_wall_s": 4616.29973575},
+  "certificate": {"allocation_improvement_certified": true, "family_confidence": 0.95, "error_per_side_per_batch": 0.0125, "benefit_bet_rate": 39810.71705534969, "loss_bet_rate": 80000.3143669523, "acceptance_rule": "Both independent complete batches have loss_upper - benefit_lower < 0", "scope": "Same fixed-bank target and fixed teacher Q_A; true IID M2/variance sign, not a percentage-ratio confidence claim or source generalization"},
+  "batches": [
+    {"batch": 0, "benefit_lower": 0.00040485839219240086, "loss_upper": 0.00006468798386248572, "M2_difference_upper": -0.0003401704083299151, "M2_difference_point": -0.0006902052932398724, "target_M2_point": 0.0012484520735757626, "candidate_M2_point": 0.0005582467803358903, "M2_ratio_point_only": 0.44715114993320004, "difference_empirical_MCSE": 0.00009502846394223428},
+    {"batch": 1, "benefit_lower": 0.000327644919448162, "loss_upper": 0.00007398577531592692, "M2_difference_upper": -0.0002536591441322351, "M2_difference_point": -0.0006130215081331976, "target_M2_point": 0.0011473689179612705, "candidate_M2_point": 0.000534347409828073, "M2_ratio_point_only": 0.4657154307243574, "difference_empirical_MCSE": 0.00010422700854753502}
+  ],
+  "allocation": {"recommended_candidate": true, "maximum_state_LR": 1.1, "universal_uncentered_M2_loss_cap": 1.1, "recipient_states": [{"state_id": 6, "source": 200020, "alpha": 0.02, "q": 0.039174546276026394}, {"state_id": 18, "source": 200051, "alpha": 0.04, "q": 0.10627999917851912}], "all_other_states_q_over_alpha": 0.9090909090909091, "all_states_retained": true, "weights_clipped": false, "target_rebalanced": false},
+  "real_IID_diagnostic": {
+    "draws_per_arm": 2112,
+    "logical_draws": 4224,
+    "physical_paths": 3125,
+    "target_iid": {"events": 59, "event_sources": 7, "IS_mean": 0.00015512290636008475, "MCSE": 0.00008951216744628634, "M2_point": 0.000016938298879365067, "estimator_variance_point": 0.000000008012428120932002, "maximum_source_M2_share_point": 0.9140292391282476},
+    "allocated_iid": {"events": 109, "event_sources": 8, "IS_mean": 0.00010976749265243336, "MCSE": 0.00004078745967366551, "M2_point": 0.0000035239441079010104, "estimator_variance_point": 0.0000000016636168666308903, "maximum_source_M2_share_point": 0.7762992182593217},
+    "variance_ratio_point_only": 0.2076295526801405,
+    "interpretation": "Separate finite-sample CRN diagnostic; not pooled independent sources or the primary confidence certificate"
+  },
+  "audit": {"verified": true, "artifact_hashes_verified": 70, "measurement_roots_verified": 199334, "real_IID_likelihoods_verified": 4224, "predetermined_native_root_replays": 66, "maximum_full_factor_log_error": 6.661338147750939e-14, "teacher_QA_and_complete_strata_states_rechecked": 33, "supported_initial_action_cells_rechecked": 11704, "maximum_coefficient_mass_abs_error": 4.440892098500626e-16, "protected_prior_training_summaries_unchanged": 4, "relevant_tests_passed": 234, "frozen_code_assets_verified": true},
+  "all_state_J_relative_precision_certified": false,
+  "source_generalization_validated": false,
+  "new_source_episodes_opened": 0,
+  "validation_or_test_episodes_opened": 0,
+  "production_changed": false,
+  "ppo_ready": false,
+  "interpretation": "Branching and exact terminal integration reduce measurement noise; a new prospectively frozen whole-bank benefit/loss certificate supports safe useful state allocation despite imperfect individual J. Earlier failures and all negative records remain intact. No optimal Q_A, original-initialization acceleration or PPO-ready data claim."
+}

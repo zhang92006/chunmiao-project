@@ -208,18 +208,6 @@ independent batches. It retains the complete bank, but still finds rare native
 future outcomes in previously negative singleton actions; no state passes the
 simultaneous precision gate. Neither completed measurement promotes a Q_S fit.
 
-The [branching measurement](highd_v47_branching_moments.md) adds exact posterior
-prefix/suffix correction and an uncertainty-aware objective guard. Its completed
-two-second fork retains substantial shared-prefix uncertainty and recommends
-unchanged alpha. The new [decision-layer design](highd_v47_decision_branching.md)
-therefore branches before the early future decisions and integrates a terminal
-natural action. Its completed matched measurement reduced relative empirical
-MCSE from 22.68% to 11.50%, but retained uninformative simultaneous J bounds.
-The next [objective-level certificate](highd_v47_allocation_certificate.md)
-measures allocation benefit and loss directly with separately frozen training
-roots. Neither design reinterprets the unsuccessful earlier allocations or
-fits on consumed validation. A per-state precision certificate is not claimed.
-
 The [continuation measurement experiment](highd_v47_continuation_moments.md)
 then changes only the later-action measurement law with a complete path mixture
 and future likelihood bounded by two. It improves event-region access but still
@@ -232,3 +220,26 @@ with correctly separated component variances and unchanged target correction.
 Its complete matched run retains every state and source; sparse outcomes
 inside coefficient-heavy layers still dominate empirical measurement noise.
 It does not promote a precise state model or new production allocation.
+
+The [branching measurement](highd_v47_branching_moments.md) adds exact posterior
+prefix/suffix correction and an uncertainty-aware objective guard. Its completed
+two-second fork retains substantial shared-prefix uncertainty and recommends
+unchanged alpha. The new [decision-layer design](highd_v47_decision_branching.md)
+therefore branches before the early future decisions and integrates a terminal
+natural action. Its completed matched measurement reduced relative empirical
+MCSE from 22.68% to 11.50%, but retained uninformative simultaneous J bounds.
+The next [objective-level certificate](highd_v47_allocation_certificate.md)
+measures allocation benefit and loss directly with separately frozen training
+roots. Neither design reinterprets the unsuccessful earlier allocations or
+fits on consumed validation. A per-state precision certificate is not claimed.
+
+The complete prospective certificate now passes in both independent batches:
+the upper bounds on M2(q)-M2(alpha) are -0.0003401704 and -0.0002536591, with
+95% joint coverage for the four benefit/loss bounds. The original 33-state/
+25-source target and teacher Q_A are unchanged; every donor state retains
+q=alpha/1.1. This supports a reliable fixed-bank allocation decision despite
+imperfect individual J estimates, not a transferable state model or precision
+certificate for every state. Independent audit verified 199,334 measurement
+roots, 4,224 real IID draws, 70 hashes and 66 native root replays; 234 tests
+passed. See the [completed evidence and limitations](highd_v47_allocation_certificate.md#completed-fixed-bank-certificate-2026-10-06).
+Earlier failures remain unchanged; production and PPO are not promoted.
