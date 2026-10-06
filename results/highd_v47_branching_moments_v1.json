@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "complete": true,
+  "implementation_commit": "2fc5c13",
+  "protocol": "configs/highd_v47_branching_moments_v1.json",
+  "summary_sha256": "300458b995b4a9ad7d2a049540ee9e06c6a25d1b5ca937b942692649a90b4156",
+  "independent_roots": 16896,
+  "suffixes": 67508,
+  "future_native_decisions": 151783,
+  "total_wall_s": 947.994453917,
+  "single": {"target_M2": 0.0008239045762490134, "measurement_variance": 4.721570515662659e-8, "MCSE": 0.00021729175123926493},
+  "branching": {"target_M2": 0.0009275825266270231, "measurement_variance": 4.682484113787697e-8, "MCSE": 0.00021639048301133062},
+  "actual_variance_ratio_point_only": 0.9917217371327396,
+  "same_root_removed_variance_unbiased": 1.8934196582576803e-8,
+  "same_root_inferred_single_variance_unbiased": 6.575903772045377e-8,
+  "simultaneously_precise_states": 0,
+  "allocation": {"recommendation": "retain_target_uncertain_objective", "true_uncentered_M2_loss_cap": 1.1, "batch0_worst_case_M2_difference_upper": 0.4498652625013084, "batch1_candidate_ratio_point_only": 1.0999999997266436, "batch1_M2_difference_interval": [-0.8337186422358209, 0.4498652625013084], "improvement_validated": false},
+  "audit": {"artifacts_verified": 69, "predetermined_native_root_replays": 66, "max_full_factor_log_error": 1.3677947663381929e-13, "relevant_tests_passed": 197, "frozen_code_assets_verified": true},
+  "production_changed": false,
+  "ppo_ready": false,
+  "state_noise_solved": false,
+  "interpretation": "Weighted suffix branching is unbiased but leaves important shared-prefix uncertainty. The uncertainty guard declines allocation promotion. Earlier branching and conditional action integration are prospective developments, not reinterpretations or extensions of this run."
+}

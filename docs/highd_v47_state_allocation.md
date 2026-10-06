@@ -208,6 +208,14 @@ independent batches. It retains the complete bank, but still finds rare native
 future outcomes in previously negative singleton actions; no state passes the
 simultaneous precision gate. Neither completed measurement promotes a Q_S fit.
 
+The [branching measurement](highd_v47_branching_moments.md) adds exact posterior
+prefix/suffix correction and an uncertainty-aware objective guard. Its completed
+two-second fork retains substantial shared-prefix uncertainty and recommends
+unchanged alpha. The new [decision-layer design](highd_v47_decision_branching.md)
+therefore branches before the early future decisions and integrates a terminal
+natural action. It is prospective measurement development, not a promoted Q_S
+or a reinterpretation of the completed allocation evidence above.
+
 The [continuation measurement experiment](highd_v47_continuation_moments.md)
 then changes only the later-action measurement law with a complete path mixture
 and future likelihood bounded by two. It improves event-region access but still

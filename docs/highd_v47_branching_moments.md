@@ -81,3 +81,78 @@ python -m scenario_reconstruction.highd_v47_branching_moments run --lock outputs
 python -m pytest tests/test_highd_v47_branching_moments.py tests/test_highd_v47_fixed_mixture_moments.py -q
 python -m scenario_reconstruction.highd_v46_workflow verify
 ```
+
+## Completed measurement, 2026-10-06
+
+Implementation/protocol `2fc5c13` was committed and frozen before new native
+outcomes. Both full batches completed: 16,896 independent roots, 67,508 suffix
+paths and 151,783 future native decisions, across every original state/source
+and action stratum. Nineteen stopped prefixes were not forked. Local wall time
+was 947.99 s, not a controlled efficiency benchmark.
+
+| Quantity | Single suffix | Weighted branching |
+| --- | ---: | ---: |
+| Target teacher-action M2 measurement | 0.000823905 | 0.000927583 |
+| Measurement MCSE | 0.000217292 | 0.000216390 |
+| Relative empirical MCSE | 26.37% | 23.33% |
+| First-batch target M2 | 0.000845894 | 0.001085325 |
+| Second-batch target M2 | 0.000801915 | 0.000769841 |
+
+The actual branching/single measurement-variance point ratio is 0.99172.
+The same-root unbiased removed-conditional-variance estimate is 1.89342e-8,
+giving inferred single variance 6.57590e-8 versus branching 4.68248e-8 (ratio
+0.71207). These are two different finite-sample diagnostics, not conflicting
+identities or supported variance confidence claims. Cost must also be considered.
+Neither comparison establishes precise state moments or a superior testing Q_S.
+
+### The fork is too late for important prefix uncertainty
+
+| State / source | Branching J, batch 0 / batch 1 | Combined relative empirical MCSE |
+| --- | --- | ---: |
+| 6 / 200020 | 0.0106707 / 0.0234004 | 40.10% |
+| 18 / 200051 | 0.0138845 / 0.0050830 | 36.47% |
+| 19 / 200053 | 0.00288293 / 0.0000979904 | 94.46% |
+| 32 / 230053 | 0.0145574 / 0.00545561 | 57.04% |
+
+For example, state 19's root 6240880/action [32,18] has four identical positive
+suffix values 0.955127. Its rare dangerous prefix is already shared by all
+suffixes. Several largest state-6/18 roots likewise have all four suffixes
+positive with almost identical weights. More suffixes from those same prefixes
+cannot remove the randomness that selected the prefix. This is an observed
+mechanism of the remaining noise, not proof that all uncertainty has that cause.
+
+Batch 0's objective upper bound remained positive (0.449865), so the protected
+allocator recommended unchanged alpha. Its exploratory upper-envelope candidate
+gave a batch-1 common-measurement M2 ratio 1.10, not improvement; the objective
+interval was [-0.833719, 0.449865]. No state meets simultaneous relative precision,
+and no Q_S fit or PPO dataset is promoted. The 10% true uncentered-M2 safety
+bound is implemented, but is not an empirical efficiency result. Importantly,
+the uncertain point estimates no longer force an unsafe allocation decision.
+
+Independent reconstruction verified all 69 artifact hashes, all densities,
+posterior weights, schedules, root-level variances, allocation decisions and
+66 predetermined complete native trees. Maximum full/factor log error was
+1.37e-13. Replays are checks, not additional observations. Earlier evidence
+and production remain unchanged. The completed summary SHA is
+`300458b995b4a9ad7d2a049540ee9e06c6a25d1b5ca937b942692649a90b4156`.
+All 197 relevant measurement/allocation/sampler regression tests and frozen
+code/assets verification passed at the subsequent decision-layer handoff.
+
+**Decision:** prefix/suffix correction and uncertainty protection are verified;
+the large measurement problem is not solved. Continue prospective development
+with weighted branching before future decisions, and conditional integration
+of a terminal action instead of only more suffixes at two seconds. Such a
+measurement must retain the same target and native endpoint, independent-root
+statistics, exact correction and all negative states. Do not retune or append
+outcomes to this completed experiment.
+
+The separately versioned [decision-layer measurement](highd_v47_decision_branching.md)
+implements that next design; it does not append to this completed run.
+
+Compact evidence:
+[highd_v47_branching_moments_v1.json](../results/highd_v47_branching_moments_v1.json).
+
+```bash
+python -m scenario_reconstruction.highd_v47_branching_moments_audit --replay
+python -m pytest tests/test_highd_v47_branching_moments.py tests/test_highd_v47_branching_moments_audit.py -q
+```
