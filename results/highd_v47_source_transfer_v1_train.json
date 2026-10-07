@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "record_date": "2026-10-06",
+  "status": "complete_training_review_failed_validation_unopened",
+  "implementation_commit": "d431b242092b890dbfdd3c57e372764003b4d9e3",
+  "validation_only_correction_commit": "afb99df",
+  "protocol": "configs/highd_v47_source_transfer_v1.json",
+  "config_sha256": "0ee2da48365041db841a8faa78698544a46e82f24ce0fc4d9025600bddc1c82b",
+  "implementation_sha256": "ef7beebd9f95d0ff7a9f98b2628a6f0ab94b94ec131f2a83fc7245e729c527b9",
+  "feature_implementation_sha256": "1e96af24a87cda68f8e3f2a67f3c8eb45b14f8c5b0367fd8283bcab5dbb3d32f",
+  "rule_lock_sha256": "8ef8736cbf3c014a1736c826b282dbf7b73b018b49c1ea8e25928f7724afa5b9",
+  "summary_sha256": "e9dc6960c85f33686693942f9b3576173524f97fd73cb5d6810784e26fc9f176",
+  "model_sha256": "1a605e31f59f26d4f1d5262efbe935b22439709f1bdff446358805ceb190f732",
+  "conditional_target_sha256": "120af5af56c1756ddb59730d0654ae5abd719b16cd08988386d678f5039b832f",
+  "collection": {
+    "source_seed_start": 260000,
+    "natural_sources": 256,
+    "bank_states": 1280,
+    "bounded_pair_audits": 3740,
+    "selected_sources": 56,
+    "supported_initial_action_cells_retained": 24069,
+    "batches": 2,
+    "roots_per_state_per_batch": 128,
+    "independent_measurement_roots": 14336,
+    "measured_positive_sources": 26,
+    "states_with_zero_observed_measurement": 30,
+    "total_recorded_wall_s": 5780.123264917,
+    "target": "Uniform selected source and its one frozen strict-B state; not natural reset density",
+    "interpretation": "Positive branching measurement is not a real-Q event-source count. Finite zero observations do not establish zero risk. No outcome-dependent budget extension or source substitution."
+  },
+  "model_review": {
+    "whole_source_folds": 4,
+    "feature_count": 11,
+    "source_ID_predictors": false,
+    "ridge_candidates": [
+      {"ridge": 1.0, "mean_OOF_M2_ratio_point": 1.091999650484473},
+      {"ridge": 10.0, "mean_OOF_M2_ratio_point": 1.0682577256962624},
+      {"ridge": 100.0, "mean_OOF_M2_ratio_point": 1.0518256392159397}
+    ],
+    "selected_ridge": 100.0,
+    "selected_fold_M2_ratio_points": [1.098949411060482, 0.9422850048080867, 1.099779779939778, 1.0662883610554128],
+    "selected_OOF_ratio_point": 1.0518256392159397,
+    "full_training_fit_M2_ratio_point": 0.8114211962721605,
+    "required_OOF_ratio_below": 1.0,
+    "minimum_positive_training_sources": 5,
+    "training_review_passed": false,
+    "interpretation": "Training-only development point diagnostics, not variance-ratio confidence bounds. In-fit improvement is not source generalization."
+  },
+  "posthoc_training_diagnosis": {
+    "largest_measured_target_source_M2_share": 0.8449225960985489,
+    "effective_measured_target_M2_sources": 1.3912435757198782,
+    "dominant_missed_source": {
+      "source": 260081,
+      "state_id": 24,
+      "time_s": 20.0,
+      "actor_ids": [24, 26],
+      "batch_J": [0.07924743424352254, 0.11501872024763943],
+      "J_point": 0.09713307724558098,
+      "OOF_predicted_J": 0.0000838299584426436,
+      "OOF_q_over_alpha": 0.9090909090909091,
+      "positive_roots": 36,
+      "relative_empirical_measurement_MCSE": 0.33465138482294154
+    },
+    "same_fold_recipient": {
+      "source": 260214,
+      "measured_J": 0.0001592949976803882,
+      "OOF_predicted_J": 0.0007538583876551182,
+      "OOF_q_over_alpha": 2.181818181818181
+    },
+    "interpretation": "Held-out J ordering misallocates mass despite a valid protected water-filling solver. Surrogate-loss/feature adequacy and residual label uncertainty require training-only ablations; this does not identify a unique causal deficiency. Old/new source-share values use different targets and are not matched improvements."
+  },
+  "audit": {
+    "verified": true,
+    "record_sha256": "e64c8ff143006f975d7dfc9648567e367f95ddabf2983e7f8edfe944dd49d4dc",
+    "artifact_hashes_verified": 174,
+    "independent_measurement_roots_verified": 14336,
+    "predetermined_native_root_replays": 112,
+    "maximum_full_factor_log_error": 9.281464485866309e-14,
+    "audit_implementation_sha256": "10d74e0c54ce52a54a53bad359de3c3a92165adb771e9cc4d6ef5d4a1d0aac29",
+    "relevant_tests_passed": 296,
+    "frozen_code_and_assets_verified": true,
+    "protected_prior_summaries_unchanged": 7
+  },
+  "validation": {
+    "source_seed_start": 270000,
+    "reserved_sources": 256,
+    "sources_opened": false,
+    "model_lock_created": false,
+    "training_guard_refuses_freeze": true,
+    "native_transfer_metrics": null,
+    "prospective_corrected_protocol": "configs/highd_v47_source_transfer_validation_v2.json",
+    "corrected_protocol_sha256": "57137f7cbc9f30963ef7b3383dca4b24b18b873662443010c14de468e3fccf59"
+  },
+  "old_fixed_bank_certificate_unchanged": true,
+  "old_fixed_bank_certificate_summary_sha256": "274250eaff69cfe4eb50ff4b488937fbf8d4d051267399fe2de5a772e6e8d571",
+  "natural_target_sha256": "106a9fbc795c75c9d4f60a880da7264cb626f9163e5ec073b720e6b48c6f9db5",
+  "production_changed": false,
+  "ppo_ready": false,
+  "ppo_trained": false,
+  "training_exported": false,
+  "decision": "Do not open validation or promote this model. Preserve the complete failed training check; a separately versioned training-only feature/objective redesign is required before a fresh validation freeze."
+}

@@ -222,3 +222,6 @@ The next [fresh-source transfer experiment](highd_v47_source_transfer.md) leaves
 this fixed-bank evidence unchanged. It learns Q_S from pre-outcome features on
 new training sources, then freezes the mapping before separate validation;
 it does not run another refinement of this certificate or authorize PPO.
+The first new-source training model failed its predeclared source-held-out
+check (OOF M2 ratio point 1.05183). Validation remains unopened; this does not
+invalidate or expand the original fixed-bank certificate's scope.

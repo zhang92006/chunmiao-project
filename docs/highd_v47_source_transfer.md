@@ -2,8 +2,9 @@
 
 This prospective experiment follows the completed [fixed-bank certificate](highd_v47_allocation_certificate.md),
 but does not run, refine or fit that bank again. The old certificate demonstrates
-a decision principle, not a source-generalizing model. No new-source result is
-claimed here. NDE, initialization, native dynamics, stopped CAV-first-collision
+a decision principle, not a source-generalizing model. Completed training
+evidence is recorded below; fresh validation has not opened. NDE,
+initialization, native dynamics, stopped CAV-first-collision
 event, teacher action proposal, production and PPO remain unchanged.
 
 ## Separate new sources and an explicit conditional target
@@ -178,3 +179,85 @@ and retain abstention/censoring behavior. Training review and the independent
 audit/replays must still pass before any validation freeze or source opening.
 All 296 relevant regression tests and frozen-code/asset verification passed
 after this correction. These synthetic tests did not open validation sources.
+
+## Completed new-source training: the transferable model did not pass
+
+The frozen `d431b24` training collector completed all 256 new natural sources,
+1,280 bank states, 3,740 bounded pair audits and 56 selected sources. Both full
+branching batches retained 14,336 independent roots and all 24,069 supported
+initial-action cells. Twenty-six sources have positive measured J; 30 states
+have zero observations. Positive integrated measurements are not real-Q event
+source counts, and finite zero observations do not establish zero risk. No
+extra case, continuation, batch or source episode was added. Recorded local run
+time was 5,780.12 s, not a controlled timing benchmark.
+
+All three predeclared ridge candidates failed the source-held-out point check:
+
+| Ridge | Mean four-fold OOF M2 ratio to alpha, point only |
+| --- | ---: |
+| 1 | 1.09200 |
+| 10 | 1.06826 |
+| 100, selected | 1.05183 |
+
+The selected model's individual checking-fold ratios were 1.09895, 0.94229,
+1.09978 and 1.06629. Its full-training fitted ratio was 0.81142. That in-fit
+drop is not source-generalization evidence: the selected OOF ratio is above
+one, so the frozen rule rejects opening validation. These are development
+point diagnostics, not confidence claims that the true variance is 5.18%
+worse or that the training improvement repeats. No parameter was changed to
+obtain a passing value, and no validation outcome was used to choose a model.
+
+### Observed failure is held-out J ranking, not invalid state likelihood
+
+At source 260081, state 24, 20 s, pair [24,26], the two independently seeded
+branching batches measured J=0.0792474 and 0.115019 (combined 0.0971331).
+There were 36 positive roots and empirical relative measurement MCSE 33.47%.
+The checking-fold prediction was only 0.0000838300, causing the protected
+allocator to put this source at q=alpha/1.1. The same fold instead gave source
+260214 q/alpha=2.18182, predicting J=0.000753858 versus measured 0.000159295.
+Thus this model orders the important sources incorrectly. The dominant
+260081 measurement is not solely a single positive in an otherwise negative
+batch, although its J remains uncertain.
+
+The new bank's measured target M2 share at 260081 is 84.49%, with descriptive
+effective M2 sources 1.391. The old teacher's 99.54% used different states,
+target and observations: subtracting these percentages would not establish
+an intervention effect. Likewise, 26 positive measured sources include
+extremely small natural-risk contributions and do not certify balanced risk.
+
+The eleven aggregate features and equal-source log-fraction ridge surrogate
+have not demonstrated the required allocation ranking. Log prediction error
+is not the M2 objective sum(alpha^2 J/q); it can favor fitting small fractions
+while underallocating a large-J source. Feature insufficiency and residual
+measurement noise remain plausible contributors, not independently isolated
+causes. The next development version should compare an allocation-objective
+loss and richer pre-outcome traffic/action context on training data, with
+source-held-out checks and the same support protection. This is a proposed
+separate training design, not a refit or an extra run in the completed protocol.
+
+### Audit and enforced decision
+
+Independent read-only reconstruction verified all 174 artifact hashes, all
+14,336 root schedules/densities/endpoints, the whole-source folds and exact
+fitting reproduction. All 112 predetermined complete native root replays
+matched; maximum full/factor log discrepancy was 9.28e-14. Those replays are
+verification, not extra fitting observations. Seven protected old measurement,
+allocation and consumed-validation summaries stayed unchanged. All 296 relevant
+tests and frozen code/assets passed.
+
+The corrected validation entry point refuses model freeze with
+`Training source-held-out review failed; leave validation unopened`.
+Sources 270000–270255 remain reserved and unopened; no validation lock, native
+validation result, PPO run or sequence manifest is produced. The old fixed-bank
+certificate remains valid within its original scope and is not re-run.
+
+**Decision:** this transferable feature model has not earned fresh validation
+or production use. Keep the failed training evidence, baseline alpha, NDE,
+teacher Q_A and PPO unchanged; do not claim that the original generalization
+problem is solved. The next work is training-side model/feature diagnosis, not
+another fixed-bank certificate or a validation-driven parameter search.
+
+Compact reproducible evidence:
+[highd_v47_source_transfer_v1_train.json](../results/highd_v47_source_transfer_v1_train.json).
+Complete summary SHA:
+`e9dc6960c85f33686693942f9b3576173524f97fd73cb5d6810784e26fc9f176`.

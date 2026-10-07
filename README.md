@@ -65,6 +65,8 @@ The [fresh-source Q_S transfer protocol](docs/highd_v47_source_transfer.md)
 uses new, disjoint training/validation cohorts, outcome-blind features and
 source-grouped fitting. It tests prospective same-target objective benefit,
 without refining the old fixed-bank certificate or automatically launching PPO.
+Its first complete new-source training check did not improve held-out M2;
+the declared review keeps fresh validation unopened and production unchanged.
 The frozen NDE tag is `nde-v46-frozen-20261003`; training code is on
 `feature/highd-v46-d2rl-handoff`. This path needs Python 3.9 and the V46 LFS
 archive, with no SUMO or raw highD tracks. The fixed IDM CAV does not change lanes.
