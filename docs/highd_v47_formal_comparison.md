@@ -6,9 +6,14 @@ modes still have zero CAV events in both attempts**. Formal PPO has not
 started; Validation/FinalTest remain unopened.
 The frozen v1 protocol/data are unchanged. The separate
 [training-behavior recovery record](highd_v47_formal_recovery.md) retains this
-failed action-exploration attempt. Its next supported-path diagnostic checks
-action persistence before any further training collection. Do not repeat the
-completed recovery commands or remove the zero-reward guard.
+failed action-exploration attempt. The subsequent 7,578 supported temporal
+probes also recorded zero CAV events; this does not establish action persistence
+as the cause. Do not repeat completed recovery commands or remove the guard.
+The current next step is [original teacher restoration and source expansion](highd_v47_teacher_expansion.md):
+reproduce the historical 67 CAV events, then collect one shared fixed-behavior
+dataset on 4,096 declared training sources. Require at least 50 collision-bearing
+sources and 500 events for the count gate; 100 collision sources are desired.
+These are prospective goals, not completed results or automatic PPO readiness.
 
 This protocol implements the user's formal comparison request on 2026-10-07.
 The prior six 100-iteration runs are retained as pipeline smoke evidence in
