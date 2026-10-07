@@ -166,3 +166,12 @@ Compact evidence:
 [highd_v47_state_model_revision_v1.json](../results/highd_v47_state_model_revision_v1.json).
 Complete summary SHA:
 `cfd3effbe02b53fd21f45411fdeae35a7230d22688b167221b52e51aadf04f97`.
+
+## Subsequent user decision, 2026-10-06
+
+Transferable Q_S training is stopped. The new
+[fixed-alpha PPO protocol](highd_v47_fixed_alpha_ppo.md) sets Q_S=alpha and
+state LR=1, then trains actual Single-BV and Dual-BV policies from new real-Q
+critical sequences. Passing this failed state-model screen is no longer a
+prerequisite for that separate training experiment. The completed results
+above are preserved; no transferable state model is promoted.

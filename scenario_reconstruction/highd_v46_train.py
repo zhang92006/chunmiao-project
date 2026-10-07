@@ -29,7 +29,8 @@ def export_policy(trainer,output,dataset,training_seeds,validation_seeds,validat
         'sampling_scope':dataset.get('sampling_scope','natural_initialization'),
         'conditional_target_sha256':dataset.get('conditional_target_sha256'),
         'training_source_seeds':sorted({s['source_seed'] for s in dataset['sequences'] if 'source_seed' in s}),
-        'validation_source_seeds':sorted({s['source_seed'] for s in (validation_dataset or {}).get('sequences',[]) if 'source_seed' in s})})
+        'validation_source_seeds':sorted({s['source_seed'] for s in (validation_dataset or {}).get('sequences',[]) if 'source_seed' in s}),
+        **{k:dataset[k] for k in ('state_sampling','state_likelihood_ratio','state_law_sha256') if k in dataset}})
 
 
 def main():
@@ -43,6 +44,9 @@ def main():
     from .highd_v46_assets import read,save,digest
     output=Path(a.output).resolve();output.mkdir(parents=True,exist_ok=False)
     cfg=read(a.config);iterations=cfg['iterations'] if a.iterations is None else a.iterations
+    fixed_iteration=cfg.get('checkpoint_selection')=='fixed_iteration'
+    if fixed_iteration and (a.validation_manifest or cfg.get('require_validation')):
+        raise ValueError('Fixed-iteration training cannot select on validation')
     if iterations<1 or cfg.get('validation_interval',10)<1:raise ValueError('Iterations and validation interval must be positive')
     from d2rl_training.highd_v46_sequence_env import V46SequenceEnv
     env_config={'sequence_manifest':str(Path(a.sequence_manifest).resolve()),'seed':a.seed,
@@ -113,6 +117,7 @@ def main():
             'validation_positive_episodes':sum(s['event_result'] for s in validation.sequences) if validation else 0,
             'observation_contract':check.dataset['observation_contract'],
             'sampling_scope':check.dataset.get('sampling_scope','natural_initialization'),
+            **{k:check.dataset[k] for k in ('state_sampling','state_likelihood_ratio','state_law_sha256') if k in check.dataset},
             'conditional_target_sha256':check.dataset.get('conditional_target_sha256'),
             'training_source_episodes':len({s['source_seed'] for s in check.sequences if 'source_seed' in s})}
         save(output/'training_protocol.json',provenance);records=[]
@@ -156,6 +161,7 @@ def main():
             'validation_fixed_scaled_second_moment':validation_baseline,'validation_selected_scaled_second_moment':best,
             'validation_ratio':best/validation_baseline if validation else None,
             'scope':('Validation selects a checkpoint including the initial fixed policy. Independent online testing is still required.' if validation
+                     else 'Fixed predeclared iteration PPO training completed; independent native evaluation remains separate.' if fixed_iteration
                      else 'Unvalidated training/interface check only; no generalization or acceleration claim.')})
     finally:
         if trainer is not None:trainer.stop()

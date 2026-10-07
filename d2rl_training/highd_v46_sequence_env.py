@@ -7,7 +7,7 @@ from gym import Env, spaces
 from scenario_reconstruction.highd_v46_contract import (
     LEGACY_OBSERVATION, CONTEXT_OBSERVATION, OBSERVATION_DIMENSIONS, replay_observation,
     LOG_WEIGHT_INDEX, LOG_WEIGHT_SCALE,
-    CONDITIONAL_OBSERVATION, CONTEXT_CONTRACTS,
+    CONDITIONAL_OBSERVATION, FIXED_ALPHA_OBSERVATION, CONTEXT_CONTRACTS,
 )
 
 
@@ -26,15 +26,20 @@ class V46SequenceEnv(Env):
         self.source=source;self.source_sha256=manifest['sha256']
         self.dataset=json.loads(raw)
         conditional = self.dataset['contract'] == 'highd_v46_conditional_d2rl_sequence_v1'
-        if self.dataset['contract'] not in ('highd_v46_native_d2rl_sequence_v1','highd_v46_native_d2rl_sequence_v2','highd_v46_conditional_d2rl_sequence_v1'):raise ValueError('Wrong native event/observation contract')
+        fixed_alpha = self.dataset['contract'] == 'highd_v47_fixed_alpha_d2rl_sequence_v1'
+        if self.dataset['contract'] not in ('highd_v46_native_d2rl_sequence_v1','highd_v46_native_d2rl_sequence_v2','highd_v46_conditional_d2rl_sequence_v1','highd_v47_fixed_alpha_d2rl_sequence_v1'):raise ValueError('Wrong native event/observation contract')
         self.observation_contract=self.dataset['observation_contract']
         if self.observation_contract not in OBSERVATION_DIMENSIONS:raise ValueError('Wrong observation contract')
-        expected=('highd_v46_conditional_d2rl_sequence_v1' if self.observation_contract==CONDITIONAL_OBSERVATION else
+        expected=('highd_v47_fixed_alpha_d2rl_sequence_v1' if self.observation_contract==FIXED_ALPHA_OBSERVATION else
+                  'highd_v46_conditional_d2rl_sequence_v1' if self.observation_contract==CONDITIONAL_OBSERVATION else
                   'highd_v46_native_d2rl_sequence_v2' if self.observation_contract==CONTEXT_OBSERVATION else 'highd_v46_native_d2rl_sequence_v1')
         if self.dataset['contract']!=expected:raise ValueError('Sequence and observation versions differ')
         self.sequences=self.dataset['sequences'];self.dimension=self.dataset['action_dimension']
         if not self.sequences:raise ValueError('Empty collection')
         if len({s['seed'] for s in self.sequences})!=len(self.sequences):raise ValueError('Duplicate collection seed')
+        if fixed_alpha:
+            from scenario_reconstruction.highd_v47_fixed_alpha_contract import validate_dataset
+            validate_dataset(self.dataset,manifest)
         if conditional:
             if self.dataset.get('sampling_scope') != 'conditional_state_bank':raise ValueError('Missing conditional scope')
             if manifest.get('conditional_target_sha256')!=self.dataset.get('conditional_target_sha256') or not self.dataset.get('conditional_target_sha256'):raise ValueError('Missing or mismatched conditional target')

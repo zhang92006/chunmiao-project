@@ -4,8 +4,10 @@ import numpy as np
 LEGACY_OBSERVATION = 'native_cav6_bv4x2_v1'
 CONTEXT_OBSERVATION = 'native_cav6_bv4x2_context_v2'
 CONDITIONAL_OBSERVATION = 'native_conditional_geometry22_v1'
-CONTEXT_CONTRACTS = (CONTEXT_OBSERVATION, CONDITIONAL_OBSERVATION)
-OBSERVATION_DIMENSIONS = {LEGACY_OBSERVATION: 14, CONTEXT_OBSERVATION: 22, CONDITIONAL_OBSERVATION: 22}
+FIXED_ALPHA_OBSERVATION = 'native_fixed_alpha_geometry22_v1'
+CONTEXT_CONTRACTS = (CONTEXT_OBSERVATION, CONDITIONAL_OBSERVATION, FIXED_ALPHA_OBSERVATION)
+OBSERVATION_DIMENSIONS = {LEGACY_OBSERVATION: 14, CONTEXT_OBSERVATION: 22, CONDITIONAL_OBSERVATION: 22,
+                          FIXED_ALPHA_OBSERVATION: 22}
 LOG_WEIGHT_INDEX = 16
 LOG_WEIGHT_SCALE = 30.
 
@@ -44,9 +46,10 @@ def independent_split(training, validation):
     overlap = {s['seed'] for s in training['sequences']} & {s['seed'] for s in validation['sequences']}
     if overlap:
         raise ValueError('Training/validation seeds overlap: '+str(sorted(overlap)[:8]))
-    if training.get('sampling_scope') == 'conditional_state_bank':
-        if validation.get('sampling_scope') != 'conditional_state_bank':
+    if training.get('sampling_scope') in ('conditional_state_bank','fixed_alpha_state_bank_iid'):
+        if validation.get('sampling_scope') != training['sampling_scope']:
             raise ValueError('Conditional and population collections cannot be mixed')
-        overlap = {s['source_seed'] for s in training['sequences']} & {s['source_seed'] for s in validation['sequences']}
+        key = 'state_law' if training['sampling_scope']=='fixed_alpha_state_bank_iid' else 'sequences'
+        overlap = {s['source_seed'] for s in training[key]} & {s['source_seed'] for s in validation[key]}
         if overlap:
             raise ValueError('Training/validation source episodes overlap')

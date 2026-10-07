@@ -13,6 +13,11 @@ license.
 
 ## Frozen V46 NDE and D2RL handoff
 
+The current training direction is [fixed-alpha Single-BV and Dual-BV PPO](docs/highd_v47_fixed_alpha_ppo.md).
+Transferable Q_S development has stopped by user direction. State sampling is
+fixed to alpha with state LR=1; both modes train on fresh real-Q, four-second
+critical sequences using the same locked training state bank.
+
 For a ready-to-train dual-BV experiment, use the
 [conditional PPO baseline](docs/highd_v46_conditional_baseline.md): explicit
 source-weighted replay, fresh validation, fixed-policy comparators, native
