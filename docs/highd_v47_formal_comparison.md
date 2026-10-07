@@ -1,5 +1,13 @@
 # Prospective matched Single-BV / Dual-BV action D2RL
 
+Current execution status: the v1 bank, both full 8,192-draw collections and
+2,518 scheduled native replays completed, but **both modes have zero CAV
+events**. Formal PPO has not started; Validation/FinalTest remain unopened.
+The frozen v1 protocol/data are unchanged. The separate
+[training-behavior recovery v2](highd_v47_formal_recovery.md) explains the
+proxy/native mismatch and supplies guarded off-policy collection/training
+commands; it does not relax the target event or silently change this protocol.
+
 This protocol implements the user's formal comparison request on 2026-10-07.
 The prior six 100-iteration runs are retained as pipeline smoke evidence in
 [the compact record](../results/highd_v47_fixed_alpha_ppo_smoke_v1.json).
@@ -192,6 +200,11 @@ passed 103 tests. A read-only reconstruction checked all 1,263 states and all
 state LR=1 remain intact. No source was regenerated and no native trajectory
 was run. Compact diagnostic evidence:
 [identity compatibility v1](../results/highd_v47_formal_identity_compat_v1.json).
+
+The following commands document the original v1 workflow. Its completed
+zero-event collection must not be overwritten or retried until favorable;
+use the [versioned recovery commands](highd_v47_formal_recovery.md) now, not
+the v1 `train` command below.
 
 The assistant prepares and tests the implementation. Run long jobs yourself.
 Use NEW output directories; preserve failed runs. Changes to code/configuration
