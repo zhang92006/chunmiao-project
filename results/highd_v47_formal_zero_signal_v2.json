@@ -1,0 +1,63 @@
+{
+  "status": "completed_recovery_failed_training_signal; prospective_reachability_not_started",
+  "recovery_implementation_commit": "4e8fc56",
+  "inputs": {
+    "outputs/v47_formal_v2_recovery_data/summary.json": "f8cd065b1bec38f817e0d6f2c74810044120405b115214fba408b0116929934c",
+    "outputs/v47_formal_v2_recovery_data/audit.json": "dd76fb94662e10a063bc9550f571e48907ee8050226922628f8379036687b6e9",
+    "outputs/v47_formal_v1_train_bank/bank.json": "eafef73f614045db7493ea5887c71ff16862ca955ee2a8efce457db0622c2c9b"
+  },
+  "single": {
+    "sequences": 8192,
+    "CAV_events": 0,
+    "BV_only_competing_endpoints": 81,
+    "horizon_endpoints": 8111,
+    "initial_controlled_actors_same_lane": 7981,
+    "initial_controlled_actors_other_lane": 211
+  },
+  "dual": {
+    "sequences": 8192,
+    "CAV_events": 0,
+    "BV_only_competing_endpoints": 80,
+    "horizon_endpoints": 8112,
+    "initial_controlled_actors_same_lane": 11761,
+    "initial_controlled_actors_other_lane": 328
+  },
+  "completed_native_audit": {
+    "verified": true,
+    "replays": 2518,
+    "maximum_full_factor_log_error": 5.684341886080802e-14
+  },
+  "read_only_bank_reconstruction": {
+    "states": 1263,
+    "original_single_selected_direct_CAV_leader": 1071,
+    "original_single_selected_same_lane_rear": 156,
+    "original_single_selected_other_lane": 35,
+    "original_single_selected_other_same_lane_front": 1,
+    "states_with_selected_actor_maximum_supported_proxy_at_least_0_5": 114,
+    "proxy_threshold_role": "descriptive only; not a filter or a new bank"
+  },
+  "bounded_old_action_physics_replay": {
+    "selection": "first 32 already recorded recovery draws in each mode",
+    "new_observations": 0,
+    "matched_elapsed_and_endpoints": 64,
+    "smallest_CAV_clearance_single_m": 6.687657955972327,
+    "smallest_CAV_clearance_dual_m": 6.412202880493396,
+    "scope": "old-path action application check; not full-bank safety or a unique causal diagnosis"
+  },
+  "prospective_probe_design": {
+    "protocol": "configs/highd_v47_formal_reachability_v1.json",
+    "states": 1263,
+    "sources": 253,
+    "modes": 2,
+    "arms": ["initial_peak", "reselected_peak", "persistent_peak"],
+    "planned_probes": 7578,
+    "native_outcomes_opened": false,
+    "PPO_export": false
+  },
+  "state_likelihood_ratio_in_training": 1.0,
+  "formal_PPO_started": false,
+  "validation_opened": false,
+  "zero_CAV_problem_solved": false,
+  "implementation_tests_passed": 121,
+  "frozen_assets_verified": true
+}

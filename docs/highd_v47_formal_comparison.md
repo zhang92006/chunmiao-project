@@ -1,12 +1,14 @@
 # Prospective matched Single-BV / Dual-BV action D2RL
 
-Current execution status: the v1 bank, both full 8,192-draw collections and
-2,518 scheduled native replays completed, but **both modes have zero CAV
-events**. Formal PPO has not started; Validation/FinalTest remain unopened.
+Current execution status: v1 and the separate recovery v2 each completed
+both 8,192-draw collections and 2,518 scheduled native replays, but **both
+modes still have zero CAV events in both attempts**. Formal PPO has not
+started; Validation/FinalTest remain unopened.
 The frozen v1 protocol/data are unchanged. The separate
-[training-behavior recovery v2](highd_v47_formal_recovery.md) explains the
-proxy/native mismatch and supplies guarded off-policy collection/training
-commands; it does not relax the target event or silently change this protocol.
+[training-behavior recovery record](highd_v47_formal_recovery.md) retains this
+failed action-exploration attempt. Its next supported-path diagnostic checks
+action persistence before any further training collection. Do not repeat the
+completed recovery commands or remove the zero-reward guard.
 
 This protocol implements the user's formal comparison request on 2026-10-07.
 The prior six 100-iteration runs are retained as pipeline smoke evidence in

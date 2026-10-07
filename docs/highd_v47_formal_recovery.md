@@ -1,5 +1,10 @@
 # Formal training status and versioned behavior recovery
 
+**Current status:** recovery v2 also completed with zero CAV events in both
+modes. The historical reproduction commands below are not instructions to
+repeat it. See the final section for the new, bounded reachability preflight.
+Formal PPO and held-out evaluation have not started.
+
 ## Where the experiment actually stopped
 
 The completed formal v1 training bank contains 1,263 states from 253 selected
@@ -98,7 +103,7 @@ This design **does not guarantee enough events**. If it fails its fixed budget,
 retain the negative result; no extra batch, positive-only restart, model change
 on Validation or automatic retry is authorized. Behavior event frequencies
 are not target-Q evaluation probabilities or efficiency evidence. Actual
-recovery outcomes and formal PPO results are pending researcher execution.
+recovery outcomes are recorded below; formal PPO remains blocked.
 
 ## Commands for the researcher
 
@@ -164,3 +169,116 @@ Implementation verification: 118 relevant regression tests passed; two
 iterations of synthetic PPO completed for each action dimension with state
 LR=1 and portable checkpoints. Frozen code/assets verified. No native recovery
 collection, formal PPO or held-out source evaluation was run by the assistant.
+
+## Completed recovery v2: exploration alone did not supply reward
+
+The researcher completed the full 8,192 draws per mode and native audit.
+Single has 8,111 horizon endpoints, 81 BV-only first collisions and zero CAV
+events; Dual has 8,112, 80 and zero respectively. All 2,518 prescribed native
+replays matched, with maximum full/factor log error 5.684341886080802e-14.
+The guard correctly returns `training_blocked` before Ray/PPO. This is a
+failed training-data design, not another Python exception to suppress.
+
+The competing BV endpoints account for approximately 1% of each collection.
+They do not explain why the other 99% also lack CAV reward. Recovery expands
+the action law only on the actors chosen by the original selector; it neither
+explores actor identity nor enforces temporal persistence of an adverse action.
+
+Read-only reconstruction of all 1,263 bank states found Single's initial
+selected actor to be the direct CAV leader in 1,071 states, a same-lane rear
+actor in 156, another-lane actor in 35 and a more distant same-lane front
+actor in one. Only 114 states have selected-actor maximum supported original
+proxy risk >=0.5. This threshold is descriptive, not a new selection rule.
+The proxy's four-second held-action calculation is not the native one-second
+reselection/resampling process. An exponential clearance score also assigns
+positive criticality to close but successfully controlled following traffic.
+
+As a bounded read-only physics check, the first 32 **existing** recovery paths
+per mode were replayed using their stored complete actions. All endpoints and
+elapsed times matched. All 32 Single initial choices were direct leaders;
+Dual included those 32 leaders and 15 further same-lane front actors. Minimum
+CAV clearances over these old paths were at least 6.68766 m (Single) and
+6.41220 m (Dual). Native CAV acceleration responded to the executed actions.
+This subset is not proof of safety for the full bank, and does not establish
+which mechanism caused every zero. No new continuation was sampled for this
+check. The negative collections do not establish zero true CAV probability.
+
+## Next command: supported-path reachability, not another PPO retry
+
+The new [protocol](../configs/highd_v47_formal_reachability_v1.json) and
+`highd_v47_formal_reachability` entry point test the missing temporal-control
+hypothesis on **every** one of the 1,263 locked training states. Each mode
+receives one four-second probe per state under each of three declared rules:
+
+| Probe | Initial decision | Later decisions |
+| --- | --- | --- |
+| `initial_peak` | Original selected actor(s), supported maximum-risk action | Natural actions |
+| `reselected_peak` | Same | Original actor selector, supported maximum-risk action at each eligible decision |
+| `persistent_peak` | Same | Keep initial actor identities, recompute their supported maximum-risk actions each second |
+
+Maximum-risk ties use largest natural action mass, then flat action index.
+These are **forced supported-action diagnostics**, not probabilistic teachers.
+All unforced partners follow the exact natural conditional distribution.
+Persistent pairs use their current joint marginal even if natural pairing
+changes; the original evaluated target selector is not overwritten. Persistence
+continues independently of later original-gate eligibility, explicitly as a
+diagnostic intervention. Neither persistent identities nor persistent peak
+actions are silently adopted by Single/Dual evaluation.
+
+The complete plan has 7,578 probes; Single and Dual have identical state
+coverage and budget. Seeds 1600000000–1600001262 are disjoint by case and
+shared across arms/modes as common random numbers, not independent source
+replications. All negatives, sources and BV-only stopped endpoints remain.
+The bank target alpha and all frozen training/evaluation laws stay unchanged.
+The exhaustive diagnostic schedule is not an IID draw from alpha; it produces
+no IS mean, M2, state-LR estimate or PPO manifest. Every path records forced
+action natural mass, original target actors, actual actors/actions, conditional
+partner log probability, native clearance and first-collision identities.
+
+A witness under `reselected_peak` would establish a supported path accessible
+without changing actor choice and motivate a separately declared risk-directed
+behavior proposal. A witness only under `persistent_peak` would motivate
+investigating actor continuity. Neither finite contrast proves a unique cause;
+unforced futures differ after actions diverge. A negative probe is not a
+certificate of unreachability. There is no automatic further batch or teacher
+promotion, and these forced labels cannot be inserted into ordinary PPO replay.
+
+Run the following once after code/protocol review and commit. No long native
+job is launched by the assistant. The two commands stop on errors and use new
+exclusive-create destinations; do not delete old evidence or rerun old training.
+
+```bash
+conda activate highd-ppo-clean39
+export TMPDIR=/tmp OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
+
+python -m scenario_reconstruction.highd_v47_formal_reachability freeze \
+  --recovery-frozen outputs/v47_formal_v2_recovery_frozen \
+  --data outputs/v47_formal_v2_recovery_data \
+  --output outputs/v47_formal_reachability_v1_frozen \
+&& python -u -m scenario_reconstruction.highd_v47_formal_reachability run \
+  --frozen outputs/v47_formal_reachability_v1_frozen \
+  --output outputs/v47_formal_reachability_v1
+```
+
+Progress prints every 32 probes, including the current CAV witness count.
+The final summary is `outputs/v47_formal_reachability_v1/summary.json`.
+After completion, a separate native replay audit is available:
+
+```bash
+python -u -m scenario_reconstruction.highd_v47_formal_reachability audit \
+  --frozen outputs/v47_formal_reachability_v1_frozen \
+  --data outputs/v47_formal_reachability_v1 --replay \
+  --output outputs/v47_formal_reachability_v1/audit.json
+```
+
+Implementation tests check support/ties, current conditional partners,
+actor-persistence boundaries, first-collision stopping, complete schedules,
+exclusive output creation and freeze-before-outcomes. They are not evidence
+that this prospective diagnostic has found CAV events. The zero-CAV training
+problem remains unresolved until a supported probabilistic collection actually
+passes the training-signal gate.
+
+Verification for this addition: 121 relevant regression tests passed and frozen
+code/assets verified. A read-only load of the actual completed recovery passed
+its locks and reproduced the full 7,578-task plan without sampling outcomes.
+Compact evidence: [zero-signal v2](../results/highd_v47_formal_zero_signal_v2.json).
