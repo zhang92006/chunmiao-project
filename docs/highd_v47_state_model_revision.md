@@ -94,3 +94,75 @@ Raw feature matrices, models and full fitting reports stay in ignored outputs.
 Commit only reproducible code/protocol, tests and compact evidence. Old source,
 measurement, model and validation artifacts must remain unchanged. There is
 no optional native extension or repeat-until-favorable fit.
+
+## Completed training development, 2026-10-06
+
+Implementation/protocol `a58cb64` was committed before freezing this fitting
+design. All four declared families completed on the same 56 source/state rows,
+with zero new native outcomes. The original 14,336-root measurements and all
+negative states were retained. The primary candidate did **not** pass:
+
+| Family | Aggregate nested outer M2 ratio | Batch 0 ratio | Batch 1 ratio |
+| --- | ---: | ---: | ---: |
+| Original features + log J | 1.09747 | 1.09444 | 1.09998 |
+| Extended context + log J | 1.06343 | 1.03887 | 1.08387 |
+| Original features + direct M2 | 1.01163 | 1.01790 | 1.00640 |
+| Extended context + direct M2, primary | 1.09922 | 1.09829 | 1.09998 |
+
+These are development point diagnostics from already consumed training data,
+not confidence statements about true source-population variance. Nested
+selection and aggregate M2 differ from the original v1 mean-fold-ratio design;
+the original 1.05183 is not a matched control for this new table.
+
+The primary full-training fitted M2 ratio is 0.31268, yet every outer checking
+fold has ratio >1. Source 260081 still receives q/alpha=0.909091, while the same
+checking fold gives 260214 q/alpha=1.85015 (their measured J are 0.0971331 and
+0.000159295). No source identifier enters inference. Optimizing training M2
+and adding traffic context therefore did not repair this held-source ordering;
+a large in-fit improvement is not a transferable allocation result. The two
+batch diagnostics both reject this candidate, without proving a unique causal
+explanation for every state's measurement uncertainty.
+
+### Numerical failure is recorded separately from source misranking
+
+Protected water-fill has active-set boundaries; a correct within-active-set
+gradient does not make the objective globally smooth. Original-feature direct
+M2 had two outer line-search failures and correctly used neutral q=alpha there.
+Its near-one aggregate ratio must not be advertised as learning progress: the
+largest-J checking fold is one of those neutral fallbacks. Extended-context
+direct M2 had no outer optimizer failure, but one outer fold's inner selection
+had no fully successful regularization candidate. That fallback and every
+failed grid fit remain in the artifacts and also prevent promotion. A solver's
+relative-objective convergence flag is not a global optimum certificate.
+
+Thus these data do not establish a clean superiority/rejection theorem for
+all direct-M2 learning methods. They demonstrate that **this implemented
+linear-score family** fails the declared training review. Both numerical
+robustness and transferable high-J ranking need attention before an independent
+test. The next development design should use a differentiable protected
+allocation parameterization, with explicit out-of-source uncertainty handling,
+rather than dropping failed folds or selecting a favorable ablation. Any such
+change needs its own version; none was substituted into this completed run.
+
+### Verification and decision
+
+Read-only reconstruction reproduced feature extraction, all nested scalers,
+priors, grid fits, failure/fallback statuses and final models exactly. A separate
+held-fold calculation reproduced all objective contributions, with maximum
+absolute discrepancy 1.73e-18. Three revision artifacts and the original 174
+native artifacts were checksum-verified; the inherited independent native audit
+remains the evidence for the old 112 root replays. No new native replay or
+continuation became fitting data. All 275 V47 regression tests and frozen
+code/assets verification passed. The original training summary and seven
+protected earlier summaries stayed unchanged.
+
+**Decision:** retain this failed development experiment and alpha as the
+operational fallback. Do not open validation 270000–270255, reinterpret the
+full-training ratio as generalization, automatically choose another family,
+retune on validation or launch PPO. The fixed-bank certificate is not refined;
+production, natural target, Q_A and all old manifests remain unchanged.
+
+Compact evidence:
+[highd_v47_state_model_revision_v1.json](../results/highd_v47_state_model_revision_v1.json).
+Complete summary SHA:
+`cfd3effbe02b53fd21f45411fdeae35a7230d22688b167221b52e51aadf04f97`.

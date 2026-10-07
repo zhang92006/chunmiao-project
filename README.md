@@ -67,6 +67,10 @@ source-grouped fitting. It tests prospective same-target objective benefit,
 without refining the old fixed-bank certificate or automatically launching PPO.
 Its first complete new-source training check did not improve held-out M2;
 the declared review keeps fresh validation unopened and production unchanged.
+The [nested state-model revision](docs/highd_v47_state_model_revision.md)
+compares richer context and direct M2 learning without new native outcomes.
+Its fixed primary candidate also fails held-source review; fitting gains and
+neutral optimizer fallbacks are not promoted as transfer success.
 The frozen NDE tag is `nde-v46-frozen-20261003`; training code is on
 `feature/highd-v46-d2rl-handoff`. This path needs Python 3.9 and the V46 LFS
 archive, with no SUMO or raw highD tracks. The fixed IDM CAV does not change lanes.
