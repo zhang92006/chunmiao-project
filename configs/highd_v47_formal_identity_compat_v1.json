@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "scope": "Explicit representation-only compatibility for frozen formal v1 banks; no source rediscovery, resimulation, changed likelihood or hash repinning",
+  "parent_config": "configs/highd_v47_formal_comparison_v1.json",
+  "parent_config_sha256": "649e4b0934a248c0e72a278f9d963ad464111d1786cf6d7c06388b2da1869503",
+  "parent_runner": "scenario_reconstruction/highd_v47_formal_comparison.py",
+  "parent_runner_sha256": "b105930668bf314e24126031f9e04dff8f5f7956c636f80ea88d22cdadd5d3a5",
+  "state_identity_rule": "Accept the unchanged serialized identity or exactly reproduce the pre-JSON hash by restoring only last_acceleration actor-ID keys to canonical nonnegative integers",
+  "immutable_parent_artifacts": ["lock.json", "bank.json", "summary.json", "state_law", "sequence manifests and trajectories"],
+  "sampling_change": false,
+  "new_outcomes_during_prepare": false
+}

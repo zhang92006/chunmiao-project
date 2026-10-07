@@ -144,6 +144,55 @@ that consistent superiority is not established. No best-seed promotion occurs.
 
 ## Commands for the researcher
 
+### Frozen-v1 JSON identity compatibility, 2026-10-07
+
+The first completed bank exposed a representation bug: `last_acceleration`
+uses integer actor-ID keys in memory, but JSON reloads them as strings.
+`identity(..., sort_keys=True)` sorts integers numerically before saving and
+strings lexicographically after loading. The outer bank checksum remains
+correct while 1,254 of the 1,263 inner state hashes fail the naive read-back
+check. Restoring ONLY that mapping's original integer keys reproduces every
+stored state hash; case IDs, sources and alpha masses match without changes.
+This is not changed physical state content or a likelihood error.
+
+Do NOT edit bank hashes, re-freeze the parent, delete sources or repeat discovery.
+The separately versioned
+[representation-only adapter](../configs/highd_v47_formal_identity_compat_v1.json)
+pins the original formal configuration/runner and preserves every parent code,
+lock and data byte. It retains outer-file checksums and exact inner identity
+checks, allowing only the provably reproducible pre-JSON acceleration-key hash.
+It neither changes returned states nor modifies Q, alpha, seeds, PPO or budgets.
+
+For an existing v1 frozen lock and training bank, declare the adapter once:
+
+```bash
+python -m scenario_reconstruction.highd_v47_formal_identity_compat prepare \
+  --frozen outputs/v47_formal_v1_frozen \
+  --bank outputs/v47_formal_v1_train_bank \
+  --output outputs/v47_formal_v1_identity_compat.json
+```
+
+Subsequent commands below already use the compatibility entry point and
+`--identity-compat outputs/v47_formal_v1_identity_compat.json`. All sampling
+arguments stay unchanged. The renderer needs no change.
+Every delegated command writes an exclusive-create provenance sidecar, verifies
+the adapter/config hashes and original parent lock, and uses the unchanged
+original entry point except for its bank identity reader. The same compatibility
+applies to the later validation bank; it is not a new sampling protocol.
+
+The local failure occurred before training collection created its destination:
+there was no `outputs/v47_formal_v1_data/summary.json` or audit. Start with
+`collect-train`, not `audit-train`, after declaring compatibility. If a complete
+collection already exists on another machine, retain it and proceed to audit;
+never overwrite or append to partial collection outputs.
+
+The compatibility regression suite plus the six original relevant modules
+passed 103 tests. A read-only reconstruction checked all 1,263 states and all
+21 parent frozen components; the original bank/summary/state-law hashes and
+state LR=1 remain intact. No source was regenerated and no native trajectory
+was run. Compact diagnostic evidence:
+[identity compatibility v1](../results/highd_v47_formal_identity_compat_v1.json).
+
 The assistant prepares and tests the implementation. Run long jobs yourself.
 Use NEW output directories; preserve failed runs. Changes to code/configuration
 after freezing require a versioned protocol and lock, not a silent re-freeze.
@@ -156,26 +205,27 @@ export TMPDIR=/tmp OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
 
 python -m scenario_reconstruction.highd_v47_formal_comparison freeze --output outputs/v47_formal_v1_frozen
 python -m scenario_reconstruction.highd_v47_formal_comparison bank --frozen outputs/v47_formal_v1_frozen --split train --output outputs/v47_formal_v1_train_bank
-python -m scenario_reconstruction.highd_v47_formal_comparison collect-train --frozen outputs/v47_formal_v1_frozen --bank outputs/v47_formal_v1_train_bank --output outputs/v47_formal_v1_data
-python -m scenario_reconstruction.highd_v47_formal_comparison audit-train --frozen outputs/v47_formal_v1_frozen --bank outputs/v47_formal_v1_train_bank --data outputs/v47_formal_v1_data --replay --output outputs/v47_formal_v1_data/audit.json
-python -m scenario_reconstruction.highd_v47_formal_comparison train --frozen outputs/v47_formal_v1_frozen --data outputs/v47_formal_v1_data --output outputs/v47_formal_v1_training
+python -m scenario_reconstruction.highd_v47_formal_identity_compat prepare --frozen outputs/v47_formal_v1_frozen --bank outputs/v47_formal_v1_train_bank --output outputs/v47_formal_v1_identity_compat.json
+python -m scenario_reconstruction.highd_v47_formal_identity_compat --identity-compat outputs/v47_formal_v1_identity_compat.json collect-train --frozen outputs/v47_formal_v1_frozen --bank outputs/v47_formal_v1_train_bank --output outputs/v47_formal_v1_data
+python -m scenario_reconstruction.highd_v47_formal_identity_compat --identity-compat outputs/v47_formal_v1_identity_compat.json audit-train --frozen outputs/v47_formal_v1_frozen --bank outputs/v47_formal_v1_train_bank --data outputs/v47_formal_v1_data --replay --output outputs/v47_formal_v1_data/audit.json
+python -m scenario_reconstruction.highd_v47_formal_identity_compat --identity-compat outputs/v47_formal_v1_identity_compat.json train --frozen outputs/v47_formal_v1_frozen --data outputs/v47_formal_v1_data --output outputs/v47_formal_v1_training
 ```
 
 After all ten training runs have completed, the next commands collect the
 independent validation bank and measure every frozen checkpoint:
 
 ```bash
-python -m scenario_reconstruction.highd_v47_formal_comparison bank --frozen outputs/v47_formal_v1_frozen --split validation --training outputs/v47_formal_v1_training --output outputs/v47_formal_v1_validation_bank
-python -m scenario_reconstruction.highd_v47_formal_comparison validate --frozen outputs/v47_formal_v1_frozen --bank outputs/v47_formal_v1_validation_bank --training outputs/v47_formal_v1_training --output outputs/v47_formal_v1_validation
-python -m scenario_reconstruction.highd_v47_formal_comparison seal --frozen outputs/v47_formal_v1_frozen --validation outputs/v47_formal_v1_validation --output outputs/v47_formal_v1_selected_lock.json
+python -m scenario_reconstruction.highd_v47_formal_identity_compat --identity-compat outputs/v47_formal_v1_identity_compat.json bank --frozen outputs/v47_formal_v1_frozen --split validation --training outputs/v47_formal_v1_training --output outputs/v47_formal_v1_validation_bank
+python -m scenario_reconstruction.highd_v47_formal_identity_compat --identity-compat outputs/v47_formal_v1_identity_compat.json validate --frozen outputs/v47_formal_v1_frozen --bank outputs/v47_formal_v1_validation_bank --training outputs/v47_formal_v1_training --output outputs/v47_formal_v1_validation
+python -m scenario_reconstruction.highd_v47_formal_identity_compat --identity-compat outputs/v47_formal_v1_identity_compat.json seal --frozen outputs/v47_formal_v1_frozen --validation outputs/v47_formal_v1_validation --output outputs/v47_formal_v1_selected_lock.json
 ```
 
 Read the selection and stop-condition report before running FinalTest. If seal
 fails, stop there. If it creates the selected lock:
 
 ```bash
-python -m scenario_reconstruction.highd_v47_formal_comparison final-test --frozen outputs/v47_formal_v1_frozen --policy-lock outputs/v47_formal_v1_selected_lock.json --output outputs/v47_formal_v1_final_test
-python -m scenario_reconstruction.highd_v47_formal_comparison audit-final --frozen outputs/v47_formal_v1_frozen --result outputs/v47_formal_v1_final_test --replay --output outputs/v47_formal_v1_final_audit.json
+python -m scenario_reconstruction.highd_v47_formal_identity_compat --identity-compat outputs/v47_formal_v1_identity_compat.json final-test --frozen outputs/v47_formal_v1_frozen --policy-lock outputs/v47_formal_v1_selected_lock.json --output outputs/v47_formal_v1_final_test
+python -m scenario_reconstruction.highd_v47_formal_identity_compat --identity-compat outputs/v47_formal_v1_identity_compat.json audit-final --frozen outputs/v47_formal_v1_frozen --result outputs/v47_formal_v1_final_test --replay --output outputs/v47_formal_v1_final_audit.json
 python -m scenario_reconstruction.highd_v47_formal_report --result outputs/v47_formal_v1_final_test --audit outputs/v47_formal_v1_final_audit.json --output outputs/v47_formal_v1_report
 ```
 
