@@ -87,6 +87,9 @@ class V46SequenceEnv(Env):
                 total+=log_weight(step,eps)
             if not np.isclose(total,seq['generation_log_weight'],rtol=1e-10,atol=1e-9):raise ValueError('Densification lost likelihood factors')
         self.log_scale=max((2*s['generation_log_weight'] for s in self.sequences if s['event_result']),default=0.)
+        if 'log_reward_scale' in config:
+            if not np.isfinite(config['log_reward_scale']):raise ValueError('Nonfinite common reward scale')
+            self.log_scale=float(config['log_reward_scale'])
         self.sampling_correction=len(self.eligible)/len(self.sequences)
         self.positive=[i for i in self.eligible if self.sequences[i]['event_result']]
         self.negative=[i for i in self.eligible if not self.sequences[i]['event_result']]

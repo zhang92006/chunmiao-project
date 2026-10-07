@@ -52,6 +52,10 @@ def main():
     env_config={'sequence_manifest':str(Path(a.sequence_manifest).resolve()),'seed':a.seed,
                 'replay_positive_fraction':cfg.get('replay_positive_fraction')}
     check=V46SequenceEnv(env_config)
+    if 'log_reward_scale' in cfg:
+        import math
+        if not math.isfinite(cfg['log_reward_scale']):raise ValueError('Nonfinite common reward scale')
+        check.log_scale=cfg['log_reward_scale'];env_config['log_reward_scale']=cfg['log_reward_scale']
     validation=None
     from .highd_v46_contract import independent_split,CONTEXT_CONTRACTS
     if a.validation_manifest:
@@ -121,6 +125,15 @@ def main():
             'conditional_target_sha256':check.dataset.get('conditional_target_sha256'),
             'training_source_episodes':len({s['source_seed'] for s in check.sequences if 'source_seed' in s})}
         save(output/'training_protocol.json',provenance);records=[]
+        catalog=[]
+        def archive(iteration,checkpoint):
+            directory=output/('iteration_%04d_policy'%iteration)
+            export_policy(trainer,directory,check.dataset,[s['seed'] for s in check.sequences],[])
+            catalog.append(dict(iteration=iteration,checkpoint=str(Path(checkpoint).relative_to(output)),
+                policy_path=directory.name,metadata_sha256=digest(directory/'policy.json'),weights_sha256=digest(directory/'policy_weights.npz')))
+        if cfg.get('export_all_checkpoints'):
+            if validation:raise ValueError('External native selection must run after training')
+            archive(0,trainer.save(str(output/'checkpoints')))
         validation_baseline=validation.empirical_objective(lambda obs:[cfg['initial_epsilon']]*check.dimension) if validation else None
         best=validation.empirical_objective(deterministic) if validation else None
         selected_iteration=0 if validation else iterations
@@ -131,9 +144,15 @@ def main():
             row={'iteration':i,'timesteps_total':result['timesteps_total'],'reward_mean':result['episode_reward_mean'],
                 'learner':{k:float(stats[k]) for k in ('policy_loss','vf_loss','entropy','kl') if k in stats}}
             if not np.isfinite([row['reward_mean'],*row['learner'].values()]).all():raise FloatingPointError('Nonfinite training metrics')
+            if cfg.get('training_diagnostics_each_iteration'):
+                from .highd_v47_formal_training_metrics import policy_from_model,diagnostics
+                row.update(diagnostics(check,policy_from_model(trainer.get_policy().model,check.dataset)))
+                row['gradient_norm_after_clipping_last_minibatch']=float(np.sqrt(sum(float((p.grad.detach()**2).sum()) for p in trainer.get_policy().model.parameters() if p.grad is not None)))
+                row['gradient_norm_before_clipping']=float(stats['grad_gnorm']) if 'grad_gnorm' in stats else None
             if i%cfg.get('validation_interval',10)==0 or i==iterations:
                 row['empirical_scaled_second_moment']=check.empirical_objective(deterministic)
                 checkpoint=trainer.save(str(output/'checkpoints'))
+                if cfg.get('export_all_checkpoints'):archive(i,checkpoint)
                 if validation:
                     values=validation.objective_values(deterministic);score=float(values.mean())
                     row['validation_scaled_second_moment']=score
@@ -154,13 +173,16 @@ def main():
         error=max(float(np.max(np.abs(np.asarray(portable(obs))-deterministic(obs)))) for obs in observations)
         if not np.isfinite(error) or error>1e-6:raise RuntimeError('Portable policy differs from training policy')
         final=check.empirical_objective(deterministic)
+        if cfg.get('export_all_checkpoints'):save(output/'checkpoint_catalog.json',dict(checkpoints=catalog,selection='Pending external source-disjoint native Validation'))
         save(output/'training_summary.json',{**provenance,'completed_iterations':len(records),'timesteps_total':records[-1]['timesteps_total'],
             'fixed_epsilon_scaled_second_moment':baseline,'trained_empirical_scaled_second_moment':final,'resubstitution_ratio':final/baseline,
             'portable_policy_max_error':error,'checkpoint':str(Path(selected_checkpoint).relative_to(output)),
-            'selected_iteration':selected_iteration,'selection':'independent_validation_second_moment' if validation else 'last_iteration_no_validation',
+            'selected_iteration':None if cfg.get('export_all_checkpoints') else selected_iteration,
+            'selection':('pending_external_native_validation' if cfg.get('export_all_checkpoints') else 'independent_validation_second_moment' if validation else 'last_iteration_no_validation'),
             'validation_fixed_scaled_second_moment':validation_baseline,'validation_selected_scaled_second_moment':best,
             'validation_ratio':best/validation_baseline if validation else None,
-            'scope':('Validation selects a checkpoint including the initial fixed policy. Independent online testing is still required.' if validation
+            'scope':('All checkpoints including iteration 0 retained; native Validation must select before FinalTest.' if cfg.get('export_all_checkpoints')
+                     else 'Validation selects a checkpoint including the initial fixed policy. Independent online testing is still required.' if validation
                      else 'Fixed predeclared iteration PPO training completed; independent native evaluation remains separate.' if fixed_iteration
                      else 'Unvalidated training/interface check only; no generalization or acceleration claim.')})
     finally:

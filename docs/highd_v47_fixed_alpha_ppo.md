@@ -1,5 +1,13 @@
 # Fixed-alpha Single-BV and Dual-BV PPO
 
+The 2026-10-07 formal comparison declaration classifies these completed six
+runs as pipeline smoke evidence. Their original protocol and artifacts remain
+intact. The new [matched original-critical-state experiment](highd_v47_formal_comparison.md)
+uses independent native validation for checkpoint selection, including iteration
+0, before a sealed original-initialization FinalTest. No smoke seed is promoted.
+The new trainer instrumentation has a new hash; old frozen run locks remain
+historical records and must not be silently repinned to rerun them.
+
 User direction on 2026-10-06 ends transferable Q_S development and starts actual
 PPO with `Q_S=alpha`, `state LR=1`, and `state log-LR=0`. This is a new training
 protocol; the preceding failed state models and their results remain recorded.

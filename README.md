@@ -13,7 +13,12 @@ license.
 
 ## Frozen V46 NDE and D2RL handoff
 
-The current training direction is [fixed-alpha Single-BV and Dual-BV PPO](docs/highd_v47_fixed_alpha_ppo.md).
+The current main experiment is the [prospective matched Single/Dual D2RL comparison](docs/highd_v47_formal_comparison.md):
+original Single-critical states, Q_S=alpha, five paired training seeds, native
+Validation selection including iteration 0, and a sealed original-reset FinalTest.
+Long jobs are provided as commands for the researcher to run. The completed
+[fixed-alpha Single-BV and Dual-BV PPO](docs/highd_v47_fixed_alpha_ppo.md) runs
+are retained as pipeline smoke evidence under their earlier strict-B bank.
 Transferable Q_S development has stopped by user direction. State sampling is
 fixed to alpha with state LR=1; both modes train on fresh real-Q, four-second
 critical sequences using the same locked training state bank.
