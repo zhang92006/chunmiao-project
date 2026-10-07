@@ -1,5 +1,10 @@
 # Restore the collision-producing teacher, then expand training sources
 
+Execution update: the researcher completed the full historical reproduction,
+expansion and native audit described below. See the completed evidence at the
+end; do not rerun completed collection commands. The next job is the
+[shared fixed-behavior Single/Dual PPO handoff](highd_v47_shared_teacher_ppo.md).
+
 This supersedes further zero-CAV recovery reruns, not their retained evidence.
 The original V47 teacher is the positive control: 67 sampled CAV first
 collisions / 2,112 continuations (3.1723%), across seven event sources from
@@ -154,3 +159,39 @@ python -m pytest tests/test_highd_v47_teacher_expansion.py \
   tests/test_highd_v46_cross_unit.py tests/test_highd_v46_multistate_q.py -q
 python -m scenario_reconstruction.highd_v46_workflow verify
 ```
+
+## Completed expansion and next handoff
+
+All 4,096 declared natural sources were processed. Outcome-blind discovery
+selected 790 source episodes and 1,043 cases: 551 sources had one case, 225 had
+two and 14 had three. Each received exactly 64 draws, for 66,752 total; source
+maximum was 192, not an event-dependent extension. All 805 zero-event cases
+remain in the record.
+
+There were **2,009 CAV first collisions across 209 independent event sources**
+and 637 BV-only competing endpoints. Raw continuation event yield was 3.00965%;
+event-source yield over all 4,096 sources was 5.10254%. The count gate (50
+sources/500 events, 100 sources desired) passed. This is fixed-behavior yield,
+not a natural collision probability or a trained PPO result.
+
+Under the declared source/case law, the teacher IS mean is 0.00193285524536
+and event M2 is 0.0124173643600. Largest source M2 share is 56.7499%, and
+effective M2 sources are 2.49193. Almost all the largest source's contribution
+comes from one event; the three largest sources contribute about 56.75%,
+24.75% and 12.99%. The larger event-source count does not establish balanced
+natural-risk contributions or low target-policy gradient variance.
+
+The completed audit verified all collection likelihoods and 1,043 predetermined
+native replays, with maximum full/factor log error 2.84217e-14. A subsequent
+read-only handoff check rehashed all 2,153 bank/collection artifacts and verified
+the parent's recorded dependencies/configuration/assets unchanged. The original
+67-event reproduction also passed. Validation sources remain unopened.
+
+Bank summary SHA:
+`161a8c49e76937e126e17aed04b54844b03eabee1ba9e28967d42307b411c9ec`.
+Collection summary SHA:
+`e852abfd3f4822319ccc25a01a6c97c1d1fe35279cab4b6174b595931e3e0918`.
+
+The next handoff reuses these paths, not another collection. Its own complete
+target replay/audit must establish useful Single and Dual reward signals before
+the guarded PPO command starts. No PPO outcome is claimed by this collection.

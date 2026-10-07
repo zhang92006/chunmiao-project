@@ -16,9 +16,14 @@ license.
 The current main experiment is the [prospective matched Single/Dual D2RL comparison](docs/highd_v47_formal_comparison.md):
 original Single-critical states, Q_S=alpha, five paired training seeds, native
 Validation selection including iteration 0, and a sealed original-reset FinalTest.
-Its zero-CAV v1/recovery collections did not start PPO. Current work first
-[restores the collision-producing teacher and expands training sources](docs/highd_v47_teacher_expansion.md),
-with a full historical reproduction gate and a fixed 4,096-source budget.
+Its zero-CAV v1/recovery collections did not start PPO. The completed
+[teacher restoration and source expansion](docs/highd_v47_teacher_expansion.md)
+retained 2,009 CAV events from 209 sources in 66,752 continuations.
+The next [shared-teacher PPO handoff](docs/highd_v47_shared_teacher_ppo.md)
+reconstructs independent Single/Dual target likelihoods on those same fixed
+paths, with exact source/case replay correction and target-specific signal gates.
+This teacher-selected conditional bank differs from the original formal bank;
+its native source-disjoint evaluation is still pending.
 Long jobs are provided as commands for the researcher to run. The completed
 [fixed-alpha Single-BV and Dual-BV PPO](docs/highd_v47_fixed_alpha_ppo.md) runs
 are retained as pipeline smoke evidence under their earlier strict-B bank.
