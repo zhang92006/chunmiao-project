@@ -235,6 +235,11 @@ loss and richer pre-outcome traffic/action context on training data, with
 source-held-out checks and the same support protection. This is a proposed
 separate training design, not a refit or an extra run in the completed protocol.
 
+The [nested objective-model revision](highd_v47_state_model_revision.md) now
+implements that separate training-only design. It compares context and loss
+ablations without new native outcomes; the original failed fit and unopened
+validation guard remain unchanged.
+
 ### Audit and enforced decision
 
 Independent read-only reconstruction verified all 174 artifact hashes, all

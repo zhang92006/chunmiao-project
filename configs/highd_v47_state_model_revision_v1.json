@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "scope": "Training-only nested model redesign after failed new-source log-J model; zero new native outcomes, no validation or PPO",
+  "parent_config": "configs/highd_v47_source_transfer_v1.json",
+  "parent_config_sha256": "0ee2da48365041db841a8faa78698544a46e82f24ce0fc4d9025600bddc1c82b",
+  "training_summary_sha256": "e9dc6960c85f33686693942f9b3576173524f97fd73cb5d6810784e26fc9f176",
+  "training_audit_sha256": "e64c8ff143006f975d7dfc9648567e367f95ddabf2983e7f8edfe944dd49d4dc",
+  "conditional_target_sha256": "120af5af56c1756ddb59730d0654ae5abd719b16cd08988386d678f5039b832f",
+  "primary_family": "context_direct_M2",
+  "families": ["legacy_log_J", "context_log_J", "legacy_direct_M2", "context_direct_M2"],
+  "native_draws": 0,
+  "model": {
+    "outer_folds": 4,
+    "outer_seed": 260017,
+    "inner_folds": 3,
+    "inner_seed": 261017,
+    "log_grid": [1.0, 10.0, 100.0],
+    "direct_grid": [0.01, 0.1, 1.0],
+    "prior_roots": 16.0,
+    "probability_floor": 0.00000001,
+    "allocation_loss_cap": 1.1,
+    "minimum_positive_sources": 5,
+    "optimizer": {"maxiter": 400, "ftol": 0.000000000001, "gtol": 0.00000001, "coefficient_bound": 8.0}
+  },
+  "selection": "Select regularization only on inner whole-source folds using aggregate common-measurement M2, not mean ratios. Outer sources never enter scaler, prior, fitting or selection. Family is not selected by observed outer scores.",
+  "development_review": "Primary family only: all optimizers and selections succeed, at least five positive measured sources, and aggregate outer M2 ratio below one in BOTH original measurement batches. This post-hoc development check is not fresh-source validation or a confidence certificate.",
+  "boundary": "Consumed training 260000-260255 only. Reserved validation 270000-270255 and final test stay unopened. A passing training screen still requires a separately reviewed/versioned validation adapter, protocol and lock. Failed v1 guards are not bypassed. No automatic winner, production change, PPO launch, new native batch, event-conditioned extension or training manifest."
+}
