@@ -126,3 +126,63 @@ Frozen NDE/assets, the complete teacher evidence and shell syntax also verified.
 python -m pytest tests/test_highd_v47_shared_teacher.py tests/test_highd_v47_teacher_expansion.py tests/test_highd_v47_fixed_alpha_ppo.py tests/test_highd_v47_formal_comparison.py tests/test_highd_v46_d2rl.py tests/test_highd_v46_cross_unit.py -q
 python -m scenario_reconstruction.highd_v46_workflow verify
 ```
+
+## Ray startup interruption and continuation
+
+The researcher completed export and all 1,043 audit replays. Both target-signal
+gates passed: 1,992 usable event trajectories from 209 sources per mode; Dual's
+second factor has 394 usable events from 36 sources. Single seed 7 completed
+all 200 iterations and all scheduled policy exports. Dual seed 7 failed BEFORE
+PPO initialization: Ray's registry tried sending 108,261,462 bytes against its
+104,857,600-byte gRPC limit. There are no Dual iterations or checkpoints to
+restore. This is a software startup failure, not a failed learning result.
+
+The frozen model's `forward` closure references `check.observation_contract`,
+but captures the complete sequence environment and therefore the whole Dual
+dataset. The separate recovery adapter replaces ONLY that method's `check`
+closure cell with a small object containing the identical observation-contract
+string. Its bytecode, other closure cells, model parameters, active-factor mask,
+optimizer, reward and all training data remain unchanged. The live trainer
+environment is not altered. No gRPC limit is raised, old frozen implementation
+is edited, or old lock is repinned. The runtime adapter receives its own hash
+in the new recovery protocol.
+
+The continuation validates all 200 Single iteration records, its 21 scheduled
+checkpoint exports and original provenance, then retains that completed run.
+It records checksums of all original attempt files, preserves the failed Dual
+log and empty directory, and runs the remaining NINE mode/seed combinations in
+a new exclusive directory, starting with Dual seed 7. Any nonempty unfinished
+run is rejected: this command must never silently restart a partially trained
+model instead of restoring its optimizer/checkpoint. It is specifically the
+documented pre-training registration-failure recovery, not generic resumption.
+
+Run this INSTEAD of the original all-stage script:
+
+```bash
+conda activate highd-ppo-clean39
+bash scripts/resume_v47_shared_teacher_ppo.sh
+```
+
+Monitor the first remaining run with:
+
+```bash
+tail -f outputs/v47_shared_teacher_ppo_v1_training_recovery/dual_seed7.log
+```
+
+No discovery, collection, target export, native audit or completed Single run
+is repeated. Validation stays unopened. The final recovery summary links the
+original completed run and all nine remaining results; it does not pool them
+as extra seeds. A second interruption retains the recovery output for explicit
+review rather than overwriting it or silently restarting partial training.
+
+Recovery checks passed 29 focused tests. With the actual complete Dual dataset,
+serialized model size fell from 108,261,403 to 3,274 bytes (the gRPC request has
+additional framing). This preflight stopped before Ray startup. Separate
+one-iteration synthetic PPO checks for both modes completed under the adapter;
+their metrics matched the earlier unmodified synthetic checks and portable
+policy errors were 0 / 7.45e-9. These are software checks, not resumed native
+training. The original 318 attempt files and all frozen inputs were retained.
+
+```bash
+python -m pytest tests/test_highd_v47_shared_teacher_recovery.py tests/test_highd_v47_shared_teacher.py -q
+```
