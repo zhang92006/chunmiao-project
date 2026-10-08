@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "status": "representation_bug_verified_and_compatibility_adapter_tested; sampling_not_started_by_assistant",
+  "parent_commit": "14c42f91114c9b0053c27c5775e9284069873fb5",
+  "parent_lock_sha256": "9677269cdc789303bbf116138d6f15f30d26e80f59ccd6668ffa75df488b37e0",
+  "bank_sha256": "eafef73f614045db7493ea5887c71ff16862ca955ee2a8efce457db0622c2c9b",
+  "bank_summary_sha256": "c60ef9b93c239523e28285fdbd60899febf0abf775b6b452e799fd25de60a7f5",
+  "state_law_sha256": "c50e3b0752044e64636f4c3cd4665a563037f21238cadb04e70594dbc416375c",
+  "states": 1263,
+  "serialized_identity_matches": 9,
+  "exact_pre_JSON_integer_key_identity_matches": 1254,
+  "case_id_mismatches": 0,
+  "source_seed_mismatches": 0,
+  "alpha_mismatches": 0,
+  "frozen_parent_components_verified": 21,
+  "state_likelihood_ratio": 1.0,
+  "original_artifacts_rewritten": false,
+  "new_native_outcomes": 0,
+  "training_collection_summary_present_at_diagnosis": false,
+  "tests_passed": 103,
+  "frozen_NDE_and_assets_verified": true,
+  "scope": "Read-only diagnosis of an existing training bank; explicit versioned reader compatibility, not a changed proposal or sampling budget"
+}

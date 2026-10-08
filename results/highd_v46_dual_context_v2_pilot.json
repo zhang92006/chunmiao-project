@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-03",
+  "scope": "Engineering and data-sufficiency pilot; no validated performance or acceleration claim",
+  "handoff_commit": "142cea39eec3632db0ac0fb4f932f6b56cbf8828",
+  "protocol": "configs/highd_v46_dual_comparison_protocol_v2.json",
+  "natural_target_sha256": "106a9fbc795c75c9d4f60a880da7264cb626f9163e5ec073b720e6b48c6f9db5",
+  "experiment_target_sha256": "ab84bb18d3d649be86ff4d3f568e1562079fae656dd7004b726645affe4e07fe",
+  "proposal_structure_sha256": "0784fe4089e133a0db0c80154a145189f578f227ef664e48179767b003024ae6",
+  "training": {
+    "seed_start": 1000,
+    "episodes": 1024,
+    "cav_first_collisions": 2,
+    "bv_only_competing_collisions": 41,
+    "sequence_sha256": "02609f7cd3aabf8e5606bf03d18805b61466c4f90d9f46f31559f81a6600fdce",
+    "critical_step_fraction": 0.9263056285990081,
+    "two_factor_steps": 26576,
+    "weak_second_factor_fraction_tv_below_0_001": 0.8656682721252258,
+    "event_contribution_ess": 1.0000152359124321,
+    "relative_half_width_90_percent": 1.644841084423133
+  },
+  "validation": {
+    "seed_start": 50000,
+    "episodes": 1024,
+    "cav_first_collisions": 0,
+    "bv_only_competing_collisions": 43,
+    "sequence_sha256": "f7f39c4ffa95a8ea4a20400959a68836b16c205f57a25a721453029ae465cd0b",
+    "selection_status": "Rejected by insufficient-validation-events guard"
+  },
+  "unvalidated_masked_ppo_interface_check": {
+    "config": "configs/highd_v46_d2rl_ppo.json",
+    "seed": 7,
+    "iterations": 5,
+    "timesteps": 5509,
+    "trainer_sha256": "717c87ca1d7d3f21f142b68890339b044ce149839a686ec95077a9cd418275cf",
+    "environment_sha256": "709dde54103cf5d316205116c2783bd2ab4f6ae13ad8db4f12560c8f7aa988bc",
+    "action_distribution_sha256": "08d14eb5994f5c0b958d67ad3cf55eb8715e393f58c0b26d3fc7bd95d3f71ee1",
+    "fixed_epsilon_scaled_second_moment": 0.0009765625000566732,
+    "trained_scaled_second_moment": 0.0009860827751414143,
+    "training_objective_ratio_lower_is_better": 1.009748761686209,
+    "portable_policy_max_error": 2.2351741790771484e-8,
+    "selection": "last_iteration_no_validation"
+  },
+  "closed_loop_interface_check": {
+    "seed_start": 110000,
+    "episodes_per_arm": 16,
+    "arms": ["natural", "fixed_dual_epsilon_0.1", "unvalidated_learned_dual"],
+    "cav_first_collisions_per_arm": [0, 0, 0],
+    "bv_only_competing_collisions_per_arm": [2, 2, 2],
+    "bootstrap_repeats": 30,
+    "bootstrap_seed": 41,
+    "budget_censored_repeats_per_arm": [30, 30, 30],
+    "observed_acceleration": null,
+    "formal_test_seed_range_unused": [100000, 101023]
+  },
+  "checks": {
+    "pytest_passed": 38,
+    "frozen_code_and_assets_verified": true,
+    "synthetic_checkpoint_selection_restore_export_passed": true,
+    "synthetic_fixture_scope": "Software integration only; excluded from all traffic evidence"
+  },
+  "remaining_work": [
+    "Audit pair selection and the risk proxy for genuine two-factor influence",
+    "Predeclare and collect informative independent cohorts without collision picking",
+    "Validation-selected fixed and learned policies across training seeds",
+    "Five-arm independent testing with sufficient event counts and precision"
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "method": "geometry_1s",
+  "view": "local_interaction_actual_H",
+  "pair_selection": "ranked",
+  "maximum_source_episodes": 2,
+  "replicates_per_corner": 16,
+  "horizon_s": 4,
+  "source_horizon_s": 60,
+  "clearance_scale_m": 2,
+  "train_continuation_seed_start": 1800000,
+  "validation_continuation_seed_start": 1900000,
+  "selection": "Top positive-interaction mass, one state/pair per source episode, before native outcomes",
+  "scope": "Native confirmation of discovered proxy candidates; no population-risk or significance claim"
+}

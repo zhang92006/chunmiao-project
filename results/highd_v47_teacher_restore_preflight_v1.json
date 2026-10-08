@@ -1,0 +1,22 @@
+{
+  "status": "Historical teacher verified; prospective expansion not started",
+  "original_teacher_commit": "839e162",
+  "original_summary_sha256": "b59a511ebf1751f255a7c4039b29e5f315a008a69e4f34e6671a385adc4505d8",
+  "original_lock_sha256": "6a75888149d4ce31afb71b816d194cd9f615fd1a288baa3eca6bcfed7762a235",
+  "runtime_matches_original_lock": true,
+  "verified_original_artifacts": 68,
+  "original_draws": 2112,
+  "original_CAV_events": 67,
+  "original_cases": 33,
+  "original_selected_sources": 25,
+  "original_natural_sources": 128,
+  "original_event_sources": [200002, 200017, 200020, 200041, 200047, 200051, 230053],
+  "exact_native_replays": 41,
+  "replay_rule": "First scheduled continuation and first historical positive per case, deduplicated; diagnostic reproduction, not new independent data",
+  "full_2112_draw_reproduction_completed": false,
+  "new_selection_on_old_banks": {"selected_cases": 33, "old_teacher_cases_retained": 33, "missing_old_event_cases": []},
+  "prospective_expansion": {"natural_training_sources": 4096, "minimum_collision_sources": 50, "desired_collision_sources": 100, "minimum_events": 500, "opened": false},
+  "validation_opened": false,
+  "PPO_started": false,
+  "scope": "Restoration evidence and bounded acquisition plan, not fresh-cohort yield, formal training readiness or variance improvement"
+}

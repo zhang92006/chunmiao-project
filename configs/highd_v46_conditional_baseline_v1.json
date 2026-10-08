@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "scope": "Conditional one-decision dual-BV PPO baseline; four-second native continuation",
+  "training_source": "outputs/v46_native_calibration_v1_train",
+  "training_summary_sha256": "f8b1334db8901e009a9e1b190a5c4e157a8bc2e64964f8af41d81d96b27ac131",
+  "calibration_config": "configs/highd_v46_native_calibration_v1.json",
+  "validation": {"seed_start": 210000, "episodes": 32, "continuation_seed_start": 2600000, "replicates": 128},
+  "test": {"seed_start": 220000, "episodes": 32, "continuation_seed_start": 2700000, "replicates": 128},
+  "forbidden_source_ranges": [[100000, 101023], [110000, 110015], [120000, 120031], [140000, 140007], [160000, 160015], [170000, 170007], [180000, 180031], [190000, 190031], [200000, 200063]],
+  "ppo_config": "configs/highd_v46_conditional_ppo_v1.json",
+  "training_seeds": [7, 17, 29],
+  "fixed_grid": [0.0501, 0.1, 0.3, 0.6, 0.99],
+  "smoke_evaluation_replicates": 16,
+  "initialization_law": "Uniform selected eligible source episode, then uniform selected states within source; natural continuation conditional on the fixed state",
+  "event": "CAV involvement in first any-actor collision within four seconds; BV-only collision is a competing negative",
+  "observation": "22-D causal geometry/context; unavailable past accelerations are explicitly zero; time budget is four seconds",
+  "selection": "Frozen mixed5 state discovery, rank 1 + rank 2 + audit, unchanged strict gates, at most two native cases per source",
+  "fixed_budget": "Retain all selected states and all continuations. No event-dependent replacement, sample extension, or precision-guard relaxation. Test sources opened only after freezing policies."
+}

@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "parent_config": "configs/highd_v47_branching_moments_v1.json",
+  "parent_path": "outputs/v47_branching_moments_v1",
+  "parent_summary_sha256": "300458b995b4a9ad7d2a049540ee9e06c6a25d1b5ca937b942692649a90b4156",
+  "roots_per_state": 256,
+  "batches": 2,
+  "seed_starts": [8000000, 9000000],
+  "schedule_seed": 800017,
+  "workers": 4,
+  "confidence": 0.95,
+  "allocation_loss_cap": 1.1,
+  "target": "Unchanged teacher action Q_A, 33-state/25-source target, natural future first-CAV collision event and native dynamics. New independent initial action schedule and continuation seeds.",
+  "prefix_measurement": "At one and two seconds fork surviving prefixes into two P and two T one-decision children. Aggregate by the causal posterior P_prefix/(P_prefix+T_prefix). Full prefix P/G weight occurs once, not at every node. The whole-prefix mixture ends at three seconds.",
+  "terminal_measurement": "The final decision is natural. Integrate ALL naturally supported actions of the nearest BV, selected by pre-action distance/ID; unforced correlated partners are drawn under P conditional on that action, with identical partner uniforms across cells. Execute full BV assignments with the verified batch native 15-substep terminal kernel. Its law is P, so the terminal density ratio cancels. No proxy substitutes for the event.",
+  "control": "Choose one posterior-weighted prefix child at each fork, then one terminal action by its natural marginal, using predeclared uniforms. This shares one physical tree path. Leaves and terminal integration cells are not independent roots or sources.",
+  "uncertainty": "Keep coefficient-minimax counts, independent root variance, all negative states, simultaneous bounds and batch0 frozen objective decision before independent batch1. Uncertainty protection caps true uncentered state-M2 loss at 10%; no uncertified proposal promotion.",
+  "scope": "New prospective training measurement, not an extension or restart of earlier outcomes. Maximum 16896 roots, 337920 future prefix decisions and 8921088 terminal action-cell decisions. No extra batches, outcome-dependent replacement, production Q_S/Q_A/PPO changes, validation/test access or training export."
+}

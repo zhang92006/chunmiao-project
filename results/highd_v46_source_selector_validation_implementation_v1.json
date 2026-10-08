@@ -1,0 +1,28 @@
+{
+  "date": "2026-10-05",
+  "scope": "Implementation and pre-validation rule lock; fresh validation cohort remains unopened",
+  "implementation_commit": "c3e70096cc74d8860a80f21deb44625248006f8a",
+  "config": "configs/highd_v46_source_selector_validation_v1.json",
+  "config_sha256": "8de723ceda7b20029110936ec70aa95af31639cbd323cdae571beccf99607593",
+  "rule_lock_sha256": "5cce02ee01f28b383882f15f846cbc2ae8d7cd1204e6050f06bbc2f4ec0f7b91",
+  "source": {
+    "split": "validation",
+    "seed_start": 240000,
+    "episodes": 256
+  },
+  "replicates_per_case_arm": 64,
+  "tests_passed": 162,
+  "frozen_verification_passed": true,
+  "old_training_and_validation_manifests_unchanged": true,
+  "implementation_sampler_checks": [
+    "strict_pair",
+    "non_strict_positive_interaction_mass",
+    "zero_mass_natural_fallback"
+  ],
+  "maximum_sampler_full_vs_factor_log_error": 5.773159728050814e-15,
+  "fresh_validation_sources_opened": false,
+  "fresh_validation_results": null,
+  "ppo_trained": false,
+  "new_native_continuations": 0,
+  "push_status": "blocked_missing_GitHub_authentication"
+}

@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "parent_config": "configs/highd_v47_state_moments_v2.json",
+  "parent_path": "outputs/v47_state_moments_v2",
+  "parent_summary_sha256": "38fd9eeb002da1cc4ce4d503d5d23f7ec0446d00e222fde355c7aa102ac1818d",
+  "arms": ["natural", "defensive"],
+  "batches": 2,
+  "draws_per_state_per_arm": 256,
+  "continuation_seed_starts": [5800000, 5900000],
+  "schedule_seed": 580017,
+  "horizon_s": 4,
+  "workers": 4,
+  "confidence": 0.95,
+  "continuation": {
+    "natural_fraction": 0.5,
+    "epsilon": [0.1, 0.1],
+    "radius_m": 115,
+    "risk_power": 4,
+    "proxy_step_s": 0.3333333333333333,
+    "clearance_scale_m": 10.0
+  },
+  "target": "The unchanged 33-state/25-source bank target and frozen teacher Q_A moment. Later native actions are natural in the estimand, not in every measurement path.",
+  "measurement": "G_future=0.5 P_future+0.5 T_future on the complete stopped continuation. Sample one component per path. T tilts the nearest two BVs at each later pre-draw state using P*clearance_risk^4 and unchanged correlated natural conditional partners. No initial action or initial partner tilt.",
+  "weight": "P_future/G_future evaluated using both path densities, including on natural-component paths; weight <=2. Moment observations use Y*(P_future/G_future) ONCE, multiplied by the action stratum coefficient C_h. Do not square this future weight.",
+  "budget": "Same frozen v2 equal partition/counts: 256 roots/state/arm/batch, 33792 logical continuations. Natural-component paths are simulated once and shared with the natural control. Component assignments, actions and seeds locked before outcomes. No extra batches or outcome-dependent extensions.",
+  "uncertainty": "Two-sided bounded empirical Bernstein intervals, Bonferroni over states/strata/arms/batches. Weighted events are not Bernoulli; no Clopper-Pearson interval for weighted values. Variance ratios descriptive only; retain all zero and event sources.",
+  "scope": "Training-only estimator development, not a transferable state model, production Q, population efficiency test or PPO launch. Consumed validation/final test data remain unopened."
+}

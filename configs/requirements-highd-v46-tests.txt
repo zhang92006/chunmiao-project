@@ -1,0 +1,2 @@
+# Install alongside requirements-highd-v46-d2rl.txt in Python 3.9.
+pytest==7.4.4

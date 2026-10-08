@@ -1,0 +1,16 @@
+{
+  "schema_version": 2,
+  "scope": "Offline discovery only; frozen NDE, Q, proxy, gates and PPO unchanged",
+  "base_discovery_config": "configs/highd_v46_state_discovery_v1.json",
+  "train": {"seed_start": 160000, "episodes": 16},
+  "validation": {"seed_start": 180000, "episodes": 32},
+  "forbidden_validation_ranges": [[100000, 101023], [120000, 120031], [140000, 140007], [160000, 160015], [170000, 170007]],
+  "methods": ["geometry2_diverse", "geometry5_top2", "mixed5_top2"],
+  "bank": {"geometry_states": 2, "uniform_states": 2, "phase_states": 1, "geometry_control_states": 5, "minimum_geometry_separation_s": 5, "phase_bins": 3, "random_seed": 73},
+  "pairs": {"ranked": 2, "audit": 1, "random_seed": 79},
+  "shadow_epsilon": [0.1, 0.1],
+  "shadow_seed": 83,
+  "calibration": {"maximum_positive_episodes_per_method": 8, "negative_controls": 4, "selection_seed": 89, "replicates_per_corner": 16, "horizon_s": 4, "clearance_scale_m": 2, "train_seed_start": 2100000, "validation_seed_start": 2200000, "minimum_native_interaction": 0.05},
+  "validation_rule": "Freeze source, all dependencies and config after train; open the new cohort once. Do not change rules based on its outcomes.",
+  "environment": {"python": "3.9.19", "numpy": "1.23.1", "scipy": "1.13.1", "OPENBLAS_NUM_THREADS": 1, "OMP_NUM_THREADS": 1}
+}

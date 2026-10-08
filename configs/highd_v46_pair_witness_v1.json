@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "scope": "Training-only conditional native-continuation check of proxy-selected witnesses",
+  "proxy": "reactive_1s",
+  "max_pairs": 4,
+  "replicates": 16,
+  "continuation_seed_start": 1300000,
+  "horizon_s": 4.0,
+  "clearance_scale_m": 2.0,
+  "selection": "Top synergy-eligible pairs by positive interaction mass, one pair per state; no continuation outcomes used in selection"
+}

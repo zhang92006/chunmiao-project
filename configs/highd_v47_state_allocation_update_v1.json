@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "parent_config": "configs/highd_v47_state_allocation_v1.json",
+  "development_path": "outputs/v47_state_allocation_v1",
+  "development_summary_sha256": "a816d1183722f8df0d39be0522d259d0172de1e39026b624eb13673e20414ffd",
+  "state_floor": 0.5,
+  "M2_regularization": 0.01,
+  "draws_per_arm": 2112,
+  "state_rng_seed": 490017,
+  "continuation_seed_start": 4900000,
+  "fit_rule": "All pilot and all completed development arms, including zeros; deduplicate identical state/continuation-seed labels before tabular M2 fitting; no validation sources",
+  "scope": "Explicit training-side model update after failed first state proposal. New fixed-budget continuation comparison, not independent source validation. Preserve failed experiment; no outcome-based substitution within this run.",
+  "guard": "Q_S >= 0.5 P_S caps state LR at two and true IID M2 at twice target_iid M2 for any fixed action law. This is not a centered variance-ratio bound or a guarantee of improvement."
+}

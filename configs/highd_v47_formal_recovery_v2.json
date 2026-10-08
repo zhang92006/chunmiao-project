@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "scope": "Training-only off-policy action exploration after complete zero-event formal v1; not a v1 extension or a change to the evaluated target proposal",
+  "parent_config": "configs/highd_v47_formal_comparison_v1.json",
+  "state_sampling": "Q_S_equals_alpha",
+  "state_likelihood_ratio": 1.0,
+  "state_model": null,
+  "behavior_H": "uniform_over_naturally_supported_selected_action_cells",
+  "behavior_epsilon": 0.1,
+  "target_H": "unchanged_original_formal_Single_or_Dual_H",
+  "training": {"draws_per_mode": 8192, "state_seed": 1700017, "continuation_seed_start": 1300000000, "seeds": [7, 17, 29, 41, 53], "iterations": 200, "checkpoint_interval": 10},
+  "readiness": {"minimum_usable_events_per_mode": 20, "minimum_usable_event_sources_per_mode": 5, "require_dual_second_factor_signal": true},
+  "reward": "E_Q_behavior[I * (P/Q_behavior) * (P/Q_target_epsilon)]; exact replay correction; no weight clipping",
+  "budget": "One complete prospective training collection; retain every endpoint; no positive-only selection, extension, old/new pooling, adaptive epsilon or automatic retry",
+  "workers": 4,
+  "validation_or_final_test_during_recovery": false
+}

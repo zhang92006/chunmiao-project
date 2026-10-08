@@ -1,0 +1,127 @@
+{
+  "date": "2026-10-06",
+  "experiment": "v47_fixed_mixture_moments_v1",
+  "implementation_commit": "5227aec",
+  "protocol": "configs/highd_v47_fixed_mixture_moments_v1.json",
+  "complete": true,
+  "summary_sha256": "b8a1610326e78bd12b3d2948987ab81e12e8ec939a44264c3d637dbc6a878dcb",
+  "design_sha256": "2e836fd07d95c5c4f10e83005243ab710d63d7eb530343cfe10d34b3287e37f5",
+  "target": "Unchanged uniform-source/within-source-state 25-source/33-state bank, frozen teacher-action J and natural future endpoint law. No reset-density correction or fresh-source generalization.",
+  "environment": {"python": "3.9.19", "numpy": "1.23.1", "scipy": "1.13.1", "blas_omp_threads": 1, "workers": 4},
+  "budget": {
+    "states": 33,
+    "source_episodes": 25,
+    "initial_action_strata": 1549,
+    "batches": 2,
+    "continuation_seed_starts": [6000000, 6100000],
+    "schedule_seed": 600017,
+    "roots_per_arm": 16904,
+    "logical_arm_uses": 50712,
+    "native_paths_planned_upper_bound": 29566,
+    "native_paths_simulated": 29566,
+    "counts": "All strata retained, even counts >=4, half P/half T in fixed arm. State 8 uses 260 roots per batch, remaining states 256. Matched in all arms."
+  },
+  "total_wall_s": 550.3577286249999,
+  "arms": {
+    "natural": {
+      "events": 98,
+      "observed_event_sources": [200017, 200028, 200041, 200051, 200053, 230053],
+      "target_M2": 0.00005271435244781118,
+      "target_M2_empirical_MCSE": 0.00003188710449382057,
+      "relative_empirical_MCSE": 0.6049036555156355,
+      "measurement_variance": 1.016787432999832e-9,
+      "batch_target_M2": [0.00006406701155003402, 0.00004136169334558833],
+      "precise_states": 0
+    },
+    "iid_defensive": {
+      "events": 129,
+      "observed_event_sources": [200002, 200017, 200020, 200028, 200041, 200047, 200051, 200053, 230053],
+      "target_M2": 0.000960428526211876,
+      "target_M2_empirical_MCSE": 0.0003945912987423971,
+      "relative_empirical_MCSE": 0.41084920738323427,
+      "measurement_variance": 1.5570229304321168e-7,
+      "batch_target_M2": [0.0006045373075377642, 0.0013163197448859873],
+      "precise_states": 0
+    },
+    "fixed_defensive": {
+      "events": 123,
+      "observed_event_sources": [200002, 200017, 200020, 200024, 200034, 200041, 200051, 200053, 230053],
+      "target_M2": 0.0009145896012150326,
+      "target_M2_empirical_MCSE": 0.0003509063561747835,
+      "relative_empirical_MCSE": 0.3836763021453604,
+      "measurement_variance": 1.2313527080386404e-7,
+      "batch_target_M2": [0.0001888397628168443, 0.0016403394396132208],
+      "precise_states": 0
+    }
+  },
+  "comparisons": {
+    "fixed_over_actual_iid_variance_point_only": 0.7908378765474611,
+    "fixed_over_natural_variance_point_only": 121.10227448482281,
+    "same_fixed_draws": {
+      "removed_between_component_variance_unbiased": 1.327143721240708e-10,
+      "removed_between_component_variance_interval": [0.0, 0.030366308296872795],
+      "iid_variance_inferred_unbiased": 1.232679851759881e-7,
+      "fixed_over_inferred_iid_variance_point_only": 0.9989233670694415,
+      "removed_fraction_point_only": 0.0010766329305585405,
+      "strictly_positive_removed_variance_certified": false
+    },
+    "interpretation": "Fixed counts remove a nonnegative variance term exactly for the law, but finite estimates do not certify its size or full-bank precision. The actual IID contrast and same-draw contrast are both retained; do not attribute the entire observed 20.92% point difference to count fixing."
+  },
+  "fixed_state_examples": [
+    {
+      "state_id": 6,
+      "source_seed": 200020,
+      "J": 0.009351586354051965,
+      "batch_J": [0.0, 0.01870317270810393],
+      "events": 1,
+      "relative_empirical_MCSE": 1.0,
+      "measurement_variance_target_contribution": 3.498086693491637e-8,
+      "single_event_diagnostic": {"seed": 6101664, "initial_action": [18, 21], "component": "T", "future_weight": 0.14325802643101332, "initial_stratum_coefficient": 0.5222233804012523}
+    },
+    {
+      "state_id": 18,
+      "source_seed": 200051,
+      "J": 0.015765559029028237,
+      "batch_J": [0.0016703287619078168, 0.029860789296148653],
+      "events": 37,
+      "relative_empirical_MCSE": 0.46588775009368744,
+      "measurement_variance_target_contribution": 8.631798931146315e-8,
+      "largest_J_event_diagnostic": {"seed": 6104744, "initial_action": [20, 20], "component": "T", "future_weight": 0.07788742362219611, "initial_stratum_coefficient": 0.60569630788185}
+    },
+    {
+      "state_id": 19,
+      "source_seed": 200053,
+      "J": 0.00009234433806575831,
+      "batch_J": [0.00010202961545306516, 0.00008265906067845145],
+      "events": 19,
+      "relative_empirical_MCSE": 0.12890117031242682
+    },
+    {
+      "state_id": 32,
+      "source_seed": 230053,
+      "J": 0.0052370067088693606,
+      "batch_J": [0.008057298161161427, 0.002416715256577294],
+      "events": 49,
+      "relative_empirical_MCSE": 0.5744875278793947
+    }
+  ],
+  "verification": {
+    "artifact_hashes_verified": 68,
+    "predetermined_native_root_replays_matched": 66,
+    "max_full_factor_log_error": 1.212363542890671e-13,
+    "fixed_future_weight_range": [0.009731388712788499, 1.9999547876425074],
+    "regression_tests_passed": 180,
+    "frozen_code_assets_verified": true,
+    "natural_target_sha256": "106a9fbc795c75c9d4f60a880da7264cb626f9163e5ec073b720e6b48c6f9db5",
+    "protected_summary_hashes_unchanged": {
+      "continuation_v1": "253603bd2ef930cc59ad68f4e7cccab0683edc9eb66e224a340e111e9209e6d1",
+      "state_moments_v2": "38fd9eeb002da1cc4ce4d503d5d23f7ec0446d00e222fde355c7aa102ac1818d",
+      "state_allocation_update": "0a50edb8530818ba30d45626b56aed74caecd95d953f4fa22a5694df8c0cb0d3"
+    }
+  },
+  "decision": "Keep fixed-component measurement as a correct structural estimator improvement, not a precise J fit or validated variance winner. The remaining sparsely measured within-component outcomes dominate the observed variance; no extra batch, production Q_S fit or PPO launch.",
+  "production_changed": false,
+  "validation_opened": false,
+  "ppo_ready": false,
+  "source_generalization_validated": false
+}

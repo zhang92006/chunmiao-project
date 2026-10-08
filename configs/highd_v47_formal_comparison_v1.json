@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "scope": "Prospective original-critical-state Single/Dual action D2RL comparison; previous six runs are pipeline smoke evidence",
+  "physical_config": "configs/highd_v46_dual_context_v2.json",
+  "single_reference_config": "configs/highd_v46_d2rl_experiment.json",
+  "state_sampling": "Q_S_equals_alpha",
+  "state_likelihood_ratio": 1.0,
+  "state_model": null,
+  "state_discovery": "Original NativeExperiment.choose(single) on natural behavior; no pair eligibility in bank selection",
+  "pair_rule": "Frozen NativeExperiment.choose(dual) following-pair rule; original Single fallback when no pair passes",
+  "source_splits": {
+    "train": {"seed_start": 1000000000, "episodes": 256},
+    "validation": {"seed_start": 1000100000, "episodes": 256},
+    "final_test": {"seed_start": 1000200000, "episodes": 1024}
+  },
+  "historical_namespace_excluded": [0, 999999999],
+  "bank": {"maximum_states_per_source": 5, "selection_seed": 1717, "continuation_horizon_s": 4},
+  "training": {"draws_per_mode": 8192, "state_seed": 1700017, "continuation_seed_start": 1100000000, "seeds": [7, 17, 29, 41, 53], "iterations": 200, "checkpoint_interval": 10},
+  "validation": {"draws_per_checkpoint": 1024, "state_seed": 1800017, "continuation_seed_start": 1200000000, "selection": "Native unscaled event M2; ascending iteration ties; iteration 0 retained unless strictly improved"},
+  "final_test": {"horizon_s": 60, "initialization": "original natural initialization", "fixed_epsilon": 0.1, "bootstrap_seed": 1917, "bootstrap_replicates": 2000},
+  "screen": {"minimum_events": 20, "minimum_event_sources": 5, "maximum_source_M2_share": 0.8, "minimum_effective_M2_sources": 3, "maximum_event_M2_share": 0.8, "minimum_second_factor_TV": 0.001, "minimum_effective_dual_fraction": 0.01, "minimum_improved_seeds_per_mode": 3},
+  "statistics": {"confidence": 0.9, "rhw_targets": [0.3, 0.2, 0.1], "acceleration": "observed stable-suffix N_single / N_dual at matched RHW; undefined unless both reach it; asymptotic projections reported separately"},
+  "workers": 4,
+  "ppo_config": "configs/highd_v47_formal_ppo_v1.json",
+  "environment": {"python": "3.9.19", "numpy": "1.23.1", "scipy": "1.13.1", "ray": "1.11.0", "torch": "1.11.0", "gym": "0.21.0"},
+  "budget": "Fixed complete budgets; no positive-only filtering, extensions, favorable seed selection, model update after validation or final-test replacement"
+}

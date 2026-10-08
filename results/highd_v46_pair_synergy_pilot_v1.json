@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "record_date": "2026-10-04",
+  "scope": "Training-only pair diagnostic and selected-state conditional witnesses; no PPO or population acceleration claim",
+  "dependency_commit": "729ed95",
+  "diagnostic_config": "configs/highd_v46_pair_synergy_diagnostic_v1.json",
+  "witness_config": "configs/highd_v46_pair_witness_v1.json",
+  "natural_target_sha256": "106a9fbc795c75c9d4f60a880da7264cb626f9163e5ec073b720e6b48c6f9db5",
+  "diagnostic_implementation_sha256": "524ebd24f53fa2fb0734fd0782eb8b6ca697c307d75cd9b1b2c6a97184473b22",
+  "witness_implementation_sha256": "54419a408317d11cb244407eb7f3aa21e9bfb3303ec7a2bfa91b8b485f831b95",
+  "collector_sha256_unchanged": "83644ca9bf355ef37d2e1db890ff5a3a78554d2177f052d2b2a16373e296606c",
+  "state_pool_sha256": "047696b0b9f169c888a185115e3dd820e4a2b4bc728d7af0acec6c7bade9b95b",
+  "pair_diagnostics_sha256": "664d30a37b9c17dd69b7aacba47e73870734f8a4b505fcb629e6c163695d152c",
+  "source_rollouts": {
+    "seed_start": 120000,
+    "episodes": 32,
+    "horizon_s": 60,
+    "collision_episodes": 0,
+    "predraw_observations": 384,
+    "high_risk_flagged": 244,
+    "control": 140,
+    "pool_high_risk": 16,
+    "pool_control": 16,
+    "interpretation": "Balanced diagnostic strata; no demonstrated rare-event density increase"
+  },
+  "pair_audit": {
+    "state_pair_combinations": 189,
+    "same_natural_unit": 46,
+    "cross_unit": 143,
+    "synergy_eligible_legacy_hold": 1,
+    "synergy_eligible_mean_1s": 2,
+    "synergy_eligible_reactive_1s": 2,
+    "reactive_selected_pairs_are_cross_unit": true
+  },
+  "native_witness_protocol": {
+    "replicates_per_corner": 16,
+    "continuation_seed_start": 1300000,
+    "horizon_s": 4,
+    "physics_hz": 15,
+    "corners": ["modal_baseline", "rear_only", "front_only", "joint"],
+    "unforced_actors": "Exact natural conditional law including affected unit partners",
+    "randomness": "Common random numbers across the four corners"
+  },
+  "native_witnesses": [
+    {
+      "source_seed": 120013,
+      "time_s": 25,
+      "cav_id": 37,
+      "rear_front_ids": [36, 38],
+      "joint_natural_action_probability": 0.00017462667694475206,
+      "baseline_accelerations_mps2": [-2.4, 0.0],
+      "joint_accelerations_mps2": [0.8, -3.0],
+      "proxy_C_i_increment": 0.07692002407126819,
+      "proxy_C_j_increment": 0.04224330922549495,
+      "proxy_C_ij_increment": 0.8127996304477325,
+      "proxy_joint_excess": 0.6936362971509694,
+      "native_mean_clearance_risk": [0.034876202721197756, 0.10547089921624916, 0.0525691567546656, 0.8836533709333644],
+      "native_cav_event_counts": [0, 0, 0, 5],
+      "native_bv_only_event_counts": [0, 0, 0, 0],
+      "native_mean_interaction": 0.7604895176836473,
+      "native_interaction_standard_error": 0.051830017820995784
+    },
+    {
+      "source_seed": 120000,
+      "time_s": 20,
+      "cav_id": 16,
+      "rear_front_ids": [15, 17],
+      "native_mean_clearance_risk": [0.04873114214175818, 0.09596223033676882, 0.050744142511543355, 0.19209117192401629],
+      "native_cav_event_counts": [0, 0, 0, 0],
+      "native_bv_only_event_counts": [0, 0, 0, 0],
+      "native_mean_interaction": 0.09411594121746229,
+      "native_interaction_standard_error": 0.004543165702055438
+    }
+  ],
+  "validation": {
+    "pytest_passed": 52,
+    "native_snapshot_restore_regression": "passed",
+    "both_witness_snapshots_match_unmodified_natural_continuation": true,
+    "frozen_nde_verified": true,
+    "production_collector_unchanged": true,
+    "ppo_trained": false
+  },
+  "remaining_work": [
+    "Cross-unit online intervention with complete likelihood and support audit",
+    "Proxy calibration on separately seeded native continuations and horizon/step sensitivity",
+    "Training-state distribution and replay corrections before conditional-start PPO",
+    "Independent natural-initialization method comparison"
+  ]
+}

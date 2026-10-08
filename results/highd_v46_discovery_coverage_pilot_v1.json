@@ -1,0 +1,59 @@
+{
+  "date": "2026-10-04",
+  "base_commit": "da04d33",
+  "scope": "Training-only coverage audit; no NDE, production Q, proxy, gate or PPO changes",
+  "protocol": "configs/highd_v46_discovery_coverage_v1.json",
+  "witness_protocol": "configs/highd_v46_coverage_witness_v1.json",
+  "config_sha256": "10b9965746d4d7fe03a25ef60d95cfc960d8c2ff8f2d17d2d804096018462d84",
+  "implementation_sha256": "a576b5bd4a32217501637053a3997583242afc89c634f74dcf654fa88d6c2ef6",
+  "source_summary_sha256": "77dd136342ab59daebf150eb05096283358796a1f2bdbb78c91195cee9cd73e3",
+  "summary_sha256": "83ea401579ebdd17f150be09b7f52b8fef66ec7cf52ae80ef0ebe66dd5ea46a2",
+  "state_bank_sha256": "00da1c349cc7d2eaf4644a26487c1be5732edb17c1ddc5685b92502609460cf2",
+  "pair_audit_sha256": "3c3480080688e6c4991dbba03ceb6bb99c1e814241a3beef0c9e53acdcad6ebd",
+  "natural_target_sha256": "106a9fbc795c75c9d4f60a880da7264cb626f9163e5ec073b720e6b48c6f9db5",
+  "dependency_lock_reference": "results/highd_v46_state_discovery_pilot_v1.json",
+  "source_seed_start": 160000,
+  "source_episodes": 16,
+  "omitted_state_seed": 61,
+  "source_near_horizon_states_excluded_without_backfill": 4,
+  "natural_scanned_states": 925,
+  "audit_states": 60,
+  "audit_pairs": 1132,
+  "scan_wall_time_s": 11.775814375,
+  "total_wall_time_s": 475.823167292,
+  "selected_bank": {
+    "states": 28, "pairs": 540, "leverage_rejections": 524,
+    "strict_positive_pairs": 3, "strict_positive_states": 2, "strict_positive_source_episodes": 2,
+    "v1_audited_strict_positive_pairs": 2, "additional_strict_positive_pairs": 1,
+    "additional_strict_positive_states": 0,
+    "within_audited_universe_v1_pair_recall": 0.6666666666666666,
+    "strict_positive_ranks": [1, 2, 1],
+    "local_interaction_positive_pairs": 4, "local_interaction_positive_states": 3
+  },
+  "omitted_uniform": {
+    "states": 32, "pairs": 592, "leverage_rejections": 588,
+    "strict_positive_pairs": 1, "strict_positive_states": 1, "strict_positive_source_episodes": 1,
+    "strict_positive_ranks": [2],
+    "local_interaction_positive_pairs": 1, "local_interaction_positive_states": 1
+  },
+  "new_candidates_native_checks": [
+    {"seed": 160008, "time_s": 34, "actor_ids": [12, 29], "miss_type": "omitted_state", "mechanism": "lateral", "geometry_rank": 2, "proxy_interaction": 0.37935326930101737, "native_interaction_mean": 0.4022873630664563, "native_interaction_se": 0.009654988176623759, "cav_events_base_first_second_joint": [0, 0, 0, 0]},
+    {"seed": 160009, "time_s": 19, "actor_ids": [7, 10], "miss_type": "pair_in_already_positive_state", "mechanism": "bracket", "geometry_rank": 2, "proxy_interaction": 0.05181904822175354, "native_interaction_mean": 0.13491625073176064, "native_interaction_se": 0.02719805560517452, "cav_events_base_first_second_joint": [0, 0, 0, 0]}
+  ],
+  "native_check_replicates_per_corner": 16,
+  "native_check_continuation_seed_start": 2000000,
+  "witness_config_sha256": "3c358004a7c3cebf47638f276bb8d34e1097f46ad948aa6d5ae3a54ddc076a96",
+  "witness_implementation_sha256": "71d3695ce96f1178c47f78b48358ee65c4276cc7e3686f512881ec8078ab591d",
+  "witness_summary_sha256": "72884a4e6818d6fc1384a7ead2a9d44f3a38018ce249c54d8bffb0203929d8c3",
+  "engineering_note": "Initial attempt stopped on an exclusive-create output error; retained separately. Complete rerun used identical sampling rules and retained all outcomes. Added two-state integration regression.",
+  "tests_passed": 82,
+  "frozen_code_assets_verified": true,
+  "limitations": [
+    "No new validation or final-test data inspected; no generalization claim",
+    "Exhaustive pairs only within nearest eight BVs / 115 m at these 60 states",
+    "Omitted times sampled, not exhaustive; no global temporal recall estimate",
+    "Positive native clearance-risk interaction is not a collision-probability estimate",
+    "Forced corners are not draws from Q; no population rate, significance or acceleration claim",
+    "Neither new case had a collision in the native check; training event density remains unresolved"
+  ]
+}

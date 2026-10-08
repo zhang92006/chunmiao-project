@@ -1,0 +1,24 @@
+{
+  "scope": "Pipeline smoke evidence only; not the prospective original-critical-state formal comparison",
+  "implementation_commit": "7199863e27f0655ca8e4b2942b4d9da758eab235",
+  "training_summary_sha256": "a5fe7fa4463a05b9ec17849fd1879a3fdea3d442885fa78b3b08a09ea9b1c8ec",
+  "collection_summary_sha256": "92b92f47e6f7506ad7d88f72783f245f3ae634e697eaf984bffe34c5bcfa1223",
+  "source_bank": "56 strict-B training sources from 260000-260255, uniform alpha",
+  "state_likelihood_ratio": 1.0,
+  "state_model": null,
+  "draws_per_mode": 4096,
+  "native_CAV_events": {"single": 18, "dual": 625},
+  "event_sources": {"single": 8, "dual": 54},
+  "iterations_per_run": 100,
+  "training_seeds": [7, 17, 29],
+  "training_M2_ratio_to_own_fixed_epsilon": {
+    "single": [0.9639187799478651, 0.9966333452537632, 1.0011039585216472],
+    "dual": [1.2725310840693513, 1.2059611950085372, 0.9128041199146382]
+  },
+  "checkpoint_selection": "Predeclared iteration 100; no independent validation selection",
+  "native_likelihood_replays": 112,
+  "maximum_reconstructed_log_error": 5.684341886080802e-14,
+  "initial_failed_attempt": "macOS AF_UNIX socket path exceeded 103 bytes; no PPO iteration completed; retained",
+  "runtime_repair": "TMPDIR=/tmp; identical frozen data and training settings",
+  "decision": "Retain all six runs and all seeds as pipeline evidence. No Dual superiority conclusion or best-seed promotion. Formal comparison requires a new protocol."
+}

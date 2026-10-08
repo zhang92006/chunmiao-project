@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "version": "highd_dual_ndd_research_reference_20260926_v1",
+  "status": "research_reference_frozen_not_behavior_accepted",
+  "bundle_manifest": "data_analysis/raw_data/highd_dual_ndd_conditional_process_v2/fit/bundle_candidate.json",
+  "pilot_config": "data_analysis/raw_data/highd_dual_ndd_conditional_process_v2/fit/pilot_candidate.json",
+  "road": "unchanged_two_lane_highway",
+  "natural_partition": "existing_target_geometry_v1_disjoint_maximum_one_pair",
+  "cav": "existing_SUMO_IDM_type_with_autonomous_lane_change_disabled",
+  "action_encoding": "31_accelerations_times_3_lateral_choices_per_BV",
+  "pins": {
+    "data_analysis/raw_data/highd_dual_ndd_conditional_process_v2/fit/bundle_candidate.json": "be44cd1dbb4cf71041c87c20620d7ab6842772edc010192143cc8e2bb3695c38",
+    "data_analysis/raw_data/highd_dual_ndd_conditional_process_v2/fit/pilot_candidate.json": "90b1d989bbc4f87bced22954127dcaeb1f1bf8dda90d278a362081b288472345",
+    "scenario_reconstruction/highd_dual_ndd_runtime.py": "040b059fc5ffa8a26ef811d212daea0d4b7b9866edcd751288f83e46f3c9b234",
+    "scenario_reconstruction/highd_dual_ndd_bundle.py": "5045d44cafdc0ecce436cde37fb68adfbfbfc5d68a5cfa64f8b86d715068298d",
+    "scenario_reconstruction/highd_dual_ndd_pilot.py": "c78cac803390f10f51c48f9c225abef4906ccb5696e28ff4232c47c0be754122",
+    "maps/2LaneHighway/2LaneHighway.net.xml": "03838171f5a33f4131e0e629a7138590fe1b06c5a64dea8699c898bcd9bdcef3",
+    "maps/2LaneHighway/2LaneHighwayHighSpeed.rou.xml": "1360ed59e9d1fdfb0fdce51aa407c8318505ec4bd745f3b32be0bccf1012de5f",
+    "maps/2LaneHighway/2LaneHighwayHighSpeed.sumocfg": "515a85a4b20b10c62ec392776ae510cbce4cb0b6b17ff7a7c863c96721489c3b"
+  },
+  "known_limitations": [
+    "No ongoing lateral replanning; sampled motion remains committed",
+    "Target alongside/front longitudinal residual dependence is explicitly independent",
+    "History-conditioned longitudinal marginals can suppress braking in dangerous lateral states",
+    "Some small lateral adjustments require substantial duration conditioning",
+    "Existing three-seed diagnostics do not establish behavioral realism or risk efficiency",
+    "Artifact manifests currently reference the local fitted cache; this is not a portable public release"
+  ],
+  "reuse_policy": "New behavior data only; do not mix old SHRP2/33-action probabilities or checkpoint semantics",
+  "claim_scope": "Conditional risk under a fixed research simulator and separately declared initial-state mixture, not real-world highD/SHRP2 crash probability"
+}

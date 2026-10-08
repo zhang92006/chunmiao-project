@@ -1,0 +1,40 @@
+{
+  "date": "2026-10-05",
+  "status": "frozen_not_started",
+  "code_commit": "55360408c7c5c48239eb219cd0813c45b35c305f",
+  "config_sha256": "d7f7694298015541ca1fd46f71fe16b89196b75b3420543f5d82436f27c301de",
+  "implementation_sha256": "4cbf6ac915f9d1e66cabd0a723eade97ed61529b862723471c2da781df1ab378",
+  "rule_lock_sha256": "a6b7a6d19b111a16efed9b87f31ca0a6d59fbf469e555c5334dfe73a547fd594",
+  "training_summary_sha256": "5c9ff17e6f2f1b4bbd3b59118b20ce5f934fb879ade5e3533dbae7a667631c5f",
+  "proposal_structure_sha256": "5c278e03659dfbc91ae714338a2d916dfbda68c93db856d16420c9df04ad30ae",
+  "source": {
+    "split": "validation",
+    "seed_start": 250000,
+    "episodes": 256
+  },
+  "candidates": {
+    "interaction": 1,
+    "absolute_risk": 0,
+    "mixed": 0.5
+  },
+  "continuation_seed_start": 4200000,
+  "confirmation": {
+    "maximum_source_episodes": 16,
+    "source_selection_seed": 139,
+    "replicates_per_corner": 16,
+    "continuation_seed_start": 4300000,
+    "minimum_native_interaction": 0.05,
+    "rule": "Uniform sample within common strict-B eligible sources, saved before outcomes; each physical case measured once for all proposals; no replacement"
+  },
+  "environment": {
+    "python": "3.9.19",
+    "numpy": "1.23.1",
+    "scipy": "1.13.1",
+    "OPENBLAS_NUM_THREADS": 1,
+    "OMP_NUM_THREADS": 1
+  },
+  "fresh_validation_sources_opened": false,
+  "ppo_trained": false,
+  "relevant_tests_passed": 162,
+  "scope": "Pre-outcome protocol lock only; no validation performance evidence"
+}

@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "config": "configs/highd_v46_cross_unit_v1.json",
+  "seed_start": 140000,
+  "episodes_per_arm": 8,
+  "arms": {"natural": null, "first_factor_only": [0.1, 1.0], "dual": [0.1, 0.1]},
+  "horizon_s": 60,
+  "mechanism_replay": {"seed_start": 120013, "episodes": 1, "epsilon": [0.1, 0.1],
+    "scope": "Previously selected training seed; end-to-end likelihood/replay check only, excluded from fresh-cohort comparison"},
+  "collection_rule": "Retain all episodes; these development seeds are not validation or formal final-test data",
+  "purpose": "Likelihood audit and closed-loop implementation pilot, not a significance or acceleration study",
+  "environment": {"python": "3.9.19", "numpy": "1.23.1", "scipy": "1.13.1"}
+}

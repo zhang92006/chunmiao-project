@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "scope": "Fresh source-level validation of absolute-risk ranking with and without the frozen dual research gate",
+  "discovery_config": "configs/highd_v46_discovery_v2.json",
+  "bank_method": "mixed5_top2",
+  "source": {"split": "validation", "seed_start": 240000, "episodes": 256},
+  "forbidden_source_ranges": [[100000, 101023], [110000, 110015], [120000, 120031], [140000, 140007], [160000, 160015], [170000, 170007], [180000, 180031], [190000, 190031], [200000, 200063], [210000, 210031], [220000, 220031], [230000, 230063]],
+  "training_locks": [
+    {"path": "outputs/v46_native_calibration_v1_train", "config": "configs/highd_v46_native_calibration_v1.json", "summary_sha256": "f8b1334db8901e009a9e1b190a5c4e157a8bc2e64964f8af41d81d96b27ac131"},
+    {"path": "outputs/v46_training_expansion_v1", "config": "configs/highd_v46_training_expansion_v1.json", "summary_sha256": "6cd41910ab556c0aa5ad4da262808f0bff1e9d65296b08484fff0e266eccdef3"}
+  ],
+  "selectors": {"A": "absolute_risk_only", "B": "absolute_risk_with_production_strict_gate"},
+  "rank_score": "maximum_supported_proxy_risk",
+  "tie_break": "Ascending time then ordered actor IDs",
+  "maximum_states_per_source": 1,
+  "zero_interaction_mass": "Natural fallback with no replacement",
+  "replicates_per_case_arm": 64,
+  "continuation_seed_start": 2900000,
+  "arms": {"natural": [1.0, 1.0], "first_factor_only": [0.1, 1.0], "second_factor_only": [1.0, 0.1], "dual": [0.1, 0.1]},
+  "horizon_s": 4,
+  "confirmation": {"maximum_source_episodes": 16, "source_selection_seed": 127, "replicates_per_corner": 16, "continuation_seed_start": 3900000, "minimum_native_interaction": 0.05, "rule": "Uniform source sample from the A/B candidate-source union before native outcomes; four supported maximum-interaction corners, no substitutions"},
+  "statistics": {"confidence": 0.9, "bootstrap_repeats": 2000, "bootstrap_seed": 131, "minimum_event_sources_for_intervals": 5, "minimum_events_for_intervals": 20, "minimum_effective_factor_tv": 0.001},
+  "screening_readiness": {"minimum_event_sources": 5, "desired_event_sources": 10, "maximum_source_second_moment_fraction": 0.8, "minimum_effective_second_moment_sources": 3.0, "meaning": "Predeclared engineering checks for candidate screening; no significance guarantee or automatic PPO launch"},
+  "fixed_budget": "One fixed source cohort. Retain every source, abstention, candidate and continuation; no event-conditioned extension or replacement. Different cases from the same source share continuation seeds for A/B pairing; different sources have disjoint seeds.",
+  "state_law": "Within each selector, uniform selected source episode and its one fixed selected state; report all-source coverage separately",
+  "uncertainty": "Paired whole-source cluster bootstrap for source generalization; fixed-state stratified Monte Carlo standard errors reported separately",
+  "environment": {"python": "3.9.19", "numpy": "1.23.1", "scipy": "1.13.1", "OPENBLAS_NUM_THREADS": 1, "OMP_NUM_THREADS": 1}
+}

@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "teacher_config": "configs/highd_v47_action_teacher_v1.json",
+  "teacher_path": "outputs/v47_action_teacher_v1_train",
+  "teacher_summary_sha256": "b59a511ebf1751f255a7c4039b29e5f315a008a69e4f34e6671a385adc4505d8",
+  "target": "Unchanged teacher target: uniform over 25 sources, uniform over locked states within source; 33 total states",
+  "state_floor": 0.2,
+  "M2_regularization": 0.01,
+  "state_model": "Tabular pilot action-weighted conditional second moment per locked state, plus 0.01 times target-average pilot M2; constrained square-root allocation",
+  "arms": ["target_iid", "allocated_iid", "equal_state_stratified"],
+  "draws_per_arm": 2112,
+  "state_rng_seed": 470017,
+  "continuation_seed_start": 4800000,
+  "epsilon": [0.1, 0.1],
+  "horizon_s": 4,
+  "scope": "New independent continuation draws on a fixed training state bank. Q_A unchanged. Exact state and action likelihood correction. Not source-held-out validation or original-initialization testing.",
+  "budget": "Freeze Q_S and all arm schedules before outcomes; 6336 native continuations. No outcome-conditioned changes, omitted zero cases, weight clipping, PPO export, or production replacement."
+}

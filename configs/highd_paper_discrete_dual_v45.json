@@ -1,0 +1,188 @@
+{
+  "schema_version": 1,
+  "status": "retained_gap_priority_candidate",
+  "module": "scenario_reconstruction.highd_paper_discrete_pairs",
+  "single_baseline": "configs/highd_paper_discrete_v34.json",
+  "single_contract": {
+    "single_version": "user_accepted_v34",
+    "model_sha256": "906c1a33d26b03a1ec75bf42bd3f6e2fc0bc0faf3dee6563ba2615a7a2934368",
+    "lateral_sha256": "ed4e5bcf8307727c591db175dda3cd4ac8f71be867da404b881c8812b95a6358",
+    "options": {
+      "empirical_backoff": true,
+      "pooled_lateral": true,
+      "weighted_lateral": true,
+      "reference_lateral": false,
+      "train_headway": false,
+      "one_second_feasibility": true
+    },
+    "decision_interval_s": 1.0,
+    "lane_change_duration_s": 1.0,
+    "physics_hz": 15,
+    "action_count": 33
+  },
+  "joint_artifact": "highd_paper_discrete_pair_fit_interval_hierarchy_v6_20261003",
+  "joint_sha256": "7b128179828876e6d820e54758285a9d5e782934a7691246429ca6304118a3bb",
+  "rollout_artifact": "highd_paper_discrete_dual_v45_interval_hierarchy_20261003",
+  "initial_fleet_artifact": "highd_paper_native_matched_v2_20261001/initial_fleets",
+  "reference_artifact": "highd_paper_native_reference_v2_20261001",
+  "reference_sha256": "5e050658ab1a36bc829b0ab4f430679da1569bbe28a9fa3c78238515bb2229cf",
+  "seeds": [
+    7,
+    19,
+    29
+  ],
+  "duration_s": 60,
+  "completed_runs": 3,
+  "lane_change_counts": [
+    7,
+    9,
+    7
+  ],
+  "pair_statistics": [
+    {
+      "paired_decisions": 736,
+      "correlated_pair_decisions": 736,
+      "maximum_simultaneous_pairs": 16,
+      "pair_additions": 101,
+      "pair_removals": 87,
+      "maximum_marginal_error": 2.220446049250313e-16
+    },
+    {
+      "paired_decisions": 630,
+      "correlated_pair_decisions": 630,
+      "maximum_simultaneous_pairs": 15,
+      "pair_additions": 115,
+      "pair_removals": 102,
+      "maximum_marginal_error": 3.3306690738754696e-16
+    },
+    {
+      "paired_decisions": 710,
+      "correlated_pair_decisions": 710,
+      "maximum_simultaneous_pairs": 15,
+      "pair_additions": 98,
+      "pair_removals": 87,
+      "maximum_marginal_error": 2.220446049250313e-16
+    }
+  ],
+  "full_exposure_hellinger": {
+    "speed": 0.16633115815492305,
+    "gap": 0.20695541899184972,
+    "rr": 0.11575554519131517
+  },
+  "independent_control_exact_v34_actions_and_diagnostics": null,
+  "validation": "All three fitted scenes complete 60 s; no extra scoring-replay collisions. V46 independent control exactly matches V34 per-second actions, accelerations, and diagnostics. Four focused tests pass, including forward interval labels and truncated source-track exclusion.",
+  "scope": "Fit joint dependence against forward 1 s velocity increments on fully observed stable intervals, matching held-action duration. The source current-state domain filters remain; future quiet leader/lane stability selects the offline both-stay interval sample. Runtime uses current/past states only. Hierarchical speed cells shrink toward coarse parent on existing calibration recordings; V46 chooses simplest mixture within one recording-level standard error of best gain. Source interval selection can bias coverage. V34 single marginals, explicit feasibility, LC execution, model data and initial fleets unchanged.",
+  "environment": {
+    "python": "3.12.7",
+    "numpy": "1.26.4",
+    "scipy": "1.13.1",
+    "pandas": "2.2.2"
+  },
+  "independent_control_artifact": null,
+  "runtime_options": {
+    "supported_pairs_only": true,
+    "dependence_scale": 1.0,
+    "gap_taper": false,
+    "pair_selection": "continuity"
+  },
+  "collision_summary_sha256": "4b2d0ced1890cc52e5fec742311444a413dc3e6d975b094b916b343d13828930",
+  "implementation_sha256": "196dc190a90737c7fcca1eacb4c7307e6ddad14d76ca2089f388720883724cf9",
+  "selection_basis": "V46 retained for speed/gap improvement versus V38, with rr regression. V45 retained as better gap alternative with worse speed. Seven exploratory candidates in this turn used the same development seeds; no independent significance/generalization claim.",
+  "development_variants": [
+    {
+      "version": "V40",
+      "artifact": "highd_paper_discrete_dual_v40_nearest_20261003",
+      "completed_runs": 2,
+      "elapsed_s": [
+        60.0,
+        26.333333333333332,
+        60.0
+      ]
+    },
+    {
+      "version": "V41",
+      "artifact": "highd_paper_discrete_dual_v41_covariance_20261003",
+      "completed_runs": 2,
+      "elapsed_s": [
+        60.0,
+        29.2,
+        60.0
+      ]
+    },
+    {
+      "version": "V42",
+      "artifact": "highd_paper_discrete_dual_v42_speed_20261003",
+      "completed_runs": 2,
+      "elapsed_s": [
+        60.0,
+        38.333333333333336,
+        60.0
+      ]
+    },
+    {
+      "version": "V43",
+      "artifact": "highd_paper_discrete_dual_v43_hierarchy_20261003",
+      "completed_runs": 3,
+      "elapsed_s": [
+        60.0,
+        60.0,
+        60.0
+      ],
+      "H": {
+        "speed": 0.16461419846199243,
+        "gap": 0.22835113430862186,
+        "rr": 0.11380638960046809
+      }
+    },
+    {
+      "version": "V44",
+      "artifact": "highd_paper_discrete_dual_v44_interval_20261003",
+      "completed_runs": 3,
+      "elapsed_s": [
+        60.0,
+        60.0,
+        60.0
+      ],
+      "H": {
+        "speed": 0.15863874060640537,
+        "gap": 0.21891923925365986,
+        "rr": 0.11654365831449066
+      }
+    },
+    {
+      "version": "V45",
+      "artifact": "highd_paper_discrete_dual_v45_interval_hierarchy_20261003",
+      "completed_runs": 3,
+      "elapsed_s": [
+        60.0,
+        60.0,
+        60.0
+      ],
+      "H": {
+        "speed": 0.16633115815492305,
+        "gap": 0.20695541899184972,
+        "rr": 0.11575554519131517
+      }
+    },
+    {
+      "version": "V46",
+      "artifact": "highd_paper_discrete_dual_v46_interval_1se_20261003",
+      "completed_runs": 3,
+      "elapsed_s": [
+        60.0,
+        60.0,
+        60.0
+      ],
+      "H": {
+        "speed": 0.15716052959191842,
+        "gap": 0.2179601582015251,
+        "rr": 0.11598358942554517
+      }
+    }
+  ],
+  "fit_chain": {
+    "parent": "highd_paper_discrete_pair_fit_interval_v4_20261003",
+    "child": "highd_paper_discrete_pair_fit_interval_speed_v5_20261003",
+    "one_standard_error_selection": false
+  }
+}

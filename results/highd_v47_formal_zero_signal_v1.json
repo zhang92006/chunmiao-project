@@ -1,0 +1,21 @@
+{
+  "scope": "Read-only diagnosis of complete formal v1 training data; no new native observations or PPO",
+  "parent_lock_sha256": "9677269cdc789303bbf116138d6f15f30d26e80f59ccd6668ffa75df488b37e0",
+  "training_bank_sha256": "eafef73f614045db7493ea5887c71ff16862ca955ee2a8efce457db0622c2c9b",
+  "collection_summary_sha256": "584cf11b70d9f0e83b54f6d2ab45e49de8de4ca036586adbc897ecc5b56b7e9f",
+  "audit_sha256": "de83f5c3ab962adfcf0dc6937cfd14420c71531366f41879f543807436c00ce7",
+  "natural_sources": 256,
+  "selected_sources": 253,
+  "states": 1263,
+  "single": {"sequences": 8192, "CAV_events": 0, "BV_only_endpoints": 77, "critical_decisions": 32358},
+  "dual": {"sequences": 8192, "CAV_events": 0, "BV_only_endpoints": 78, "critical_decisions": 32373},
+  "native_replays": 2518,
+  "maximum_full_factor_log_error": 4.04121180963557e-14,
+  "state_likelihood_ratio": 1.0,
+  "formal_PPO_started": false,
+  "validation_opened": false,
+  "final_test_opened": false,
+  "confirmed_code_mismatch": "Proxy holds initial selected BV acceleration for four seconds; native resamples decisions every second and stops at first collision; clearance risk is not a collision probability",
+  "causal_limitation": "Finite zero events do not prove zero true risk or isolate one sole cause",
+  "recovery_status": "Separately versioned training-only behavior exploration implementation; native outcomes pending researcher execution; original target proposal/state law/reward unchanged"
+}

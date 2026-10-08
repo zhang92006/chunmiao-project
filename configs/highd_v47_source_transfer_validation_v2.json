@@ -1,0 +1,8 @@
+{
+  "version": 2,
+  "parent_config": "configs/highd_v47_source_transfer_v1.json",
+  "parent_config_sha256": "0ee2da48365041db841a8faa78698544a46e82f24ce0fc4d9025600bddc1c82b",
+  "change": "Validation-only correction: bootstrap water-filling uses reciprocal allocation_loss_cap as its probability floor, matching the frozen candidate. No fitting, source, continuation, budget, seed or acceptance-rule change.",
+  "training_unchanged": true,
+  "validation_sources_previously_unopened": true
+}

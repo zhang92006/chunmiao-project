@@ -1,0 +1,412 @@
+{
+  "date": "2026-10-05",
+  "scope": "Complete locked fresh source-level validation; no model fitting, PPO or population-efficiency estimate",
+  "implementation_commit": "c3e70096cc74d8860a80f21deb44625248006f8a",
+  "execution_branch": "experiment/v46-source-selector-validation-run",
+  "config": "configs/highd_v46_source_selector_validation_v1.json",
+  "config_sha256": "8de723ceda7b20029110936ec70aa95af31639cbd323cdae571beccf99607593",
+  "implementation_sha256": "99bb51dbad1006dcf35e954cb31a911ac8f32701999d8c428f17f9a576590546",
+  "rule_lock_sha256": "5cce02ee01f28b383882f15f846cbc2ae8d7cd1204e6050f06bbc2f4ec0f7b91",
+  "summary_sha256": "1983dc59c2848247e90e8cf8d2688c816e57d60c638d21371660980327b22cfc",
+  "case_plan_sha256": "7a16c5aa76b5df51c9e1a2c20f865a237af99dcdaf140b5d38ecb5e429b817c6",
+  "source_records_sha256": "4ec3b65bf023a3229ad29a44a8d5fbd50a8516689068001e8391e724b20d2414",
+  "natural_target_sha256": "106a9fbc795c75c9d4f60a880da7264cb626f9163e5ec073b720e6b48c6f9db5",
+  "experiment_target_sha256": "ab84bb18d3d649be86ff4d3f568e1562079fae656dd7004b726645affe4e07fe",
+  "environment": {
+    "python": "3.9.19",
+    "numpy": "1.23.1",
+    "scipy": "1.13.1",
+    "OPENBLAS_NUM_THREADS": 1,
+    "OMP_NUM_THREADS": 1
+  },
+  "source_seed_range": [
+    240000,
+    240255
+  ],
+  "source_episodes": 256,
+  "bank_states": 1280,
+  "pair_audits": 3736,
+  "strict_positive_pairs": 65,
+  "strict_positive_states": 61,
+  "strict_positive_sources": 47,
+  "distinct_cases": 257,
+  "shared_AB_cases": 46,
+  "probabilistic_continuations": 65792,
+  "natural_source_cav_events": 0,
+  "natural_source_bv_only_events": 11,
+  "selectors": {
+    "A": {
+      "rule": "absolute_risk_only",
+      "coverage": {
+        "all_source_episodes": 256,
+        "candidate_source_episodes": 256,
+        "effective_pair_source_episodes": 177,
+        "candidate_source_fraction": 1,
+        "effective_pair_source_fraction": 0.69140625
+      },
+      "natural_fallback_sources": 78,
+      "arms": {
+        "natural": {
+          "continuations": 16384,
+          "cav_events": 4,
+          "raw_event_rate": 0.000244140625,
+          "event_source_episodes": 3,
+          "conditional_is_mean": 0.000244140625,
+          "conditional_second_moment": 0.000244140625,
+          "event_interval_guard": false
+        },
+        "first_factor_only": {
+          "continuations": 16384,
+          "cav_events": 35,
+          "raw_event_rate": 0.00213623046875,
+          "event_source_episodes": 3,
+          "conditional_is_mean": 0.00005675063349056996,
+          "conditional_second_moment": 0.000007470694293740119,
+          "event_interval_guard": false
+        },
+        "second_factor_only": {
+          "continuations": 16384,
+          "cav_events": 4,
+          "raw_event_rate": 0.000244140625,
+          "event_source_episodes": 3,
+          "conditional_is_mean": 0.00017970024766334944,
+          "conditional_second_moment": 0.00014932254007258796,
+          "event_interval_guard": false
+        },
+        "dual": {
+          "continuations": 16384,
+          "cav_events": 63,
+          "raw_event_rate": 0.00384521484375,
+          "source_weighted_event_rate": 0.00384521484375,
+          "event_source_episodes": 3,
+          "observed_event_source_yield": 0.01171875,
+          "effective_pair_event_source_episodes": 3,
+          "conditional_is_mean": 0.00003826582651812579,
+          "conditional_second_moment": 0.0000025289646666313028,
+          "fixed_state_mean_mcse": 0.000011625264410953359,
+          "q_second_factor_tv": {
+            "minimum": 0,
+            "mean": 0.40972848605571505,
+            "maximum": 0.8940999065416653
+          },
+          "maximum_source_contribution": 0.9992468179555364,
+          "effective_second_moment_sources_descriptive": 1.0015075446823631,
+          "event_interval_guard": false,
+          "source_diversity_guard": false,
+          "concentration_guard": false
+        }
+      },
+      "dual_event_sources": [
+        {
+          "source_seed": 240022,
+          "case_id": 22,
+          "cav_events": 47,
+          "source_second_moment": 0.0006469273333384481,
+          "weighted_second_moment_contribution": 0.000002527059895853313,
+          "contribution_fraction": 0.9992468179555364
+        },
+        {
+          "source_seed": 240099,
+          "case_id": 99,
+          "cav_events": 14,
+          "source_second_moment": 4.6702883936383463e-7,
+          "weighted_second_moment_contribution": 1.824331403764979e-9,
+          "contribution_fraction": 0.0007213748091605694
+        },
+        {
+          "source_seed": 240151,
+          "case_id": 151,
+          "cav_events": 2,
+          "source_second_moment": 2.0592479801501036e-8,
+          "weighted_second_moment_contribution": 8.043937422461342e-11,
+          "contribution_fraction": 0.000031807235303039
+        }
+      ],
+      "confirmation": {
+        "planned_source_episodes": 16,
+        "measured_source_episodes": 9,
+        "confirmation_count": 0,
+        "confirmation_rate_among_measured": 0,
+        "confirmed_source_yield_in_planned_subset": 0,
+        "unmeasured_reasons": {
+          "no_positive_supported_contrast": 7
+        },
+        "scope": "Preselected supported four-corner native clearance-risk confirmations, separate from real-Q event estimates"
+      }
+    },
+    "B": {
+      "rule": "absolute_risk_with_production_strict_gate",
+      "coverage": {
+        "all_source_episodes": 256,
+        "candidate_source_episodes": 47,
+        "effective_pair_source_episodes": 47,
+        "candidate_source_fraction": 0.18359375,
+        "effective_pair_source_fraction": 0.18359375
+      },
+      "natural_fallback_sources": 0,
+      "arms": {
+        "natural": {
+          "continuations": 3008,
+          "cav_events": 4,
+          "raw_event_rate": 0.0013297872340425532,
+          "event_source_episodes": 3,
+          "conditional_is_mean": 0.0013297872340425532,
+          "conditional_second_moment": 0.0013297872340425532,
+          "event_interval_guard": false
+        },
+        "first_factor_only": {
+          "continuations": 3008,
+          "cav_events": 35,
+          "raw_event_rate": 0.01163563829787234,
+          "event_source_episodes": 3,
+          "conditional_is_mean": 0.0003091098334805513,
+          "conditional_second_moment": 0.00004069144125952064,
+          "event_interval_guard": false
+        },
+        "second_factor_only": {
+          "continuations": 3008,
+          "cav_events": 4,
+          "raw_event_rate": 0.0013297872340425532,
+          "event_source_episodes": 3,
+          "conditional_is_mean": 0.0009787928383365417,
+          "conditional_second_moment": 0.0008133312820975003,
+          "event_interval_guard": false
+        },
+        "dual": {
+          "continuations": 3008,
+          "cav_events": 63,
+          "raw_event_rate": 0.020944148936170214,
+          "source_weighted_event_rate": 0.020944148936170214,
+          "event_source_episodes": 3,
+          "observed_event_source_yield": 0.01171875,
+          "effective_pair_event_source_episodes": 3,
+          "conditional_is_mean": 0.00020842662954553623,
+          "conditional_second_moment": 0.000013774786269310926,
+          "fixed_state_mean_mcse": 0.00006332058913200128,
+          "q_second_factor_tv": {
+            "minimum": 0.42529888189198567,
+            "mean": 0.5459756957879796,
+            "maximum": 0.6947481149035892
+          },
+          "maximum_source_contribution": 0.9992468179555364,
+          "effective_second_moment_sources_descriptive": 1.0015075446823631,
+          "event_interval_guard": false,
+          "source_diversity_guard": false,
+          "concentration_guard": false
+        }
+      },
+      "dual_event_sources": [
+        {
+          "source_seed": 240022,
+          "case_id": 22,
+          "cav_events": 47,
+          "source_second_moment": 0.0006469273333384481,
+          "weighted_second_moment_contribution": 0.000013764411347626557,
+          "contribution_fraction": 0.9992468179555364
+        },
+        {
+          "source_seed": 240099,
+          "case_id": 99,
+          "cav_events": 14,
+          "source_second_moment": 4.6702883936383463e-7,
+          "weighted_second_moment_contribution": 9.9367838162518e-9,
+          "contribution_fraction": 0.0007213748091605694
+        },
+        {
+          "source_seed": 240151,
+          "case_id": 151,
+          "cav_events": 2,
+          "source_second_moment": 2.0592479801501036e-8,
+          "weighted_second_moment_contribution": 4.381378681170433e-10,
+          "contribution_fraction": 0.000031807235303039
+        }
+      ],
+      "confirmation": {
+        "planned_source_episodes": 16,
+        "measured_source_episodes": 0,
+        "confirmation_count": 0,
+        "confirmation_rate_among_measured": null,
+        "confirmed_source_yield_in_planned_subset": 0,
+        "unmeasured_reasons": {
+          "selector_abstained": 16
+        },
+        "scope": "Preselected supported four-corner native clearance-risk confirmations, separate from real-Q event estimates"
+      }
+    }
+  },
+  "paired_source_cluster_uncertainty": {
+    "unit": "complete source episode",
+    "paired_source_draws": true,
+    "replicates": 2000,
+    "selectors": {
+      "A": {
+        "candidate_source_fraction": {
+          "interval": null,
+          "valid_replicates": 2000,
+          "undefined_replicates": 0,
+          "status": "degenerate_observed_boundary"
+        },
+        "effective_pair_source_fraction": {
+          "interval": [
+            0.64453125,
+            0.73828125
+          ],
+          "valid_replicates": 2000,
+          "undefined_replicates": 0,
+          "status": "reported"
+        },
+        "observed_event_source_yield": {
+          "interval": null,
+          "valid_replicates": 2000,
+          "undefined_replicates": 0,
+          "status": "insufficient_event_sources"
+        },
+        "source_weighted_event_rate": {
+          "interval": null,
+          "valid_replicates": 2000,
+          "undefined_replicates": 0,
+          "status": "insufficient_event_sources"
+        },
+        "conditional_is_mean": {
+          "interval": null,
+          "valid_replicates": 2000,
+          "undefined_replicates": 0,
+          "status": "insufficient_event_sources"
+        },
+        "conditional_second_moment": {
+          "interval": null,
+          "valid_replicates": 2000,
+          "undefined_replicates": 0,
+          "status": "insufficient_event_sources"
+        }
+      },
+      "B": {
+        "candidate_source_fraction": {
+          "interval": [
+            0.14453125,
+            0.22265625
+          ],
+          "valid_replicates": 2000,
+          "undefined_replicates": 0,
+          "status": "reported"
+        },
+        "effective_pair_source_fraction": {
+          "interval": [
+            0.14453125,
+            0.22265625
+          ],
+          "valid_replicates": 2000,
+          "undefined_replicates": 0,
+          "status": "reported"
+        },
+        "observed_event_source_yield": {
+          "interval": null,
+          "valid_replicates": 2000,
+          "undefined_replicates": 0,
+          "status": "insufficient_event_sources"
+        },
+        "source_weighted_event_rate": {
+          "interval": null,
+          "valid_replicates": 2000,
+          "undefined_replicates": 0,
+          "status": "insufficient_event_sources"
+        },
+        "conditional_is_mean": {
+          "interval": null,
+          "valid_replicates": 2000,
+          "undefined_replicates": 0,
+          "status": "insufficient_event_sources"
+        },
+        "conditional_second_moment": {
+          "interval": null,
+          "valid_replicates": 2000,
+          "undefined_replicates": 0,
+          "status": "insufficient_event_sources"
+        }
+      }
+    },
+    "paired": {
+      "candidate_source_fraction_B_minus_A": {
+        "interval": [
+          -0.85546875,
+          -0.77734375
+        ],
+        "valid_replicates": 2000,
+        "undefined_replicates": 0,
+        "status": "reported"
+      },
+      "effective_pair_source_fraction_B_minus_A": {
+        "interval": [
+          -0.55859375,
+          -0.453125
+        ],
+        "valid_replicates": 2000,
+        "undefined_replicates": 0,
+        "status": "reported"
+      },
+      "observed_event_source_yield_B_minus_A": {
+        "interval": null,
+        "valid_replicates": 2000,
+        "undefined_replicates": 0,
+        "status": "insufficient_event_sources"
+      },
+      "source_weighted_event_rate_B_minus_A": {
+        "interval": null,
+        "valid_replicates": 2000,
+        "undefined_replicates": 0,
+        "status": "insufficient_event_sources"
+      }
+    },
+    "scope": "Source generalization for a selector-specific state law; no same-target IS variance or population acceleration comparison"
+  },
+  "screening": {
+    "selected_case_reduction_B_vs_A": 0.81640625,
+    "observed_event_source_yield_equal": true,
+    "empirical_dual_over_first_factor_M2": 0.3385180235189634,
+    "both_readiness_checks_failed": true,
+    "historical_training_max_source_share": 0.9925550204363279,
+    "historical_comparison_scope": "Different source/state laws and budgets; not a matched improvement or deterioration estimate"
+  },
+  "tail_diagnostic": {
+    "source_seed": 240022,
+    "continuation_seed": 2901420,
+    "P2": 0.23889344284609254,
+    "H2": 0,
+    "Q2": 0.023889344284609256,
+    "likelihood_ratio": 0.1942593348941736,
+    "single_event_fraction_of_total_dual_M2": 0.9107540139549054,
+    "scope": "Valid supported likelihood; empirical conditional tail diagnostic, not a population claim"
+  },
+  "timing": {
+    "total_wall_s": 4987.606127792001,
+    "discovery_wall_s": 1600.733991708,
+    "proxy_cpu_s": 1405.5475890000023,
+    "selection_and_reaudit_cpu_s": 98.78087400000004,
+    "rule_specific_dual_cpu_s": {
+      "A": 802.4157750000404,
+      "B": 148.90189200000873
+    },
+    "scope": "Local offline profile; shared discovery cost retained, not an acceleration benchmark"
+  },
+  "audit": {
+    "verified_artifact_hashes": 1049,
+    "all_source_and_continuation_schedules_checked": true,
+    "outcome_blind_plan_reconstructed": true,
+    "raw_event_counts_and_source_moments_recomputed": true,
+    "paired_source_bootstrap_recomputed": true,
+    "confirmation_statistics_recomputed": true,
+    "maximum_full_vs_factor_log_weight_error": 1.4654943925052066e-14,
+    "regression_tests_passed": 58,
+    "frozen_verification_passed": true,
+    "unchanged_training_manifest_sha256": "0ec2a1869b1f3ec69fe6ac231c7f8691032f7940922df805c1e218367e25aa48",
+    "unchanged_old_validation_manifest_sha256": "325149e5d76404877d79e74de937ffb4424e9c2dce66399837f8815a0c616c91"
+  },
+  "decision": {
+    "ppo_ready": false,
+    "ppo_trained": false,
+    "training_manifest_exported": false,
+    "population_acceleration": null,
+    "interpretation": "B improves selected-state event density and screening economy, but not observed event-source diversity or M2 concentration; native B confirmation remains unmeasured",
+    "next_step": "Training-only collision-action coverage/native calibration and separately declared source discovery/confirmation, followed by fresh source-disjoint validation"
+  }
+}

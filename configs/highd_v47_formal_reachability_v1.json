@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "scope": "Training-only supported-action reachability probes after two complete zero-CAV collections; no IS estimate or PPO data",
+  "recovery_config": "configs/highd_v47_formal_recovery_v2.json",
+  "modes": ["single", "dual"],
+  "arms": ["initial_peak", "reselected_peak", "persistent_peak"],
+  "cases": "every_locked_training_case_in_bank_order",
+  "replicates_per_case": 1,
+  "seed_start": 1600000000,
+  "horizon_s": 4,
+  "peak_rule": "maximum_supported_original_challenge_then_largest_natural_mass_then_flat_index",
+  "unforced_actions": "exact_natural_conditional_partners",
+  "workers": 4,
+  "validation_opened": false,
+  "training_export": false,
+  "automatic_retry_or_extension": false
+}

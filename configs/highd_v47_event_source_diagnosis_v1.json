@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "split": "train",
+  "training_config": "configs/highd_v46_proposal_comparison_v1.json",
+  "source_ranges": [[200000, 200063], [230000, 230063]],
+  "selection": "One maximum supported absolute-risk pair per source in the entire cached mixed5 bank, before strict filtering; ties by time and ordered IDs",
+  "minimum_proxy_risk": 0.5,
+  "threshold_scope": "Training diagnostic triage only, not a collision-probability threshold or production gate",
+  "candidates": {"interaction": 1.0, "mixed": 0.5},
+  "epsilon": [0.1, 0.1],
+  "replicates": 64,
+  "forced_replicates": 16,
+  "continuation_seed_start": 4400000,
+  "forced_seed_start": 4500000,
+  "horizon_s": 4,
+  "budget_rule": "Freeze all cases/actions before new outcomes. No replacement or positive-only append. Forced supported maximum-risk and modal actions are diagnostic probes, not Q draws or training sequences.",
+  "scope": "Explain the two-event-source training bottleneck without changing production NDE, Q, gates, PPO, or reading validation. All-source funnel includes negatives below the diagnostic threshold. No global recall, generalization, or acceleration estimate."
+}

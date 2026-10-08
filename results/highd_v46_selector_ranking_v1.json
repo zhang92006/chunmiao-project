@@ -1,0 +1,240 @@
+{
+  "date": "2026-10-04",
+  "protocol_commit": "b729a57",
+  "scope": "Retrospective training-only ranking audit; no new discovery, proxy matrices, continuations, validation, test or PPO",
+  "report_sha256": "eb5f0cf5677839e133780d5a2f68bb4d34638ae1bdef47c494a5d14b4aa21e63",
+  "config_sha256": "c9c0f2aeae5699b3319f7a41d0ebb478397baec83e5c425adad7d9d752c6a9df",
+  "implementation_sha256": "63ee15e28e3a578a6f9508822dbe2f4bb015f88e77fe61e69fd637c5e5c3a427",
+  "universe": {
+    "source_episodes": 128,
+    "cached_pairs": 1883,
+    "strict_pairs": 34,
+    "strict_states": 32,
+    "strict_source_episodes": 24,
+    "native_labelled_cases": 31,
+    "observed_collision_source_seeds": [
+      200017,
+      200051
+    ]
+  },
+  "primary_budget": 16,
+  "primary": {
+    "common_native_labelled_cases": {
+      "interaction_only": {
+        "strict_positive_states": 16,
+        "source_episodes": 13,
+        "known_collision_source_recall": 0.5,
+        "known_collision_source_recall_denominator": 2,
+        "unknown_native_pairs": 0,
+        "h_second_factor_tv": {
+          "minimum": 0.4712923162972814,
+          "maximum": 0.8160378715341952,
+          "source_state_weighted_mean": 0.6556240395116054
+        },
+        "native": {
+          "continuations": 1024,
+          "cav_events": 3,
+          "continuation_collision_rate": 0.0029296875,
+          "event_source_episodes": 1,
+          "q_second_factor_tv": {
+            "minimum": 0.4140840473117899,
+            "maximum": 0.6979925149956647,
+            "source_state_weighted_mean": 0.5681818361487878
+          },
+          "top_source_second_moment_fraction": 1
+        }
+      },
+      "absolute_risk_only": {
+        "strict_positive_states": 16,
+        "source_episodes": 15,
+        "known_collision_source_recall": 1,
+        "known_collision_source_recall_denominator": 2,
+        "unknown_native_pairs": 0,
+        "h_second_factor_tv": {
+          "minimum": 0.4712923162972814,
+          "maximum": 0.8160378715341952,
+          "source_state_weighted_mean": 0.6565845665493528
+        },
+        "native": {
+          "continuations": 1024,
+          "cav_events": 31,
+          "continuation_collision_rate": 0.0302734375,
+          "event_source_episodes": 2,
+          "q_second_factor_tv": {
+            "minimum": 0.4140840473117899,
+            "maximum": 0.6979925149956647,
+            "source_state_weighted_mean": 0.5575187320306437
+          },
+          "top_source_second_moment_fraction": 0.9925550204363279
+        }
+      },
+      "absolute_risk_times_interaction": {
+        "strict_positive_states": 16,
+        "source_episodes": 14,
+        "known_collision_source_recall": 1,
+        "known_collision_source_recall_denominator": 2,
+        "unknown_native_pairs": 0,
+        "h_second_factor_tv": {
+          "minimum": 0.4712923162972814,
+          "maximum": 0.8160378715341952,
+          "source_state_weighted_mean": 0.6604528586869463
+        },
+        "native": {
+          "continuations": 1024,
+          "cav_events": 31,
+          "continuation_collision_rate": 0.0302734375,
+          "event_source_episodes": 2,
+          "q_second_factor_tv": {
+            "minimum": 0.4140840473117899,
+            "maximum": 0.6979925149956647,
+            "source_state_weighted_mean": 0.5628396656812276
+          },
+          "top_source_second_moment_fraction": 0.9925550204363279
+        }
+      }
+    },
+    "all_cached_strict_pairs": {
+      "interaction_only": {
+        "strict_positive_states": 16,
+        "source_episodes": 13,
+        "known_collision_source_recall": 0.5,
+        "known_collision_source_recall_denominator": 2,
+        "unknown_native_pairs": 0,
+        "h_second_factor_tv": {
+          "minimum": 0.4712923162972814,
+          "maximum": 0.8160378715341952,
+          "source_state_weighted_mean": 0.6556240395116054
+        },
+        "native": {
+          "continuations": 1024,
+          "cav_events": 3,
+          "continuation_collision_rate": 0.0029296875,
+          "event_source_episodes": 1,
+          "q_second_factor_tv": {
+            "minimum": 0.4140840473117899,
+            "maximum": 0.6979925149956647,
+            "source_state_weighted_mean": 0.5681818361487878
+          },
+          "top_source_second_moment_fraction": 1
+        }
+      },
+      "absolute_risk_only": {
+        "strict_positive_states": 16,
+        "source_episodes": 15,
+        "known_collision_source_recall": 1,
+        "known_collision_source_recall_denominator": 2,
+        "unknown_native_pairs": 1,
+        "h_second_factor_tv": {
+          "minimum": 0.5062124095784399,
+          "maximum": 0.8160378715341952,
+          "source_state_weighted_mean": 0.6641325759782368
+        },
+        "native": null
+      },
+      "absolute_risk_times_interaction": {
+        "strict_positive_states": 16,
+        "source_episodes": 14,
+        "known_collision_source_recall": 1,
+        "known_collision_source_recall_denominator": 2,
+        "unknown_native_pairs": 0,
+        "h_second_factor_tv": {
+          "minimum": 0.4712923162972814,
+          "maximum": 0.8160378715341952,
+          "source_state_weighted_mean": 0.6604528586869463
+        },
+        "native": {
+          "continuations": 1024,
+          "cav_events": 31,
+          "continuation_collision_rate": 0.0302734375,
+          "event_source_episodes": 2,
+          "q_second_factor_tv": {
+            "minimum": 0.4140840473117899,
+            "maximum": 0.6979925149956647,
+            "source_state_weighted_mean": 0.5628396656812276
+          },
+          "top_source_second_moment_fraction": 0.9925550204363279
+        }
+      }
+    }
+  },
+  "labelled_budget_sensitivity": {
+    "8": {
+      "interaction_only": {
+        "source_episodes": 6,
+        "observed_collision_source_recall": 0.5,
+        "events": 3,
+        "top_source_fraction": 1
+      },
+      "absolute_risk_only": {
+        "source_episodes": 8,
+        "observed_collision_source_recall": 1,
+        "events": 31,
+        "top_source_fraction": 0.9852200770966242
+      },
+      "absolute_risk_times_interaction": {
+        "source_episodes": 7,
+        "observed_collision_source_recall": 1,
+        "events": 31,
+        "top_source_fraction": 0.9925550204363279
+      }
+    },
+    "16": {
+      "interaction_only": {
+        "source_episodes": 13,
+        "observed_collision_source_recall": 0.5,
+        "events": 3,
+        "top_source_fraction": 1
+      },
+      "absolute_risk_only": {
+        "source_episodes": 15,
+        "observed_collision_source_recall": 1,
+        "events": 31,
+        "top_source_fraction": 0.9925550204363279
+      },
+      "absolute_risk_times_interaction": {
+        "source_episodes": 14,
+        "observed_collision_source_recall": 1,
+        "events": 31,
+        "top_source_fraction": 0.9925550204363279
+      }
+    },
+    "24": {
+      "interaction_only": {
+        "source_episodes": 18,
+        "observed_collision_source_recall": 1,
+        "events": 31,
+        "top_source_fraction": 0.9925550204363279
+      },
+      "absolute_risk_only": {
+        "source_episodes": 19,
+        "observed_collision_source_recall": 1,
+        "events": 31,
+        "top_source_fraction": 0.9925550204363279
+      },
+      "absolute_risk_times_interaction": {
+        "source_episodes": 18,
+        "observed_collision_source_recall": 1,
+        "events": 31,
+        "top_source_fraction": 0.9925550204363279
+      }
+    }
+  },
+  "decision": {
+    "new_collision_sources_demonstrated": false,
+    "ppo_ready": false,
+    "winner_selected": null,
+    "reason": "Fixed labels contain only the existing event sources; incomplete selections have unknown native outcomes"
+  },
+  "new_continuations": 0,
+  "new_proxy_matrices": 0,
+  "fresh_validation_performed": false,
+  "tests_passed": 144,
+  "frozen_verification_passed": true,
+  "limitations": [
+    "Retrospective training evidence on cases originally collected with interaction-based selection; not fresh validation or global recall",
+    "Same strict gate for all methods; absolute-risk-only is a score ablation, not removal of the interaction gate",
+    "Conditional state laws change with selection; concentration changes alone are not same-target variance improvements",
+    "Absolute-risk-only full-cache panel has an unlabelled state-pair, source 200017 at 30 seconds, pair [12,14]; native outcomes remain unknown",
+    "Product score has not beaten absolute-risk-only or expanded collision-source diversity; no winner or PPO run"
+  ]
+}
