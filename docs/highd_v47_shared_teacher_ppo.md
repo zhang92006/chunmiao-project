@@ -1,5 +1,10 @@
 # Shared fixed teacher data for independent Single/Dual PPO
 
+Execution update: all ten runs have now completed 200 iterations and portable
+policy export. Proceed to the separately versioned
+[source-disjoint native validation](highd_v47_shared_teacher_validation.md),
+not another training run or the incompatible historical formal validator.
+
 This handoff consumes the completed teacher expansion at `52c1929`, without
 collecting another sample, changing labels or modifying historical protocols.
 The expansion retained 66,752 continuations, including 2,009 CAV first collisions

@@ -23,7 +23,10 @@ The next [shared-teacher PPO handoff](docs/highd_v47_shared_teacher_ppo.md)
 reconstructs independent Single/Dual target likelihoods on those same fixed
 paths, with exact source/case replay correction and target-specific signal gates.
 This teacher-selected conditional bank differs from the original formal bank;
-its native source-disjoint evaluation is still pending.
+all ten PPO runs are complete. The next
+[source-disjoint native validation](docs/highd_v47_shared_teacher_validation.md)
+uses the reserved 1,024-source cohort and all checkpoints including iteration 0;
+its long-running script is ready for researcher execution, not yet a result.
 Long jobs are provided as commands for the researcher to run. The completed
 [fixed-alpha Single-BV and Dual-BV PPO](docs/highd_v47_fixed_alpha_ppo.md) runs
 are retained as pipeline smoke evidence under their earlier strict-B bank.
