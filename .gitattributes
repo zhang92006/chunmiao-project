@@ -3,3 +3,7 @@ source_data/**/*.npy filter=lfs diff=lfs merge=lfs -text
 source_data/**/*.npz filter=lfs diff=lfs merge=lfs -text
 source_data/**/*.mat filter=lfs diff=lfs merge=lfs -text
 
+# Keep the portable replication entry points executable by bash after checkout.
+run_two_lane_replication.sh text eol=lf
+tools/fetch_published_d2rl_agent.sh text eol=lf
+

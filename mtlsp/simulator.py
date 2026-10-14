@@ -148,6 +148,9 @@ class Simulator(object):
         """        
         if self.sumo_control_state:
             sumoCmd = [self.sumo_binary, "-c", self.sumo_config_file_path, "--step-length", str(self.step_size), "--random", "--collision.mingap-factor", "0", "--collision.action", "warn"]
+            if "sumo_seed" in conf.simulation_config:
+                sumoCmd.remove("--random")
+                sumoCmd += ["--seed", str(conf.simulation_config["sumo_seed"])]
             if self.sublane_flag:
                 sumoCmd += ["--lateral-resolution", "0.25"]
             elif self.step_size < self.lc_duration:

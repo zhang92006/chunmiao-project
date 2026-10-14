@@ -36,13 +36,23 @@ git submodule update --init --recursive
 Run all commands from the repository root:
 
 ```bash
+python -m scenario_reconstruction.prepare_published_d2rl --fetch-agent
 python -m scenario_reconstruction.validate_template scenario_reconstruction/templates/autoware_cut_in.yaml
 python -m scenario_reconstruction.run_template scenario_reconstruction/templates/autoware_cut_in.yaml --episode 0 --experiment_path data_analysis/raw_data/smoke_test
 ```
 
-The first command validates the template without starting SUMO. The second runs
-one headless SUMO episode and writes generated data under the ignored
-`data_analysis/raw_data/` directory.
+The first command verifies published assets and builds exact, read-only
+probability caches before any runtime imports. The second validates the
+template without starting SUMO. The third runs one headless SUMO episode and
+writes generated data under the ignored `data_analysis/raw_data/` directory.
+
+## Released two-lane D2RL evaluation
+
+See [the preparation and evening-run guide](docs/published_d2rl_replication_setup.md)
+for the isolated Python 3.9 environment, the supplied archive comparison, memory
+measurements, and the explicit 10 x 20,001 episode launch command. Preparation
+alone starts no traffic tests. This evaluates the released single-POV agent;
+it does not train D2RL or use the highD/V46 naturalistic model.
 
 ## Batch reconstruction
 

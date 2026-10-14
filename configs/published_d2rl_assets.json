@@ -1,0 +1,70 @@
+{
+  "upstream_repository": "https://github.com/michigan-traffic-lab/Dense-Deep-Reinforcement-Learning",
+  "upstream_commit": "087921a994b3f5176fb0d75667a0a11fa357cd2b",
+  "files": {
+    "source_data/Decompose/BV_CF/BV_CF_challenge_value.npy": {
+      "sha256": "0434908671a8fb784e0444ab23660c2ac9486f0785b1885e0b89c5ca1404bf56",
+      "bytes": 815676
+    },
+    "source_data/Decompose/BV_CF/BV_CF_state_value.npy": {
+      "sha256": "009761b8da3328f555c583ebb27a6abd698937233183c14625d69baf32c24053",
+      "bytes": 79052
+    },
+    "source_data/Decompose/CF/dangerous_state_table.mat": {
+      "sha256": "7825b5b612a11d4c99c8acb663a8b3e3361eb184966b069a0909e990987bd572",
+      "bytes": 2967
+    },
+    "source_data/Decompose/CF/dangerous_state_table_1e-1_gap.mat": {
+      "sha256": "353cb7de720fd752c8a80df82dec60c59f8b1a35ecd6593d4665d5358d47f544",
+      "bytes": 1569
+    },
+    "source_data/Decompose/CF/Q_table_little.mat": {
+      "sha256": "366e2c6f646308140b64f01a5a88c2a784c580ac5ae6c2f864207514a3e14d7f",
+      "bytes": 5559
+    },
+    "source_data/Decompose/CF/Q_table_little_1e-1_gap.mat": {
+      "sha256": "eca8118a9add7acf9a0c9b6450172a1ed0883ab90c7c1c85148b8c75c65109c5",
+      "bytes": 28475
+    },
+    "source_data/NDD_DATA/CF/Optimized_CF_joint_pdf_array.npy": {
+      "sha256": "57caca2ec843cf2a57ff8f5cfdf142eb771543016ac0b84052d8a4ee75301eba",
+      "bytes": 11478560
+    },
+    "source_data/NDD_DATA/CF/Optimized_CF_pdf_array.npy": {
+      "sha256": "b77c91194a3ebcbdeb1577eefe2152b90a19e186d4ed620c457f964ba3b40eb2",
+      "bytes": 11478560
+    },
+    "source_data/NDD_DATA/FF/Optimized_FF_pdf_array.npy": {
+      "sha256": "39f98930713a5c7b4e77fbca7052dfc4f42c782102b10abb38e7d1d15ed4c1a9",
+      "bytes": 5336
+    },
+    "source_data/NDD_DATA/Initialization/Optimized_presum_list_forward.npy": {
+      "sha256": "b72c427c525cb94a944ea7265a0f237fc929765c3e3a54cfee9c1c7635dfa4f9",
+      "bytes": 370400
+    },
+    "source_data/NDD_DATA/Initialization/speed_CDF.npy": {
+      "sha256": "656059e3efeacff8dcc3d0dc2ab17cb05b0557466cb2392db4f6bb989c8b7967",
+      "bytes": 296
+    },
+    "source_data/NDD_DATA/LC/10106_10620_OL_pdf_smoothed_soft_p8_1_tmp.npz": {
+      "sha256": "5fbeaa4159a93f6308e1e735bcea8ce033c489c4767d5aea120b56de13cefd3f",
+      "bytes": 354575
+    },
+    "source_data/NDD_DATA/LC/10119_10630_CI_pdf_smoothed_p8_1_tmp.npz": {
+      "sha256": "40acbb859e04ed646d080cdd2b59175250139cd462b4aeeadddaacf4312f1308",
+      "bytes": 3928772
+    },
+    "source_data/NDD_DATA/LC/10119_10630_DLC_pdf_smoothed_p8_1_tmp.npz": {
+      "sha256": "948c25829a31baa396bef144473f2c15ec1df5436c81a3e15f93c95fdf5a2857",
+      "bytes": 7553331
+    },
+    "source_data/NDD_DATA/LC/10119_10630_SLC_pdf_smoothed_soft_p8_1_tmp.npz": {
+      "sha256": "a7d5fe8ca40a559504e364ba825e23726f61446f10523b3163077ca35285d544",
+      "bytes": 55378316
+    },
+    "checkpoints/2lane_400m/model.pt": {
+      "sha256": "a0da3e16fb5fcf0e0db470f2e08de4f78b457a36341e45b9db6964f096aa9ee6",
+      "bytes": 578232
+    }
+  }
+}

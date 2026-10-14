@@ -1,0 +1,67 @@
+{
+  "episodes": 100,
+  "workers": 2,
+  "crash_episodes": 1,
+  "crash_episode_share": 0.01,
+  "positive_weight_crash_episodes": 1,
+  "crash_rate_estimate": 1.6245014703440646e-09,
+  "relative_half_width_90": 1.6448536269514715,
+  "normal_ci90": [
+    -1.0475656651393683e-09,
+    4.2965686058274975e-09
+  ],
+  "variance_of_weighted_indicator": 2.6390050271500277e-16,
+  "maximum_collision_weight": 1.6245014703440646e-07,
+  "worker_wall_seconds": [
+    38.688029,
+    39.6500419
+  ],
+  "max_worker_rss_MiB": 257.140625,
+  "max_worker_private_MiB": 181.828125,
+  "policy_calls": 28,
+  "model_sha256": "a0da3e16fb5fcf0e0db470f2e08de4f78b457a36341e45b9db6964f096aa9ee6",
+  "scope": "Importance-weighted CAV collision probability per 400m test; raw collision share is not the natural crash probability. No event implies RHW unavailable, not zero.",
+  "batch_wall_seconds": 43.102793000000005,
+  "purpose": "Bounded setup validation, not a published crash-rate replication",
+  "full_batch_started": false,
+  "environment": {
+    "python": "3.9.25",
+    "os": "Windows",
+    "machine": "AMD64",
+    "packages": {
+      "numpy": "1.23.5",
+      "scipy": "1.9.3",
+      "torch": "1.12.1+cpu",
+      "typing-extensions": "4.13.2",
+      "eclipse-sumo": "1.14.1",
+      "libsumo": "1.14.1",
+      "sumolib": "1.14.1",
+      "traci": "1.14.1",
+      "bidict": "0.22.1",
+      "shapely": "1.8.5.post1",
+      "psutil": "7.2.2",
+      "pytest": "8.4.2"
+    }
+  },
+  "tests": {
+    "probability_queries": 4,
+    "sumo_acceleration_cases": 4,
+    "result": "8 passed",
+    "pip_check": "No broken requirements found",
+    "numpy_to_torch_bridge": "passed"
+  },
+  "errors": 0,
+  "memory_measurement_note": "Worker RSS/private values measured inside each actual interpreter are valid. Parent-only aggregate sampling in this initial pilot excluded Windows venv children; excluded here and fixed in final launcher.",
+  "ten_worker_validation": "Not run: memory guard blocked before spawning. Need >=3.0 GiB available RAM; current available RAM about 2 GiB.",
+  "time_estimate": {
+    "ideal_ten_worker_hours": 4.3523326557525,
+    "planning_hours": [
+      6,
+      10
+    ],
+    "basis": "2 workers x 50; not a measured ten-worker throughput"
+  },
+  "assets_verified": 16,
+  "cache_total_bytes": 154118176,
+  "archive_sha256": "f19d163a7ac2f3766c54cb50ce6a26d12923edafe3ad34049cd765a522564cb3"
+}

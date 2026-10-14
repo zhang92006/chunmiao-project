@@ -84,11 +84,11 @@ LC_smooth_flag = True # ! Not used
 Sparse_flag = True # ! Not used
 
 # =========== NDD distribution to generate lateral decisions (lane change) ===========
-import sparse
-OL_pdf = sparse.load_npz(ndd_data_path + "/NDD_DATA/LC/10106_10620_OL_pdf_smoothed_soft_p8_1_tmp.npz").todense()
-SLC_pdf = sparse.load_npz(ndd_data_path + "/NDD_DATA/LC/10119_10630_SLC_pdf_smoothed_soft_p8_1_tmp.npz").todense()
-DLC_pdf = sparse.load_npz(ndd_data_path + "/NDD_DATA/LC/10119_10630_DLC_pdf_smoothed_p8_1_tmp.npz").todense()
-CI_pdf = sparse.load_npz(ndd_data_path + "/NDD_DATA/LC/10119_10630_CI_pdf_smoothed_p8_1_tmp.npz").todense()
+from scenario_reconstruction.published_probability_tables import load_table
+OL_pdf = load_table(ndd_data_path + "/NDD_DATA/LC/10106_10620_OL_pdf_smoothed_soft_p8_1_tmp.npz")
+SLC_pdf = load_table(ndd_data_path + "/NDD_DATA/LC/10119_10630_SLC_pdf_smoothed_soft_p8_1_tmp.npz")
+DLC_pdf = load_table(ndd_data_path + "/NDD_DATA/LC/10119_10630_DLC_pdf_smoothed_p8_1_tmp.npz")
+CI_pdf = load_table(ndd_data_path + "/NDD_DATA/LC/10119_10630_CI_pdf_smoothed_p8_1_tmp.npz")
 
 print("================Load Action NDD data finished!=================")
 
