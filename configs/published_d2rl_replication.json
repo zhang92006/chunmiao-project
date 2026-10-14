@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "user_script_sha256": "3372081e717f3992324dc955ca949206ba0fdee7bb9df0e281b0f407b5b5e213",
+  "user_script_name": "run_two_lane_replication(1).sh",
+  "script_corresponding_commit": "Git commit not supplied; supplied complete archive identified by SHA-256",
+  "upstream_commit": "087921a994b3f5176fb0d75667a0a11fa357cd2b",
+  "workers": 10,
+  "episodes_per_worker": 20001,
+  "total_episodes": 200010,
+  "lanes": 2,
+  "av_model": "published IDM/MOBIL controller",
+  "mode": "D2RL",
+  "decision_step_s": 0.1,
+  "lane_change_duration_s": 1,
+  "cav_distance_m": 400,
+  "seed_base": 20261014,
+  "sumo_version": "1.14.1",
+  "checkpoint_sha256": "a0da3e16fb5fcf0e0db470f2e08de4f78b457a36341e45b9db6964f096aa9ee6",
+  "table_backend": "Exact source float64, sorted flat coordinate keys and read-only shared memory-mapped cache",
+  "run_policy": "Preparation only until the user starts the batch; no scheduled full run",
+  "target_metric": "Importance-weighted CAV crash probability per 400m test; 90% normal-approximation RHW; fixed sample budget is not a guarantee that RHW<=0.3",
+  "user_archive": {
+    "name": "two_lane_replication.zip",
+    "sha256": "f19d163a7ac2f3766c54cb50ce6a26d12923edafe3ad34049cd765a522564cb3",
+    "bytes": 70562967,
+    "archive_script_sha256": "3372081e717f3992324dc955ca949206ba0fdee7bb9df0e281b0f407b5b5e213"
+  },
+  "runtime_alignment": "Supplied archive uses macOS arm64 SUMO 1.27.0; Windows runtime restores upstream SUMO 1.14.1, verifies acceleration, and pins Python 3.9 / Torch 1.12.1 CPU with compatible NumPy 1.23.5.",
+  "single_pov_alignment": "Supplied archive defaults dual_bv=off, av_model=IDM, lanes=2. Its active NDD, NADE proposal, IDM/MOBIL, weights, network and model match this entry point; AEB and three-lane extensions are inactive."
+}
